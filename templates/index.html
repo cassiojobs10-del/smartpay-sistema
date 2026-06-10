@@ -3,29 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartPay 4.0 - Lançamento</title>
+    <title>Controle de Remessas Financeiras</title>
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
-        body { background-color: #0f172a; color: #fff; font-family: 'Urbanist', sans-serif; display: flex; justify-content: center; padding: 50px 20px; }
-        .form-box { background: #111; border: 1px solid #334155; border-radius: 16px; padding: 40px; width: 100%; max-width: 600px; box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
-        h1 { margin-top: 0; color: #f5f5f5; font-size: 32px; }
-        h1 span { color: #deff9a; }
+        body { 
+            /* Fundo azul marinho escuro com leve gradiente para preto */
+            background: linear-gradient(135deg, #020617 0%, #0f172a 100%); 
+            color: #ffffff; 
+            font-family: 'Urbanist', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            padding: 50px 20px; 
+            min-height: 100vh;
+            margin: 0;
+        }
+        .form-box { 
+            background: #0b1121; /* Card um pouco mais escuro que o fundo */
+            border: 1px solid #1e3a8a; /* Borda sutil em azul */
+            border-radius: 16px; 
+            padding: 40px; 
+            width: 100%; 
+            max-width: 600px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5); 
+        }
+        h1 { 
+            margin-top: 0; 
+            color: #ffffff; 
+            font-size: 32px; 
+        }
         .field-group { margin-bottom: 15px; }
-        label { display: block; color: #deff9a; font-size: 13px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
-        input { background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff; padding: 12px; width: 100%; font-family: 'Urbanist'; font-size: 16px; }
-        input:focus { border-color: #deff9a; outline: none; }
+        label { 
+            display: block; 
+            color: #ffffff; /* Textos brancos como solicitado */
+            font-size: 14px; 
+            font-weight: 700; 
+            margin-bottom: 6px; 
+        }
+        input { 
+            background: #0f172a; 
+            border: 1px solid #1e3a8a; 
+            border-radius: 8px; 
+            color: #ffffff; 
+            padding: 12px; 
+            width: 100%; 
+            font-family: 'Urbanist', sans-serif; 
+            font-size: 16px; 
+        }
+        input:focus { 
+            border-color: #3b82f6; /* Azul mais claro ao clicar */
+            outline: none; 
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
         .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .btn-submit { background: #deff9a; border: none; border-radius: 8px; color: #000; cursor: pointer; font-weight: 800; margin-top: 20px; padding: 18px; width: 100%; font-size: 16px; text-transform: uppercase; }
-        .btn-submit:hover { opacity: 0.9; }
-        .divider { border-top: 1px solid #333; margin: 25px 0; padding-top: 20px; }
+        .btn-submit { 
+            background: #2563eb; /* Azul Royal */
+            border: none; 
+            border-radius: 8px; 
+            color: #ffffff; 
+            cursor: pointer; 
+            font-weight: 800; 
+            margin-top: 20px; 
+            padding: 18px; 
+            width: 100%; 
+            font-size: 16px; 
+            text-transform: uppercase; 
+            transition: background 0.2s;
+        }
+        .btn-submit:hover { 
+            background: #1d4ed8; /* Azul um pouco mais escuro ao passar o mouse */
+        }
+        .divider { 
+            border-top: 1px solid #1e3a8a; 
+            margin: 25px 0; 
+            padding-top: 20px; 
+        }
     </style>
 </head>
 <body>
 
     <div class="form-box">
-        <h1>SmartPay <span>4.0</span></h1>
-        <p style="color: #cbd5e1; margin-bottom: 30px;">Registro analítico de remessas processadas.</p>
+        <h1>Controle de Remessas Financeiras</h1>
+        <p style="color: #94a3b8; margin-bottom: 30px;">Registro analítico de remessas processadas.</p>
 
         <div class="row-grid">
             <div class="field-group">
@@ -34,7 +93,7 @@
             </div>
             <div class="field-group">
                 <label>Nº/Nome da Remessa</label>
-                <input type="text" id="nome_remessa" placeholder="Ex: REM-88291-B" required>
+                <input type="text" id="nome_remessa" placeholder="Ex: 7190 - c" required>
             </div>
         </div>
 
@@ -50,7 +109,7 @@
         </div>
 
         <div class="divider">
-            <p style="color: #deff9a; font-weight: 700; margin-top: 0; text-transform: uppercase; font-size: 13px;">Gargalos de Complexidade</p>
+            <p style="color: #3b82f6; font-weight: 700; margin-top: 0; font-size: 14px;">Gargalos de Complexidade</p>
             <div class="field-group">
                 <label>Processos de Contrato</label>
                 <input type="number" id="qtd_contratos" value="0" min="0">
@@ -71,7 +130,6 @@
     </div>
 
     <script>
-        // Define a data de hoje como padrão ao abrir a tela
         document.getElementById('data_pagamento').valueAsDate = new Date();
 
         async function registrarLote() {
@@ -101,7 +159,6 @@
 
                 if (resposta.ok) {
                     alert(`Sucesso! A remessa gerou ${resultado.pontos} pontos de esforço analítico.`);
-                    // Limpa os campos numéricos para o próximo lançamento
                     document.querySelectorAll('input[type="number"]').forEach(input => input.value = "0");
                     document.getElementById('nome_remessa').value = "";
                 } else {
