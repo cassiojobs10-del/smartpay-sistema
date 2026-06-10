@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPay 4.0 - Lançamento</title>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { background-color: #0f172a; color: #fff; font-family: 'Urbanist', sans-serif; display: flex; justify-content: center; padding: 50px 20px; }
+        .form-box { background: #111; border: 1px solid #334155; border-radius: 16px; padding: 40px; width: 100%; max-width: 600px; box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
+        h1 { margin-top: 0; color: #f5f5f5; font-size: 32px; }
+        h1 span { color: #deff9a; }
+        .field-group { margin-bottom: 15px; }
+        label { display: block; color: #deff9a; font-size: 13px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
+        input { background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff; padding: 12px; width: 100%; font-family: 'Urbanist'; font-size: 16px; }
+        input:focus { border-color: #deff9a; outline: none; }
+        .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn-submit { background: #deff9a; border: none; border-radius: 8px; color: #000; cursor: pointer; font-weight: 800; margin-top: 20px; padding: 18px; width: 100%; font-size: 16px; text-transform: uppercase; }
+        .btn-submit:hover { opacity: 0.9; }
+        .divider { border-top: 1px solid #333; margin: 25px 0; padding-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="form-box">
+        <h1>SmartPay <span>4.0</span></h1>
+        <p style="color: #cbd5e1; margin-bottom: 30px;">Registro analítico de remessas processadas.</p>
+
+        <div class="row-grid">
+            <div class="field-group">
+                <label>Data do Pagamento</label>
+                <input type="date" id="data_pagamento" required>
+            </div>
+            <div class="field-group">
+                <label>Nº/Nome da Remessa</label>
+                <input type="text" id="nome_remessa" placeholder="Ex: REM-88291-B" required>
+            </div>
+        </div>
+
+        <div class="row-grid">
+            <div class="field-group">
+                <label>Qtd. Fornecedores</label>
+                <input type="number" id="qtd_fornecedores" value="0" min="0">
+            </div>
+            <div class="field-group">
+                <label>Qtd. Processos</label>
+                <input type="number" id="qtd_processos" value="0" min="0">
+            </div>
+        </div>
+
+        <div class="divider">
+            <p style="color: #deff9a; font-weight: 700; margin-top: 0; text-transform: uppercase; font-size: 13px;">Gargalos de Complexidade</p>
+            <div class="field-group">
+                <label>Processos de Contrato</label>
+                <input type="number" id="qtd_contratos" value="0" min="0">
+            </div>
+            <div class="row-grid">
+                <div class="field-group">
+                    <label>Certidões Renovadas</label>
+                    <input type="number" id="certidoes_renovadas" value="0" min="0">
+                </div>
+                <div class="field-group">
+                    <label>Pagamentos Parciais</label>
+                    <input type="number" id="pagamentos_parciais" value="0" min="0">
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-submit" onclick="registrarLote()">Registrar Produção</button>
+    </div>
+
+    <script>
+        // Define a data de hoje como padrão ao abrir a tela
+        document.getElementById('data_pagamento').valueAsDate = new Date();
+
+        async function registrarLote() {
+            const dados = {
+                data_pagamento: document.getElementById('data_pagamento').value,
+                nome_remessa: document.getElementById('nome_remessa').value,
+                qtd_fornecedores: document.getElementById('qtd_fornecedores').value,
+                qtd_processos: document.getElementById('qtd_processos').value,
+                qtd_contratos: document.getElementById('qtd_contratos').value,
+                certidoes_renovadas: document.getElementById('certidoes_renovadas').value,
+                pagamentos_parciais: document.getElementById('pagamentos_parciais').value
+            };
+
+            if(!dados.nome_remessa) {
+                alert("Por favor, preencha o número da remessa.");
+                return;
+            }
+
+            try {
+                const resposta = await fetch('/api/salvar-lote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dados)
+                });
+
+                const resultado = await resposta.json();
+
+                if (resposta.ok) {
+                    alert(`Sucesso! A remessa gerou ${resultado.pontos} pontos de esforço analítico.`);
+                    // Limpa os campos numéricos para o próximo lançamento
+                    document.querySelectorAll('input[type="number"]').forEach(input => input.value = "0");
+                    document.getElementById('nome_remessa').value = "";
+                } else {
+                    alert("Erro: " + resultado.mensagem);
+                }
+            } catch (erro) {
+                alert("Erro de conexão com o servidor.");
+            }
+        }
+    </script>
+</body>
+</html>
