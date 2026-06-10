@@ -28,12 +28,10 @@ def inicializar_banco_dados():
 def calcular_esforco(processos, contratos, certidoes, parciais):
     return (processos * 1) + (contratos * 2) + (certidoes * 1) + (parciais * 2)
 
-# Rota para exibir a interface visual
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Rota para salvar os dados
 @app.route('/api/salvar-lote', methods=['POST'])
 def salvar_lote_remessa():
     dados = request.json
@@ -70,6 +68,5 @@ def salvar_lote_remessa():
 
 if __name__ == '__main__':
     inicializar_banco_dados()
-    # Usa a porta definida pelo Render ou 5000 como padrão
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
