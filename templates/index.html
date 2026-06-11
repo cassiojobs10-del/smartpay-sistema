@@ -9,8 +9,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-            /* Manter o gradiente esmeralda escuro de fundo */
-            background: linear-gradient(135deg, #020617 0%, #0f172a 100%); 
+            background: linear-gradient(135deg, #060814 0%, #0b112c 50%, #050716 100%); 
             color: #ffffff; 
             font-family: 'Urbanist', sans-serif; 
             display: flex; 
@@ -26,144 +25,98 @@
             display: flex;
             flex-direction: column;
             padding: 30px 20px;
+            flex-shrink: 0;
         }
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 50px;
-        }
+        .logo-area { display: flex; align-items: center; gap: 15px; margin-bottom: 50px; }
         .logo-icon {
-            background: #1e40af; /* Azul Royal corporativo */
-            color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
+            background: #1e40af; color: #fff; width: 40px; height: 40px;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;
         }
-        .logo-text {
-            font-size: 18px;
-            font-weight: 800;
-            line-height: 1.2;
-            color: #ffffff;
-        }
-        .menu-title {
-            color: #475569;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            padding-left: 10px;
-        }
+        .logo-text { font-size: 18px; font-weight: 800; line-height: 1.2; color: #ffffff; }
+        .menu-title { color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; padding-left: 10px; }
         .menu-items { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+        
         .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            border-radius: 10px;
-            color: #94a3b8;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.2s;
-            cursor: pointer;
+            display: flex; align-items: center; gap: 15px; padding: 15px;
+            border-radius: 10px; color: #94a3b8; text-decoration: none;
+            font-weight: 600; transition: all 0.2s; cursor: pointer;
         }
         .menu-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
         .menu-item.active { background: #1e40af; color: #fff; box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3); }
 
-        /* PAINEL CENTRAL CONTEÚDO (Mágica da Fluidez) */
-        .main-content {
-            flex-grow: 1;
-            padding: 40px 50px; /* Margem interna para o conteúdo não tocar nas bordas */
-            overflow-y: auto;
+        /* CARTÃO DE PERFIL DO COLABORADOR NO CANTO INFERIOR */
+        .profile-box {
+            margin-top: auto;
             display: flex;
-            flex-direction: column;
-            gap: 30px; /* Espaço entre os cards */
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .profile-avatar {
+            background: #1e40af; width: 40px; height: 40px;
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-weight: 700; color: #ffffff;
+            font-size: 16px; border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .profile-info p { margin: 0; }
+
+        /* PAINEL CENTRAL CONTEÚDO FLUIDO */
+        .main-content {
+            flex-grow: 1; padding: 40px 50px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 30px;
         }
 
-        /* CARD ESTILO VIDRO (GLASSMORPHISM) */
         .glass-card { 
-            background: rgba(10, 15, 36, 0.7); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 16px; 
-            padding: 40px; 
-            /* MODIFICAÇÃO PARA O LAYOUT FLUIDO (STRETCH) */
-            width: 100%; /* Estica para preencher */
-            max-width: none; /* Remove o limite anterior de 850px */
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); 
+            background: rgba(10, 15, 36, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); 
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px; padding: 40px; width: 100%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); 
         }
         
         h1 { margin-top: 0; color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
-        .field-group { margin-bottom: 18px; }
+        .field-group { margin-bottom: 18px; width: 100%; }
         label { display: block; color: #ffffff; font-size: 13px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         
-        /* INPUTS INTEGRADOS */
         input { 
-            background: rgba(5, 7, 20, 0.8); 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            border-radius: 8px; 
-            color: #ffffff; 
-            padding: 14px; 
-            width: 100%; 
-            font-family: 'Urbanist', sans-serif; 
-            font-size: 16px; 
-            transition: all 0.3s;
+            background: rgba(5, 7, 20, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 8px; color: #ffffff; padding: 14px; width: 100%; 
+            font-family: 'Urbanist', sans-serif; font-size: 16px; transition: all 0.3s;
         }
-        input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
-        
-        /* Grid interno se adapta automaticamente à largura esticada */
         .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
-        /* Calendário com ícone branco e azul (aprovado anteriormente) */
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>');
-            background-repeat: no-repeat;
-            cursor: pointer;
-            width: 20px;
-            height: 20px;
+        /* ESTILO DOS CARDS INDICADORES DO DASHBOARD */
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; margin-top: 10px; }
+        .metric-card {
+            background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px; padding: 25px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
+        .metric-number { font-size: 36px; font-weight: 800; color: #ffffff; margin-top: 5px; }
+        .metric-icon { width: 50px; height: 50px; border-radius: 10px; background: rgba(30, 64, 175, 0.2); color: #60a5fa; display: flex; align-items: center; justify-content: center; font-size: 22px; }
 
-        /* BOTÃO AZUL ROYAL SÓLIDO */
         .btn-submit { 
-            background: #1e40af; 
-            border: none; 
-            border-radius: 8px; 
-            color: #ffffff; 
-            cursor: pointer; 
-            font-weight: 700; 
-            margin-top: 15px; 
-            padding: 18px; 
-            width: 100%; 
-            font-size: 16px; 
-            text-transform: uppercase; 
-            letter-spacing: 1px;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.2);
+            background: #1e40af; border: none; border-radius: 8px; color: #ffffff; 
+            cursor: pointer; font-weight: 700; margin-top: 15px; padding: 18px; 
+            width: 100%; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s;
         }
         .btn-submit:hover { background: #1d4ed8; transform: translateY(-1px); }
         .divider { border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 30px 0 25px 0; padding-top: 20px; }
 
-        /* TABELA DE HISTÓRICO (AGORA NO CARD SEPARADO E FLUIDO) */
-        .table-title { font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; }
+        .table-title { font-size: 20px; font-weight: 700; color: #ffffff; display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
         .table-container { width: 100%; overflow-x: auto; margin-top: 10px; }
-        
-        /* Tabela também se estica */
         .glass-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 15px; }
         .glass-table th { padding: 14px; color: #94a3b8; font-weight: 700; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
         .glass-table td { padding: 14px; color: #ffffff; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .glass-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
-        
-        /* Manter cores de badge e botões de ação */
         .badge-pontos { background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 14px; border: 1px solid rgba(59, 130, 246, 0.2); }
-        .btn-action { color: #94a3b8; background: none; border: none; cursor: pointer; font-size: 14px; transition: color 0.2s; }
-        .btn-action:hover { color: #ffffff; }
+        .btn-action { color: #94a3b8; background: none; border: none; cursor: pointer; font-size: 14px; }
         .btn-delete:hover { color: #ef4444 !important; }
+
+        @media (max-width: 1024px) {
+            .row-grid { grid-template-columns: 1fr; gap: 10px; }
+            .table-title { flex-direction: column; align-items: flex-start; gap: 15px; }
+        }
     </style>
 </head>
 <body>
@@ -176,97 +129,136 @@
 
         <div class="menu-title">Menu Principal</div>
         <ul class="menu-items">
-            <li class="menu-item"><i class="fa-solid fa-chart-pie"></i> Dashboard</li>
-            <li class="menu-item active"><i class="fa-solid fa-file-invoice-dollar"></i> Remessas Pagas</li>
+            <li class="menu-item active" id="menu_dashboard" onclick="alternarAba('dashboard')"><i class="fa-solid fa-chart-pie"></i> Dashboard</li>
+            <li class="menu-item" id="menu_remessas" onclick="alternarAba('remessas')"><i class="fa-solid fa-file-invoice-dollar"></i> Remessas Pagas</li>
             <li class="menu-item"><i class="fa-solid fa-list-check"></i> Outros Registros</li>
             <li class="menu-item"><i class="fa-solid fa-triangle-exclamation"></i> Particularidades</li>
         </ul>
 
-        <div style="margin-top: auto; color: #475569; font-size: 12px; text-align: center;">
-            <i class="fa-solid fa-user-shield"></i> Modo Administrador
+        <div class="profile-box">
+            <div class="profile-avatar">CA</div>
+            <div class="profile-info">
+                <p style="font-size: 14px; font-weight: 700; color: #ffffff;">Cássio Abreu</p>
+                <p style="font-size: 11px; color: #94a3b8; font-weight: 500;">Assessor Financeiro</p>
+            </div>
         </div>
     </nav>
 
     <main class="main-content">
         
-        <div class="glass-card">
-            <h1>Controle de Remessas</h1>
-            <p style="color: #94a3b8; margin-bottom: 30px; font-size: 15px;">Registro analítico de pagamentos de fornecedores e médicos.</p>
+        <section id="aba_dashboard_view">
+            <div class="glass-card">
+                <h1>Painel de Produtividade Individual</h1>
+                <p style="color: #94a3b8; margin-bottom: 30px; font-size: 15px;">Métricas exclusivas de monitoramento de desempenho.</p>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div>
+                            <label style="color: #94a3b8; font-size: 12px;">Pontos de Esforço Guardados</label>
+                            <div class="metric-number" id="dash_pontos">0</div>
+                        </div>
+                        <div class="metric-icon"><i class="fa-solid fa-bolt"></i></div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div>
+                            <label style="color: #94a3b8; font-size: 12px;">Processos Concluídos</label>
+                            <div class="metric-number" id="dash_processos">0</div>
+                        </div>
+                        <div class="metric-icon"><i class="fa-solid fa-folder-check"></i></div>
+                    </div>
 
-            <div class="row-grid">
-                <div class="field-group">
-                    <label>Data do Pagamento</label>
-                    <input type="date" id="data_pagamento" required onclick="this.showPicker()">
-                </div>
-                <div class="field-group">
-                    <label>Nº/Nome da Remessa</label>
-                    <input type="text" id="nome_remessa" placeholder="Ex: 7190 - c" required>
+                    <div class="metric-card">
+                        <div>
+                            <label style="color: #94a3b8; font-size: 12px;">Remessas Auditadas</label>
+                            <div class="metric-number" id="dash_remessas">0</div>
+                        </div>
+                        <div class="metric-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                    </div>
                 </div>
             </div>
+        </section>
 
-            <div class="row-grid">
-                <div class="field-group">
-                    <label>Qtd. Fornecedores</label>
-                    <input type="number" id="qtd_fornecedores" value="0" min="0">
-                </div>
-                <div class="field-group">
-                    <label>Qtd. Processos</label>
-                    <input type="number" id="qtd_processos" value="0" min="0">
-                </div>
-            </div>
+        <section id="aba_remessas_view" style="display: none; flex-direction: column; gap: 30px; width: 100%;">
+            <div class="glass-card">
+                <h1>Controle de Remessas</h1>
+                <p style="color: #94a3b8; margin-bottom: 30px; font-size: 15px;">Registro analítico de pagamentos de fornecedores e médicos.</p>
 
-            <div class="divider">
-                <p style="color: #60a5fa; font-weight: 700; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px;">Detalhamento da Remessa</p>
-                <div class="field-group">
-                    <label>Processos de Contrato</label>
-                    <input type="number" id="qtd_contratos" value="0" min="0">
-                </div>
                 <div class="row-grid">
                     <div class="field-group">
-                        <label>Certidões Renovadas</label>
-                        <input type="number" id="certidoes_renovadas" value="0" min="0">
+                        <label>Data do Pagamento</label>
+                        <input type="date" id="data_pagamento" required onclick="this.showPicker()">
                     </div>
                     <div class="field-group">
-                        <label>Pagamentos Parciais</label>
-                        <input type="number" id="pagamentos_parciais" value="0" min="0">
+                        <label>Nº/Nome da Remessa</label>
+                        <input type="text" id="nome_remessa" placeholder="Ex: 7190 - c" required>
                     </div>
                 </div>
+
+                <div class="row-grid">
+                    <div class="field-group">
+                        <label>Qtd. Fornecedores</label>
+                        <input type="number" id="qtd_fornecedores" value="0" min="0">
+                    </div>
+                    <div class="field-group">
+                        <label>Qtd. Processos</label>
+                        <input type="number" id="qtd_processos" value="0" min="0">
+                    </div>
+                </div>
+
+                <div class="divider">
+                    <p style="color: #60a5fa; font-weight: 700; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px;">Detalhamento da Remessa</p>
+                    <div class="field-group">
+                        <label>Processos de Contrato</label>
+                        <input type="number" id="qtd_contratos" value="0" min="0">
+                    </div>
+                    <div class="row-grid">
+                        <div class="field-group">
+                            <label>Certidões Renovadas</label>
+                            <input type="number" id="certidoes_renovadas" value="0" min="0">
+                        </div>
+                        <div class="field-group">
+                            <label>Pagamentos Parciais</label>
+                            <input type="number" id="pagamentos_parciais" value="0" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="area_botoes" style="display: flex; gap: 15px; margin-top: 15px;">
+                    <button class="btn-submit" id="btn_principal" onclick="registrarLote()">Registrar Produção</button>
+                    <button class="btn-submit" id="btn_cancelar" onclick="cancelarEdicao()" style="background: rgba(255,255,255,0.1); color: #fff; display: none;">Cancelar</button>
+                </div>
             </div>
 
-            <div id="area_botoes" style="display: flex; gap: 15px; margin-top: 15px;">
-                <button class="btn-submit" id="btn_principal" onclick="registrarLote()">Registrar Produção</button>
-                <button class="btn-submit" id="btn_cancelar" onclick="cancelarEdicao()" style="background: rgba(255,255,255,0.1); color: #fff; display: none;">Cancelar</button>
-            </div>
-        </div>
-
-        <div class="glass-card" style="padding: 30px;">
-            <div class="table-title">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <i class="fa-solid fa-clock-rotate-left" style="color: #60a5fa;"></i> Histórico de Lançamentos
+            <div class="glass-card" style="padding: 30px;">
+                <div class="table-title">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-clock-rotate-left" style="color: #60a5fa;"></i> Histórico de Lançamentos
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; font-size: 14px;">
+                        <label for="filtro_data" style="margin-bottom: 0; color: #94a3b8; font-weight: 600; text-transform: none;">Filtrar por dia:</label>
+                        <input type="date" id="filtro_data" onchange="carregarHistorico()" onclick="this.showPicker()" style="padding: 8px; font-size: 14px; width: auto; background: rgba(5, 7, 20, 0.8);">
+                        <button class="btn-action" onclick="limparFiltro()" title="Limpar Filtro" style="padding: 8px; background: rgba(255,255,255,0.1); border-radius: 6px;"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 10px; font-size: 14px;">
-                    <label for="filtro_data" style="margin-bottom: 0; color: #94a3b8; font-weight: 600; text-transform: none;">Filtrar por dia:</label>
-                    <input type="date" id="filtro_data" onchange="carregarHistorico()" onclick="this.showPicker()" style="padding: 8px; font-size: 14px; width: auto; background: rgba(5, 7, 20, 0.8);">
-                    <button class="btn-action" onclick="limparFiltro()" title="Limpar Filtro" style="padding: 8px; background: rgba(255,255,255,0.1); border-radius: 6px;"><i class="fa-solid fa-xmark"></i></button>
+                <div class="table-container">
+                    <table class="glass-table">
+                        <thead>
+                            <tr>
+                                <th>Data Pagamento</th>
+                                <th>Nº da Remessa</th>
+                                <th>Fornecedores</th>
+                                <th>Processos</th>
+                                <th>Pontos Esforço</th>
+                                <th style="text-align: right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo_tabela_historico">
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <div class="table-container">
-                <table class="glass-table">
-                    <thead>
-                        <tr>
-                            <th>Data Pagamento</th>
-                            <th>Nº da Remessa</th>
-                            <th>Fornecedores</th>
-                            <th>Processos</th>
-                            <th>Pontos Esforço</th>
-                            <th style="text-align: right;">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corpo_tabela_historico">
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        </section>
 
     </main>
 
@@ -277,8 +269,45 @@
         document.getElementById('data_pagamento').valueAsDate = new Date();
 
         window.onload = function() {
+            carregarMetricasDashboard();
             carregarHistorico();
         };
+
+        // Função Inteligente para Alternar Visualização de Abas
+        function alternarAba(aba) {
+            const menuDash = document.getElementById('menu_dashboard');
+            const menuRemessas = document.getElementById('menu_remessas');
+            const viewDash = document.getElementById('aba_dashboard_view');
+            const viewRemessas = document.getElementById('aba_remessas_view');
+
+            if (aba === 'dashboard') {
+                menuDash.classList.add('active');
+                menuRemessas.classList.remove('active');
+                viewDash.style.display = 'block';
+                viewRemessas.style.display = 'none';
+                carregarMetricasDashboard(); // Recarrega os números acumulados
+            } else if (aba === 'remessas') {
+                menuRemessas.classList.add('active');
+                menuDash.classList.remove('active');
+                viewDash.style.display = 'none';
+                viewRemessas.style.display = 'flex';
+                carregarHistorico();
+            }
+        }
+
+        // Busca dados reais da caixa preta para preencher o seu Dashboard
+        async function carregarMetricasDashboard() {
+            try {
+                const resposta = await fetch('/api/metricas-dashboard');
+                const metricas = await resposta.json();
+                
+                document.getElementById('dash_pontos').innerText = metricas.pontos_totais || 0;
+                document.getElementById('dash_processos').innerText = metricas.processos_totais || 0;
+                document.getElementById('dash_remessas').innerText = metricas.total_remessas || 0;
+            } catch (erro) {
+                console.error("Erro ao carregar métricas do dashboard:", erro);
+            }
+        }
 
         async function carregarHistorico() {
             try {
@@ -306,10 +335,10 @@
                             <td>${remessa.qtd_processos}</td>
                             <td><span class="badge-pontos">${remessa.pontuacao_total} pts</span></td>
                             <td style="text-align: right;">
-                                <button class="btn-action" title="Editar Remessa" onclick="prepararEdicao(${remessa.id})" style="color: #60a5fa; margin-right: 15px;">
+                                <button class="btn-action" title="Editar" onclick="prepararEdicao(${remessa.id})" style="color: #60a5fa; margin-right: 15px;">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
-                                <button class="btn-action btn-delete" title="Excluir Remessa" onclick="excluirRemessa(${remessa.id})">
+                                <button class="btn-action btn-delete" title="Excluir" onclick="excluirRemessa(${remessa.id})">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </td>
@@ -350,33 +379,20 @@
 
         function cancelarEdicao() {
             idSendoEditado = null;
-            
             document.getElementById('data_pagamento').valueAsDate = new Date();
             document.getElementById('nome_remessa').value = "";
             document.querySelectorAll('input[type="number"]').forEach(input => input.value = "0");
-
-            document.getElementById('btn_principal').innerText = "Registrar Produção";
+            document.getElementById('btn_principal').innerText = "Registrar Production";
             document.getElementById('btn_principal').style.background = "#1e40af";
             document.getElementById('btn_cancelar').style.display = "none";
         }
 
         async function excluirRemessa(id) {
             if(!confirm("Tem certeza que deseja excluir este registro definitivamente?")) return;
-            
             try {
-                const resposta = await fetch(`/api/deletar-lote/${id}`, {
-                    method: 'DELETE'
-                });
-
-                if (resposta.ok) {
-                    carregarHistorico(); 
-                } else {
-                    const resultado = await resposta.json();
-                    alert("Erro ao excluir: " + resultado.mensagem);
-                }
-            } catch (erro) {
-                alert("Erro de ligação com o servidor.");
-            }
+                const resposta = await fetch(`/api/deletar-lote/${id}`, { method: 'DELETE' });
+                if (resposta.ok) { carregarHistorico(); }
+            } catch (erro) { alert("Erro de ligação."); }
         }
 
         async function registrarLote() {
@@ -390,10 +406,7 @@
                 pagamentos_parciais: document.getElementById('pagamentos_parciais').value
             };
 
-            if(!dados.nome_remessa) { 
-                alert("Por favor, introduza o número/nome da remessa."); 
-                return; 
-            }
+            if(!dados.nome_remessa) { alert("Introduza a remessa."); return; }
 
             const url = idSendoEditado ? `/api/atualizar-lote/${idSendoEditado}` : '/api/salvar-lote';
             const metodo = idSendoEditado ? 'PUT' : 'POST';
@@ -405,18 +418,12 @@
                     body: JSON.stringify(dados)
                 });
 
-                const resultado = await resposta.json();
-
                 if (resposta.ok) {
-                    alert(`Sucesso! Remessa ${idSendoEditado ? 'atualizada' : 'registrada'}. Total: ${resultado.pontos} pontos.`);
-                    cancelarEdicao(); 
-                    carregarHistorico(); 
-                } else {
-                    alert("Erro ao salvar: " + resultado.mensagem);
+                    alert("Sucesso!");
+                    cancelarEdicao();
+                    carregarHistorico();
                 }
-            } catch (erro) {
-                alert("Erro de ligação com o servidor.");
-            }
+            } catch (erro) { alert("Erro ao salvar."); }
         }
     </script>
 </body>
