@@ -9,7 +9,6 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-            /* Gradiente fluido e escuro, sem contrastes exagerados */
             background: linear-gradient(135deg, #060814 0%, #0b112c 50%, #050716 100%); 
             color: #ffffff; 
             font-family: 'Urbanist', sans-serif; 
@@ -34,7 +33,7 @@
             margin-bottom: 50px;
         }
         .logo-icon {
-            background: #1e40af; /* Azul Royal corporativo */
+            background: #1e40af; 
             color: #fff;
             width: 40px;
             height: 40px;
@@ -85,7 +84,7 @@
             gap: 30px;
         }
 
-        /* CARD ESTILO VIDRO (GLASSMORPHISM) */
+        /* CARD ESTILO VIDRO */
         .glass-card { 
             background: rgba(10, 15, 36, 0.7); 
             border: 1px solid rgba(255, 255, 255, 0.08); 
@@ -102,7 +101,6 @@
         .field-group { margin-bottom: 18px; }
         label { display: block; color: #ffffff; font-size: 13px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         
-        /* INPUTS INTEGRADOS */
         input { 
             background: rgba(5, 7, 20, 0.8); 
             border: 1px solid rgba(255, 255, 255, 0.1); 
@@ -117,7 +115,6 @@
         input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
         .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
-        /* BOTÃO AZUL ROYAL SÓLIDO */
         .btn-submit { 
             background: #1e40af; 
             border: none; 
@@ -137,7 +134,7 @@
         .btn-submit:hover { background: #1d4ed8; transform: translateY(-1px); }
         .divider { border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 30px 0 25px 0; padding-top: 20px; }
 
-        /* TABELA DE HISTÓRICO (ABRINDO A CAIXA PRETA) */
+        /* TABELA DE HISTÓRICO */
         .table-title { font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
         .table-container { width: 100%; overflow-x: auto; margin-top: 10px; }
         .glass-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 15px; }
@@ -163,10 +160,7 @@
             <li class="menu-item active"><i class="fa-solid fa-file-invoice-dollar"></i> Remessas Pagas</li>
             <li class="menu-item"><i class="fa-solid fa-list-check"></i> Outros Registros</li>
             <li class="menu-item"><i class="fa-solid fa-triangle-exclamation"></i> Particularidades</li>
-       <div id="area_botoes" style="display: flex; gap: 15px; margin-top: 15px;">
-                <button class="btn-submit" id="btn_principal" onclick="registrarLote()">Registrar Produção</button>
-                <button class="btn-submit" id="btn_cancelar" onclick="cancelarEdicao()" style="background: rgba(255,255,255,0.1); color: #fff; display: none;">Cancelar</button>
-            </div>
+        </ul>
 
         <div style="margin-top: auto; color: #475569; font-size: 12px; text-align: center;">
             <i class="fa-solid fa-user-shield"></i> Modo Administrador
@@ -219,7 +213,10 @@
                 </div>
             </div>
 
-            <button class="btn-submit" onclick="registrarLote()">Registrar Produção</button>
+            <div id="area_botoes" style="display: flex; gap: 15px; margin-top: 15px;">
+                <button class="btn-submit" id="btn_principal" onclick="registrarLote()">Registrar Produção</button>
+                <button class="btn-submit" id="btn_cancelar" onclick="cancelarEdicao()" style="background: rgba(255,255,255,0.1); color: #fff; display: none;">Cancelar</button>
+            </div>
         </div>
 
         <div class="glass-card" style="padding: 30px;">
@@ -239,7 +236,7 @@
                         </tr>
                     </thead>
                     <tbody id="corpo_tabela_historico">
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -247,95 +244,6 @@
     </main>
 
     <script>
-        // Data atual por padrão no carregamento
-        document.getElementById('data_pagamento').valueAsDate = new Date();
-
-        // Executa ao abrir a página para ler o histórico existente
-        window.onload = function() {
-            carregarHistorico();
-        };
-
-        // Função para buscar dados da Caixa Preta (API GET)
-        async function carregarHistorico() {
-            try {
-                const resposta = await fetch('/api/listar-remessas');
-                const remessas = await resposta.json();
-                
-                const tabelaBody = document.getElementById('corpo_tabela_historico');
-                tabelaBody.innerHTML = ""; // Limpa a tabela
-
-                if (remessas.length === 0) {
-                    tabelaBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #475569; padding: 20px;">Nenhum registo encontrado nesta aba.</td></tr>`;
-                    return;
-                }
-
-                remessas.forEach(remessa => {
-                    // Formata a data de AAAA-MM-DD para DD/MM/AAAA
-                    const dataFormatada = remessa.data_pagamento.split('-').reverse().join('/');
-                    
-                    const linhaHtml = `
-                        <tr>
-                            <td>${dataFormatada}</td>
-                            <td style="font-weight: 600;">${remessa.nome_remessa}</td>
-                            <td>${remessa.qtd_fornecedores}</td>
-                            <td>${remessa.qtd_processos}</td>
-                            <td><span class="badge-pontos">${remessa.pontuacao_total} pts</span></td>
-                            <td>
-                                <button class="btn-action" title="Análise detalhada/Editar"><i class="fa-solid fa-pen-to-square"></i></button>
-                            </td>
-                        </tr>
-                    `;
-                    tabelaBody.innerHTML += linhaHtml;
-                });
-            } catch (erro) {
-                console.error("Erro ao carregar histórico:", erro);
-            }
-        }
-
-        // Função para submeter e salvar lote (API POST)
-        async function registrarLote() {
-            const dados = {
-                data_pagamento: document.getElementById('data_pagamento').value,
-                nome_remessa: document.getElementById('nome_remessa').value,
-                qtd_fornecedores: document.getElementById('qtd_fornecedores').value,
-                qtd_processos: document.getElementById('qtd_processos').value,
-                qtd_contratos: document.getElementById('qtd_contratos').value,
-                certidoes_renovadas: document.getElementById('certidoes_renovadas').value,
-                pagamentos_parciais: document.getElementById('pagamentos_parciais').value
-            };
-
-            if(!dados.nome_remessa) { 
-                alert("Por favor, introduza o número/nome da remessa."); 
-                return; 
-            }
-
-            try {
-                const resposta = await fetch('/api/salvar-lote', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dados)
-                });
-
-                const resultado = await resposta.json();
-
-                if (resposta.ok) {
-                    alert(`Sucesso! A remessa gerou ${resultado.pontos} pontos.`);
-                    
-                    // Limpa os campos numéricos para a próxima entrada
-                    document.querySelectorAll('input[type="number"]').forEach(input => input.value = "0");
-                    document.getElementById('nome_remessa').value = "";
-                    
-                    // Atualiza a tabela do histórico imediatamente sem recarregar a página toda
-                    carregarHistorico();
-                } else {
-                    alert("Erro ao salvar: " + resultado.mensagem);
-                }
-            } catch (erro) {
-                alert("Erro de ligação com o servidor.");
-            }
-        }
-    <script>
-        // Variáveis globais para controlar a edição
         let historicoRemessas = [];
         let idSendoEditado = null;
 
@@ -381,7 +289,6 @@
             }
         }
 
-        // Função que joga os dados da tabela de volta para o formulário
         function prepararEdicao(id) {
             const remessa = historicoRemessas.find(r => r.id === id);
             if (!remessa) return;
@@ -396,24 +303,20 @@
             document.getElementById('certidoes_renovadas').value = remessa.certidoes_renovadas;
             document.getElementById('pagamentos_parciais').value = remessa.pagamentos_parciais;
 
-            // Muda o visual dos botões
             document.getElementById('btn_principal').innerText = "Atualizar Registro";
-            document.getElementById('btn_principal').style.background = "#10b981"; // Muda para verde para indicar edição
+            document.getElementById('btn_principal').style.background = "#10b981"; 
             document.getElementById('btn_cancelar').style.display = "block";
 
-            // Rola a tela suavemente para o topo
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function cancelarEdicao() {
             idSendoEditado = null;
             
-            // Limpa o formulário
             document.getElementById('data_pagamento').valueAsDate = new Date();
             document.getElementById('nome_remessa').value = "";
             document.querySelectorAll('input[type="number"]').forEach(input => input.value = "0");
 
-            // Volta os botões ao normal
             document.getElementById('btn_principal').innerText = "Registrar Produção";
             document.getElementById('btn_principal').style.background = "#1e40af";
             document.getElementById('btn_cancelar').style.display = "none";
@@ -435,7 +338,6 @@
                 return; 
             }
 
-            // Decide se vai criar (POST) ou atualizar (PUT) baseado no ID
             const url = idSendoEditado ? `/api/atualizar-lote/${idSendoEditado}` : '/api/salvar-lote';
             const metodo = idSendoEditado ? 'PUT' : 'POST';
 
@@ -450,8 +352,8 @@
 
                 if (resposta.ok) {
                     alert(`Sucesso! Remessa ${idSendoEditado ? 'atualizada' : 'registrada'}. Total: ${resultado.pontos} pontos.`);
-                    cancelarEdicao(); // Limpa tudo e reseta botões
-                    carregarHistorico(); // Atualiza a tabela
+                    cancelarEdicao(); 
+                    carregarHistorico(); 
                 } else {
                     alert("Erro ao salvar: " + resultado.mensagem);
                 }
