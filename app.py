@@ -34,14 +34,11 @@ def calcular_esforco(processos, contratos, certidoes, parciais):
 def index():
     return render_template('index.html')
 
-# ROTA: Buscar métricas consolidadas para o Dashboard
 @app.route('/api/metricas-dashboard', methods=['GET'])
 def metricas_dashboard():
     try:
         conexao = sqlite3.connect(NOME_BANCO)
         cursor = conexao.cursor()
-        
-        # Soma a pontuação total e a quantidade de processos de todos os lançamentos
         cursor.execute('''
             SELECT 
                 TOTAL(pontuacao_total), 
@@ -53,9 +50,9 @@ def metricas_dashboard():
         conexao.close()
         
         return jsonify({
-            "pontos_totais": int(resultado[0]),
-            "processos_totais": int(resultado[1]),
-            "total_remessas": int(resultado[2])
+            "pontos_totais": int(resultado[0]) if resultado[0] else 0,
+            "processos_totais": int(resultado[1]) if resultado[1] else 0,
+            "total_remessas": int(resultado[2]) if resultado[2] else 0
         }), 200
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 500
@@ -112,12 +109,12 @@ def listar_remessas():
             resultado.append({
                 "id": linha["id"],
                 "data_pagamento": linha["data_pagamento"],
-                "nome_remessa": inline_value if (inline_value := linha["nome_remessa"]) is not None else "",
+                "nome_remessa": linha["nome_remessa"] if linha["nome_remessa"] is not None else "",
                 "qtd_fornecedores": linha["qtd_fornecedores"],
                 "qtd_processos": linha["qtd_processos"],
                 "qtd_contratos": linha["qtd_contratos"],
-                "certidoes_renovadas": inline_value if (inline_value := linha["certidoes_renovadas"]) is not None else 0,
-                "pagamentos_parciais": inline_value if (inline_value := linha["pagamentos_parciais"]) is not None else 0,
+                "certidoes_renovadas": linha["certidoes_renovadas"] if linha["certidoes_renovadas"] is not None else 0,
+                "pagamentos_parciais": linha["pagamentos_parciais"] if linha["pagamentos_parciais"] is not None else 0,
                 "pontuacao_total": linha["pontuacao_total"]
             })
         conexao.close()
