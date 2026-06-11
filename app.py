@@ -32,6 +32,7 @@ def calcular_esforco(processos, contratos, certidoes, parciais):
 def index():
     return render_template('index.html')
 
+# ROTA 1: Salvar Lote
 @app.route('/api/salvar-lote', methods=['POST'])
 def salvar_lote_remessa():
     dados = request.json
@@ -62,9 +63,38 @@ def salvar_lote_remessa():
         conexao.close()
 
         return jsonify({"status": "sucesso", "pontos": pontuacao_final}), 201
-
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 400
+
+# ROTA 2: Abrir a Caixa Preta (Listar Histórico)
+@app.route('/api/listar-remessas', methods=['GET'])
+def listar_remessas():
+    try:
+        conexao = sqlite3.connect(NOME_BANCO)
+        conexao.row_factory = sqlite3.Row  # Permite mapear colunas pelo nome
+        cursor = conexao.cursor()
+        # Traz os registos mais recentes primeiro
+        cursor.execute('SELECT * FROM lancamentos_remessas ORDER BY id DESC')
+        linhas = cursor.fetchall()
+        
+        resultado = []
+        for linha in linhas:
+            resultado.append({
+                "id": linha["id"],
+                "data_pagamento": linha["data_pagamento"],
+                "nome_remessa": linha["nome_remessa"],
+                "qtd_fornecedores": linha["qtd_fornecedores"],
+                "qtd_processos": linha["qtd_processos"],
+                "qtd_contratos": linha["qtd_contratos"],
+                "certidoes_renovadas": linha["certidoes_renovadas"],
+                "pagamentos_parciais": linha["pagamentos_parciais"],
+                "pontuacao_total": linha["pontuacao_total"]
+            })
+        
+        conexao.close()
+        return jsonify(resultado), 200
+    except Exception as e:
+        return jsonify({"status": "erro", "mensagem": str(e)}), 500
 
 if __name__ == '__main__':
     inicializar_banco_dados()
