@@ -100,5 +100,40 @@ def listar_remessas():
         return jsonify({"status": "erro", "mensagem": str(e)}), 500
 
 if __name__ == '__main__':
+    # ROTA 3: Atualizar Lote (Edição)
+@app.route('/api/atualizar-lote/<int:id_remessa>', methods=['PUT'])
+def atualizar_lote_remessa(id_remessa):
+    dados = request.json
+    try:
+        data_pagamento = dados.get('data_pagamento')
+        nome_remessa = dados.get('nome_remessa')
+        qtd_fornecedores = int(dados.get('qtd_fornecedores', 0))
+        qtd_processos = int(dados.get('qtd_processos', 0))
+        qtd_contratos = int(dados.get('qtd_contratos', 0))
+        certidoes_renovadas = int(dados.get('certidoes_renovadas', 0))
+        pagamentos_parciais = int(dados.get('pagamentos_parciais', 0))
+
+        pontuacao_final = calcular_esforco(
+            qtd_processos, qtd_contratos, certidoes_renovadas, pagamentos_parciais
+        )
+
+        conexao = sqlite3.connect(NOME_BANCO)
+        cursor = conexao.cursor()
+        cursor.execute('''
+            UPDATE lancamentos_remessas 
+            SET data_pagamento = ?, nome_remessa = ?, qtd_fornecedores = ?, 
+                qtd_processos = ?, qtd_contratos = ?, certidoes_renovadas = ?, 
+                pagamentos_parciais = ?, pontuacao_total = ?
+            WHERE id = ?
+        ''', (data_pagamento, nome_remessa, qtd_fornecedores, qtd_processos, 
+              qtd_contratos, certidoes_renovadas, pagamentos_parciais, pontuacao_final, id_remessa))
+        
+        conexao.commit()
+        conexao.close()
+
+        return jsonify({"status": "sucesso", "pontos": pontuacao_final}), 200
+
+    except Exception as e:
+        return jsonify({"status": "erro", "mensagem": str(e)}), 400
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
