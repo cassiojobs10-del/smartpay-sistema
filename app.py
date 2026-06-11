@@ -25,6 +25,11 @@ def inicializar_banco_dados():
     conexao.commit()
     conexao.close()
 
+# A SOLUÇÃO ESTÁ AQUI:
+# Chamamos a função logo na raiz do código. Assim, o Gunicorn do Render 
+# é forçado a criar o banco de dados antes de processar qualquer coisa.
+inicializar_banco_dados()
+
 def calcular_esforco(processos, contratos, certidoes, parciais):
     return (processos * 1) + (contratos * 2) + (certidoes * 1) + (parciais * 2)
 
@@ -32,7 +37,6 @@ def calcular_esforco(processos, contratos, certidoes, parciais):
 def index():
     return render_template('index.html')
 
-# ROTA 1: Salvar Lote
 @app.route('/api/salvar-lote', methods=['POST'])
 def salvar_lote_remessa():
     dados = request.json
@@ -63,17 +67,16 @@ def salvar_lote_remessa():
         conexao.close()
 
         return jsonify({"status": "sucesso", "pontos": pontuacao_final}), 201
+
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 400
 
-# ROTA 2: Abrir a Caixa Preta (Listar Histórico)
 @app.route('/api/listar-remessas', methods=['GET'])
 def listar_remessas():
     try:
         conexao = sqlite3.connect(NOME_BANCO)
-        conexao.row_factory = sqlite3.Row  # Permite mapear colunas pelo nome
+        conexao.row_factory = sqlite3.Row  
         cursor = conexao.cursor()
-        # Traz os registos mais recentes primeiro
         cursor.execute('SELECT * FROM lancamentos_remessas ORDER BY id DESC')
         linhas = cursor.fetchall()
         
@@ -97,6 +100,5 @@ def listar_remessas():
         return jsonify({"status": "erro", "mensagem": str(e)}), 500
 
 if __name__ == '__main__':
-    inicializar_banco_dados()
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
