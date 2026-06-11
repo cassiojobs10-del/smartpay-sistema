@@ -3,114 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerência Financeira - Controle de Remessas</title>
-    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Gerência Financeira - Painel Individual (Vortasky)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-            background: linear-gradient(135deg, #060814 0%, #0b112c 50%, #050716 100%); 
+            /* Fundo gradiente de roxo profundo a preto (paleta Vortasky) */
+            background: linear-gradient(135deg, #0a0f24 0%, #04060d 100%); 
             color: #ffffff; 
-            font-family: 'Urbanist', sans-serif; 
+            font-family: 'Montserrat', sans-serif; 
             display: flex; 
             height: 100vh;
             overflow: hidden;
         }
 
+        /* MENU LATERAL ESCURO (vortasky ai) */
         .sidebar {
             width: 280px;
-            background: rgba(6, 9, 22, 0.85);
+            background: #0d1117;
             border-right: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             flex-direction: column;
             padding: 30px 20px;
             flex-shrink: 0;
         }
-        .logo-area { display: flex; align-items: center; gap: 15px; margin-bottom: 50px; }
-        .logo-icon {
-            background: #1e40af; color: #fff; width: 40px; height: 40px;
-            border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;
+        .logo-area { display: flex; align-items: center; gap: 10px; margin-bottom: 50px; }
+        .logo-text { font-size: 16px; font-weight: 800; color: #ffffff; text-transform: lowercase; }
+        
+        /* Ícone deWallet (Vortasky) */
+        .logo-icon-wallet { 
+            background: rgba(160, 137, 230, 0.1); color: #a089e6; width: 32px; height: 32px;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;
         }
-        .logo-text { font-size: 18px; font-weight: 800; line-height: 1.2; color: #ffffff; }
-        .menu-title { color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; padding-left: 10px; }
+
+        .menu-title { color: #475569; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; padding-left: 10px; }
         .menu-items { list-style: none; display: flex; flex-direction: column; gap: 5px; }
         
         .menu-item {
-            display: flex; align-items: center; gap: 15px; padding: 15px;
+            display: flex; align-items: center; gap: 15px; padding: 14px 15px;
             border-radius: 10px; color: #94a3b8; text-decoration: none;
-            font-weight: 600; transition: all 0.2s; cursor: pointer;
+            font-weight: 600; font-size: 14px; transition: all 0.2s; cursor: pointer;
         }
+        .menu-item i { width: 18px; text-align: center; }
         .menu-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
-        .menu-item.active { background: #1e40af; color: #fff; box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3); }
+        
+        /* Lilás Vortasky para o item ativo */
+        .menu-item.active { background: rgba(160, 137, 230, 0.08); color: #a089e6; font-weight: 700; }
+        
+        /* Ponto brilhante do Vortasky */
+        .menu-item.active::before {
+            content: ''; position: absolute; left: 0; width: 4px; height: 16px; background: #a089e6;
+            border-radius: 0 4px 4px 0;
+        }
 
+        /* PERFIL DO COLABORADOR NO FIM (vortasky ai style) */
         .profile-box {
             margin-top: auto;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            display: flex; align-items: center; gap: 12px;
             background: rgba(255, 255, 255, 0.03);
-            padding: 15px;
-            border-radius: 12px;
+            padding: 15px; border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.06);
         }
         .profile-avatar {
-            background: #1e40af; width: 40px; height: 40px;
+            background: #2c303d; width: 38px; height: 38px;
             border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; font-weight: 700; color: #ffffff;
-            font-size: 16px; border: 1px solid rgba(255, 255, 255, 0.1);
+            justify-content: center; font-weight: 700; color: #a089e6;
+            font-size: 15px; border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        .profile-info { line-height: 1.3; }
 
+        /* PAINEL CENTRAL CONTEÚDO (GLASSMORPHISM) */
         .main-content {
-            flex-grow: 1; padding: 40px 50px; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 30px;
+            flex-grow: 1; padding: 30px 40px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 20px;
         }
 
+        /* Cabeçalho superior com brilho e botão unificado */
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        
+        .header-title-box { display: flex; align-items: center; gap: 10px; }
+        
+        .header-brilliant {
+            background: rgba(160, 137, 230, 0.1); color: #a089e6; width: 32px; height: 32px;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;
+        }
+        
+        .header-title { font-size: 24px; font-weight: 800; color: #ffffff; margin: 0; }
+        
+        /* Botão Recarregar (Vortasky style, em roxo profundo sólido) */
+        .btn-reload {
+            background: #271a58; border: none; border-radius: 8px; color: #ffffff;
+            font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+            padding: 10px 18px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+        }
+        .btn-reload i { color: #a089e6; }
+        .btn-reload:hover { background: #3c2a8a; }
+
+        .status-line { color: #94a3b8; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #a089e6; }
+
+        /* GRANDE CARD UNIFICADO (Preenche toda a largura, sem limitação de 850px) */
         .glass-card { 
-            background: rgba(10, 15, 36, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); 
+            background: rgba(16, 18, 35, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); 
             backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border-radius: 16px; padding: 40px; width: 100%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); 
+            border-radius: 16px; padding: 40px; width: 100%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); 
         }
         
-        h1 { margin-top: 0; color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
-        .field-group { margin-bottom: 18px; width: 100%; }
-        label { display: block; color: #ffffff; font-size: 13px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        /* Cabeçalho Interno do Card */
+        .card-header-internal { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; gap: 30px; width: 100%; }
         
-        input { 
-            background: rgba(5, 7, 20, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); 
-            border-radius: 8px; color: #ffffff; padding: 14px; width: 100%; 
-            font-family: 'Urbanist', sans-serif; font-size: 16px; transition: all 0.3s;
+        .card-title-box { flex-grow: 1; }
+        .internal-title { margin-top: 0; color: #ffffff; font-size: 24px; font-weight: 800; }
+        .internal-subtitle { color: #94a3b8; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Controles unificados no canto direito */
+        .unified-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; width: auto; flex-shrink: 0; }
+        
+        /* Botões de Período (Roxo sólido limpo, como Gemini) */
+        .period-buttons { display: flex; gap: 5px; }
+        
+        .btn-period { 
+            background: rgba(255, 255, 255, 0.05); border: none; border-radius: 6px; color: #94a3b8; 
+            padding: 8px 15px; cursor: pointer; font-weight: 700; font-size: 12px; text-transform: uppercase; transition: all 0.2s;
         }
-        .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
-        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; margin-top: 10px; }
+        .btn-period.active { background: rgba(160, 137, 230, 0.1); color: #a089e6; border: 1px solid rgba(160, 137, 230, 0.2); }
+        .btn-period:hover:not(.active) { background: rgba(255, 255, 255, 0.08); color: #ffffff; }
+
+        /* Seletores de Data (Cinza escuro sólido) */
+        .date-selectors { display: flex; gap: 5px; }
+        
+        .date-input-box { position: relative; display: flex; align-items: center; width: 130px; }
+        .date-input-box input { 
+            background: rgba(44, 48, 61, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); 
+            border-radius: 6px; color: #ffffff; padding: 8px 10px 8px 30px; width: 100%; 
+            font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+        
+        .date-input-box i { position: absolute; left: 10px; color: #a089e6; font-size: 14px; pointer-events: none; }
+        .date-input-box label { display: none; } /* Label escondido, mas presente no HTML */
+
+        /* ESTILO DOS CARDS INDICADORES DO DASHBOARD */
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; }
+        
         .metric-card {
             background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 12px; padding: 25px; display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
-        .metric-number { font-size: 36px; font-weight: 800; color: #ffffff; margin-top: 5px; }
-        .metric-icon { width: 50px; height: 50px; border-radius: 10px; background: rgba(30, 64, 175, 0.2); color: #60a5fa; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        
+        .metric-label { display: block; color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+        .metric-number { font-size: 32px; font-weight: 800; color: #ffffff; margin: 0; }
+        
+        /* Ícone de Glass (vortasky ai) */
+        .metric-icon-glass { 
+            width: 50px; height: 50px; border-radius: 10px; 
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            color: #a089e6; display: flex; align-items: center; justify-content: center; font-size: 20px; 
+        }
+
+        /* GAVETA DE REMESSAS PAGAS (Inalterado, apenas consolidado) */
+        #aba_remessas_view { display: none; flex-direction: column; gap: 20px; width: 100%; }
+        
+        .divider { border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 25px 0; padding-top: 20px; }
+        
+        input:not([type="date"]), select { 
+            background: rgba(44, 48, 61, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); 
+            border-radius: 6px; color: #ffffff; padding: 12px; width: 100%; font-family: 'Montserrat', sans-serif; font-size: 14px; 
+        }
+        
+        label:not(.metric-label) { display: block; color: #ffffff; font-size: 11px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .btn-submit { 
-            background: #1e40af; border: none; border-radius: 8px; color: #ffffff; 
-            cursor: pointer; font-weight: 700; margin-top: 15px; padding: 18px; 
-            width: 100%; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s;
+            background: #1e40af; border: none; border-radius: 6px; color: #ffffff; 
+            cursor: pointer; font-weight: 700; padding: 16px; 
+            width: 100%; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s;
         }
         .btn-submit:hover { background: #1d4ed8; transform: translateY(-1px); }
-        .divider { border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 30px 0 25px 0; padding-top: 20px; }
 
-        .table-title { font-size: 20px; font-weight: 700; color: #ffffff; display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
-        .table-container { width: 100%; overflow-x: auto; margin-top: 10px; }
-        .glass-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 15px; }
-        .glass-table th { padding: 14px; color: #94a3b8; font-weight: 700; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-        .glass-table td { padding: 14px; color: #ffffff; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .badge-pontos { background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 14px; border: 1px solid rgba(59, 130, 246, 0.2); }
-        .btn-action { color: #94a3b8; background: none; border: none; cursor: pointer; font-size: 14px; }
+        .table-title { font-size: 18px; font-weight: 700; color: #ffffff; display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; }
+        .table-container { width: 100%; overflow-x: auto; margin-top: 5px; }
+        .glass-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        .glass-table th { padding: 12px; color: #94a3b8; font-weight: 700; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-table td { padding: 12px; color: #ffffff; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .badge-pontos { background: rgba(160, 137, 230, 0.1); color: #a089e6; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 12px; }
+        .btn-action { color: #94a3b8; background: none; border: none; cursor: pointer; font-size: 13px; }
         .btn-delete:hover { color: #ef4444 !important; }
 
         @media (max-width: 1024px) {
             .row-grid { grid-template-columns: 1fr; gap: 10px; }
-            .table-title { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .periods-grid { grid-template-columns: 1fr; gap: 10px; }
+            .period-input-box { width: 100%; }
         }
     </style>
 </head>
@@ -118,7 +203,7 @@
 
     <nav class="sidebar">
         <div class="logo-area">
-            <div class="logo-icon"><i class="fa-solid fa-wallet"></i></div>
+            <div class="logo-icon-wallet"><i class="fa-solid fa-wallet"></i></div>
             <div class="logo-text">Gerência<br>Financeira</div>
         </div>
 
@@ -141,43 +226,90 @@
 
     <main class="main-content">
         
+        <div class="header-top">
+            <div class="header-title-box">
+                <div class="header-brilliant"><i class="fa-solid fa-gem"></i></div>
+                <h1 class="header-title">Painel de Produtividade Individual</h1>
+            </div>
+            <button class="btn-reload" onclick="recarregarPagina()"><i class="fa-solid fa-rotate"></i> Recarregar Tudo</button>
+        </div>
+        
+        <div class="status-line">
+            <div class="status-dot"></div>
+            <span id="status_timestamp">ESTADO: ATUALIZADO 10:14</span>
+        </div>
+
         <section id="aba_dashboard_view">
             <div class="glass-card">
-                <h1>Painel de Produtividade Individual</h1>
-                <p style="color: #94a3b8; margin-bottom: 30px; font-size: 15px;">Métricas exclusivas de monitoramento de desempenho.</p>
+                
+                <div class="card-header-internal">
+                    <div class="card-title-box">
+                        <h2 class="internal-title">CONTROLE GERENCIAL</h2>
+                        <span class="internal-subtitle">MÉTRICAS UNIFICADAS DE DESEMPENHO</span>
+                    </div>
+
+                    <div class="unified-controls">
+                        <div class="period-buttons">
+                            <button class="btn-period" id="period_hoje" onclick="setPeriodo('hoje')">HOJE</button>
+                            <button class="btn-period active" id="period_semanal" onclick="setPeriodo('semanal')">SEMANAL</button>
+                            <button class="btn-period" id="period_mensal" onclick="setPeriodo('mensal')">MENSAL</button>
+                        </div>
+                        
+                        <div class="date-selectors">
+                            <div class="date-input-box">
+                                <i class="fa-regular fa-calendar-days"></i>
+                                <label for="date_from">De</label>
+                                <input type="date" id="date_from" value="2026-06-04" onclick="this.showPicker()">
+                            </div>
+                            <div class="date-input-box">
+                                <i class="fa-regular fa-calendar-days"></i>
+                                <label for="date_to">Até</label>
+                                <input type="date" id="date_to" value="2026-06-11" onclick="this.showPicker()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="metrics-grid">
                     <div class="metric-card">
                         <div>
-                            <label style="color: #94a3b8; font-size: 12px;">Pontos de Esforço Guardados</label>
+                            <label class="metric-label">Pontos de Esforço Guardados</label>
                             <div class="metric-number" id="dash_pontos">0</div>
                         </div>
-                        <div class="metric-icon"><i class="fa-solid fa-bolt"></i></div>
+                        <div class="metric-icon-glass"><i class="fa-solid fa-bolt"></i></div>
                     </div>
                     
                     <div class="metric-card">
                         <div>
-                            <label style="color: #94a3b8; font-size: 12px;">Processos Concluídos</label>
+                            <label class="metric-label">Processos Concluídos</label>
                             <div class="metric-number" id="dash_processos">0</div>
                         </div>
-                        <div class="metric-icon"><i class="fa-solid fa-folder-check"></i></div>
+                        <div class="metric-icon-glass"><i class="fa-solid fa-folder-check"></i></div>
                     </div>
 
                     <div class="metric-card">
                         <div>
-                            <label style="color: #94a3b8; font-size: 12px;">Remessas Auditadas</label>
+                            <label class="metric-label">Remessas Auditadas</label>
                             <div class="metric-number" id="dash_remessas">0</div>
                         </div>
-                        <div class="metric-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                        <div class="metric-icon-glass"><i class="fa-solid fa-file-invoice-dollar"></i></div>
                     </div>
                 </div>
+                
+                <p style="color: #94a3b8; font-size: 13px; text-align: center; margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                    Este é o seu painel individual. Lançamentos de outros analistas não são contabilizados aqui.
+                </p>
             </div>
         </section>
 
-        <section id="aba_remessas_view" style="display: none; flex-direction: column; gap: 30px; width: 100%;">
+        <section id="aba_remessas_view">
             <div class="glass-card">
-                <h1>Controle de Remessas</h1>
-                <p style="color: #94a3b8; margin-bottom: 30px; font-size: 15px;">Registro analítico de pagamentos de fornecedores e médicos.</p>
+                <div class="card-header-internal">
+                    <div class="card-title-box">
+                        <h2 class="internal-title">REGISTRO DE REMESSAS</h2>
+                        <span class="internal-subtitle">LANÇAMENTO ANALÍTICO DE LOTE</span>
+                    </div>
+                </div>
 
                 <div class="row-grid">
                     <div class="field-group">
@@ -202,20 +334,20 @@
                 </div>
 
                 <div class="divider">
-                    <p style="color: #60a5fa; font-weight: 700; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px;">Detalhamento da Remessa</p>
-                    <div class="field-group">
-                        <label>Processos de Contrato</label>
-                        <input type="number" id="qtd_contratos" value="0" min="0">
-                    </div>
+                    <p style="color: #a089e6; font-weight: 700; margin-top: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px;">Detalhamento de Esforço Adicional</p>
                     <div class="row-grid">
+                        <div class="field-group">
+                            <label>Processos de Contrato</label>
+                            <input type="number" id="qtd_contratos" value="0" min="0">
+                        </div>
                         <div class="field-group">
                             <label>Certidões Renovadas</label>
                             <input type="number" id="certidoes_renovadas" value="0" min="0">
                         </div>
-                        <div class="field-group">
-                            <label>Pagamentos Parciais</label>
-                            <input type="number" id="pagamentos_parciais" value="0" min="0">
-                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>Pagamentos Parciais</label>
+                        <input type="number" id="pagamentos_parciais" value="0" min="0">
                     </div>
                 </div>
 
@@ -232,7 +364,10 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px; font-size: 14px;">
                         <label for="filtro_data" style="margin-bottom: 0; color: #94a3b8; font-weight: 600; text-transform: none;">Filtrar por dia:</label>
-                        <input type="date" id="filtro_data" onchange="carregarHistorico()" onclick="this.showPicker()" style="padding: 8px; font-size: 14px; width: auto; background: rgba(5, 7, 20, 0.8);">
+                        <div class="date-input-box" style="width: auto; background: rgba(44, 48, 61, 0.8);">
+                            <i class="fa-regular fa-calendar-days"></i>
+                            <input type="date" id="filtro_data" onchange="carregarHistorico()" onclick="this.showPicker()" style="padding: 8px 10px 8px 30px; font-size: 13px;">
+                        </div>
                         <button class="btn-action" onclick="limparFiltro()" title="Limpar Filtro" style="padding: 8px; background: rgba(255,255,255,0.1); border-radius: 6px;"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 </div>
@@ -261,13 +396,30 @@
         let historicoRemessas = [];
         let idSendoEditado = null;
 
-        document.getElementById('data_pagamento').valueAsDate = new Date();
+        // Data atual por padrão nos seletores de data
+        const dateInput = document.getElementById('data_pagamento');
+        if(dateInput) dateInput.valueAsDate = new Date();
 
         window.onload = function() {
             carregarMetricasDashboard();
             carregarHistorico();
+            atualizarTimestampStatus();
         };
 
+        // Função para recarregar a página toda (Vortasky)
+        function recarregarPagina() {
+            window.location.reload();
+        }
+
+        // Função para atualizar o timestamp do status no topo
+        function atualizarTimestampStatus() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('status_timestamp').innerText = `ESTADO: ATUALIZADO ${hours}:${minutes}`;
+        }
+
+        // Alternar visualização entre Dashboard e Lançamento de Remessas
         function alternarAba(aba) {
             const menuDash = document.getElementById('menu_dashboard');
             const menuRemessas = document.getElementById('menu_remessas');
@@ -287,8 +439,24 @@
                 viewRemessas.style.display = 'flex';
                 carregarHistorico();
             }
+            atualizarTimestampStatus();
         }
 
+        // Simulação da Função de definir período (Será ligado ao backend depois)
+        function setPeriodo(periodo) {
+            const btnHoje = document.getElementById('period_hoje');
+            const btnSemanal = document.getElementById('period_semanal');
+            const btnMensal = document.getElementById('period_mensal');
+            
+            [btnHoje, btnSemanal, btnMensal].forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`period_${periodo}`).classList.add('active');
+            
+            // Lógica para backend irá aqui futuramente para filtrar por datas pré-definidas
+            console.log(`Definindo período para: ${periodo}`);
+            atualizarTimestampStatus();
+        }
+
+        // Busca dados reais acumulados para o Dashboard
         async function carregarMetricasDashboard() {
             try {
                 const resposta = await fetch('/api/metricas-dashboard');
@@ -304,7 +472,8 @@
 
         async function carregarHistorico() {
             try {
-                const dataFiltro = document.getElementById('filtro_data').value;
+                const dataFiltroInput = document.getElementById('filtro_data');
+                const dataFiltro = dataFiltroInput ? dataFiltroInput.value : '';
                 const url = dataFiltro ? `/api/listar-remessas?data=${dataFiltro}` : '/api/listar-remessas';
                 
                 const resposta = await fetch(url);
@@ -345,7 +514,8 @@
         }
 
         function limparFiltro() {
-            document.getElementById('filtro_data').value = "";
+            const dataFiltroInput = document.getElementById('filtro_data');
+            if(dataFiltroInput) dataFiltroInput.value = "";
             carregarHistorico();
         }
 
@@ -355,71 +525,4 @@
 
             idSendoEditado = id;
             
-            document.getElementById('data_pagamento').value = remessa.data_pagamento;
-            document.getElementById('nome_remessa').value = remessa.nome_remessa;
-            document.getElementById('qtd_fornecedores').value = remessa.qtd_fornecedores;
-            document.getElementById('qtd_processos').value = remessa.qtd_processos;
-            document.getElementById('qtd_contratos').value = remessa.qtd_contratos;
-            document.getElementById('certidoes_renovadas').value = remessa.certidoes_renovadas;
-            document.getElementById('pagamentos_parciais').value = remessa.pagamentos_parciais;
-
-            document.getElementById('btn_principal').innerText = "Atualizar Registro";
-            document.getElementById('btn_principal').style.background = "#10b981"; 
-            document.getElementById('btn_cancelar').style.display = "block";
-
-            alternarAba('remessas');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function cancelarEdicao() {
-            idSendoEditado = null;
-            document.getElementById('data_pagamento').valueAsDate = new Date();
-            document.getElementById('nome_remessa').value = "";
-            document.querySelectorAll('input[type="number"]').forEach(input => input.value = "0");
-            document.getElementById('btn_principal').innerText = "Registrar Produção";
-            document.getElementById('btn_principal').style.background = "#1e40af";
-            document.getElementById('btn_cancelar').style.display = "none";
-        }
-
-        async function excluirRemessa(id) {
-            if(!confirm("Tem certeza que deseja excluir este registro definitivamente?")) return;
-            try {
-                const resposta = await fetch(`/api/deletar-lote/${id}`, { method: 'DELETE' });
-                if (resposta.ok) { carregarHistorico(); carregarMetricasDashboard(); }
-            } catch (erro) { alert("Erro de ligação."); }
-        }
-
-        async function registrarLote() {
-            const dados = {
-                data_pagamento: document.getElementById('data_pagamento').value,
-                nome_remessa: document.getElementById('nome_remessa').value,
-                qtd_fornecedores: document.getElementById('qtd_fornecedores').value,
-                qtd_processos: document.getElementById('qtd_processos').value,
-                qtd_contratos: document.getElementById('qtd_contratos').value,
-                certidoes_renovadas: document.getElementById('certidoes_renovadas').value,
-                pagamentos_parciais: document.getElementById('pagamentos_parciais').value
-            };
-
-            if(!dados.nome_remessa) { alert("Introduza a remessa."); return; }
-
-            const url = idSendoEditado ? `/api/atualizar-lote/${idSendoEditado}` : '/api/salvar-lote';
-            const metodo = idSendoEditado ? 'PUT' : 'POST';
-
-            try {
-                const resposta = await fetch(url, {
-                    method: metodo,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dados)
-                });
-
-                if (resposta.ok) {
-                    alert("Sucesso!");
-                    cancelarEdicao();
-                    carregarHistorico();
-                    carregarMetricasDashboard();
-                }
-            } catch (erro) { alert("Erro ao salvar."); }
-        }
-    </script>
-</body>
-</html>
+            const dpInput = document.getElementById('data_pagamento');
