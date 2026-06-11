@@ -25,7 +25,6 @@ def inicializar_banco_dados():
     conexao.commit()
     conexao.close()
 
-# Força a criação do banco ao ligar o servidor
 inicializar_banco_dados()
 
 def calcular_esforco(processos, contratos, certidoes, parciais):
@@ -70,14 +69,20 @@ def salvar_lote_remessa():
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 400
 
-# ROTA 2: Listar Lotes
+# ROTA 2: Listar Lotes (Agora com Filtro de Data)
 @app.route('/api/listar-remessas', methods=['GET'])
 def listar_remessas():
+    data_filtro = request.args.get('data')
     try:
         conexao = sqlite3.connect(NOME_BANCO)
         conexao.row_factory = sqlite3.Row  
         cursor = conexao.cursor()
-        cursor.execute('SELECT * FROM lancamentos_remessas ORDER BY id DESC')
+        
+        if data_filtro:
+            cursor.execute('SELECT * FROM lancamentos_remessas WHERE data_pagamento = ? ORDER BY id DESC', (data_filtro,))
+        else:
+            cursor.execute('SELECT * FROM lancamentos_remessas ORDER BY id DESC')
+            
         linhas = cursor.fetchall()
         
         resultado = []
@@ -132,6 +137,19 @@ def atualizar_lote_remessa(id_remessa):
 
         return jsonify({"status": "sucesso", "pontos": pontuacao_final}), 200
 
+    except Exception as e:
+        return jsonify({"status": "erro", "mensagem": str(e)}), 400
+
+# ROTA 4: Excluir Lote (Deletar)
+@app.route('/api/deletar-lote/<int:id_remessa>', methods=['DELETE'])
+def deletar_lote_remessa(id_remessa):
+    try:
+        conexao = sqlite3.connect(NOME_BANCO)
+        cursor = conexao.cursor()
+        cursor.execute('DELETE FROM lancamentos_remessas WHERE id = ?', (id_remessa,))
+        conexao.commit()
+        conexao.close()
+        return jsonify({"status": "sucesso"}), 200
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 400
 
