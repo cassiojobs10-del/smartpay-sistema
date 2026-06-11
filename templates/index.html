@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerência Financeira - Sistema</title>
-    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <title>Gerência Financeira - Controle de Remessas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-            background: #020617; 
+            /* Gradiente fluido e escuro, sem contrastes exagerados */
+            background: linear-gradient(135deg, #060814 0%, #0b112c 50%, #050716 100%); 
             color: #ffffff; 
             font-family: 'Urbanist', sans-serif; 
             display: flex; 
@@ -17,11 +18,11 @@
             overflow: hidden;
         }
 
-        /* MENU LATERAL */
+        /* MENU LATERAL ESCURO */
         .sidebar {
             width: 280px;
-            background: #0b1121;
-            border-right: 1px solid #1e3a8a;
+            background: rgba(6, 9, 22, 0.85);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             flex-direction: column;
             padding: 30px 20px;
@@ -33,7 +34,7 @@
             margin-bottom: 50px;
         }
         .logo-icon {
-            background: #2563eb;
+            background: #1e40af; /* Azul Royal corporativo */
             color: #fff;
             width: 40px;
             height: 40px;
@@ -47,6 +48,7 @@
             font-size: 18px;
             font-weight: 800;
             line-height: 1.2;
+            color: #ffffff;
         }
         .menu-title {
             color: #475569;
@@ -70,43 +72,81 @@
             transition: all 0.2s;
             cursor: pointer;
         }
-        .menu-item:hover { background: #1e293b; color: #fff; }
-        .menu-item.active { background: #2563eb; color: #fff; }
+        .menu-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+        .menu-item.active { background: #1e40af; color: #fff; box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3); }
 
-        /* ÁREA DE CONTEÚDO PRINCIPAL */
+        /* PAINEL CENTRAL CONTEÚDO */
         .main-content {
             flex-grow: 1;
-            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
-            padding: 40px 60px;
+            padding: 40px 50px;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
         }
 
-        /* FORMULÁRIO ENCAIXADO */
-        .form-box { 
-            background: #0b1121; 
-            border: 1px solid #1e3a8a; 
+        /* CARD ESTILO VIDRO (GLASSMORPHISM) */
+        .glass-card { 
+            background: rgba(10, 15, 36, 0.7); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-radius: 16px; 
             padding: 40px; 
             width: 100%; 
-            max-width: 700px; 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.5); 
+            max-width: 850px; 
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); 
         }
-        h1 { margin-top: 0; color: #ffffff; font-size: 32px; }
-        .field-group { margin-bottom: 15px; }
-        label { display: block; color: #ffffff; font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+        
+        h1 { margin-top: 0; color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
+        .field-group { margin-bottom: 18px; }
+        label { display: block; color: #ffffff; font-size: 13px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* INPUTS INTEGRADOS */
         input { 
-            background: #0f172a; border: 1px solid #1e3a8a; border-radius: 8px; 
-            color: #ffffff; padding: 12px; width: 100%; font-family: 'Urbanist', sans-serif; font-size: 16px; 
+            background: rgba(5, 7, 20, 0.8); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 8px; 
+            color: #ffffff; 
+            padding: 14px; 
+            width: 100%; 
+            font-family: 'Urbanist', sans-serif; 
+            font-size: 16px; 
+            transition: all 0.3s;
         }
-        input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
-        .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
+        /* BOTÃO AZUL ROYAL SÓLIDO */
         .btn-submit { 
-            background: #2563eb; border: none; border-radius: 8px; color: #ffffff; 
-            cursor: pointer; font-weight: 800; margin-top: 20px; padding: 18px; 
-            width: 100%; font-size: 16px; text-transform: uppercase; transition: background 0.2s;
+            background: #1e40af; 
+            border: none; 
+            border-radius: 8px; 
+            color: #ffffff; 
+            cursor: pointer; 
+            font-weight: 700; 
+            margin-top: 15px; 
+            padding: 18px; 
+            width: 100%; 
+            font-size: 16px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.2);
         }
-        .btn-submit:hover { background: #1d4ed8; }
-        .divider { border-top: 1px solid #1e3a8a; margin: 25px 0; padding-top: 20px; }
+        .btn-submit:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .divider { border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 30px 0 25px 0; padding-top: 20px; }
+
+        /* TABELA DE HISTÓRICO (ABRINDO A CAIXA PRETA) */
+        .table-title { font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .table-container { width: 100%; overflow-x: auto; margin-top: 10px; }
+        .glass-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 15px; }
+        .glass-table th { padding: 14px; color: #94a3b8; font-weight: 700; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-table td { padding: 14px; color: #ffffff; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .glass-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+        .badge-pontos { background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 14px; border: 1px solid rgba(59, 130, 246, 0.2); }
+        .btn-action { color: #94a3b8; background: none; border: none; cursor: pointer; font-size: 14px; transition: color 0.2s; }
+        .btn-action:hover { color: #ffffff; }
     </style>
 </head>
 <body>
@@ -126,14 +166,15 @@
         </ul>
 
         <div style="margin-top: auto; color: #475569; font-size: 12px; text-align: center;">
-            <i class="fa-solid fa-user-shield"></i> Modo Admin
+            <i class="fa-solid fa-user-shield"></i> Modo Administrador
         </div>
     </nav>
 
     <main class="main-content">
-        <div class="form-box">
+        
+        <div class="glass-card">
             <h1>Controle de Remessas</h1>
-            <p style="color: #94a3b8; margin-bottom: 30px;">Registro analítico de pagamentos de fornecedores e médicos.</p>
+            <p style="color: #94a3b8; margin-bottom: 30px; font-size: 15px;">Registro analítico de pagamentos de fornecedores e médicos.</p>
 
             <div class="row-grid">
                 <div class="field-group">
@@ -158,7 +199,7 @@
             </div>
 
             <div class="divider">
-                <p style="color: #3b82f6; font-weight: 700; margin-top: 0; font-size: 14px;">Gargalos de Complexidade</p>
+                <p style="color: #60a5fa; font-weight: 700; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px;">Detalhamento da Remessa</p>
                 <div class="field-group">
                     <label>Processos de Contrato</label>
                     <input type="number" id="qtd_contratos" value="0" min="0">
@@ -177,11 +218,78 @@
 
             <button class="btn-submit" onclick="registrarLote()">Registrar Produção</button>
         </div>
+
+        <div class="glass-card" style="padding: 30px;">
+            <div class="table-title">
+                <i class="fa-solid fa-clock-rotate-left" style="color: #60a5fa;"></i> Histórico de Lançamentos Recentes
+            </div>
+            <div class="table-container">
+                <table class="glass-table">
+                    <thead>
+                        <tr>
+                            <th>Data Pagamento</th>
+                            <th>Nº da Remessa</th>
+                            <th>Fornecedores</th>
+                            <th>Processos</th>
+                            <th>Pontos Esforço</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo_tabela_historico">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
     </main>
 
     <script>
+        // Data atual por padrão no carregamento
         document.getElementById('data_pagamento').valueAsDate = new Date();
 
+        // Executa ao abrir a página para ler o histórico existente
+        window.onload = function() {
+            carregarHistorico();
+        };
+
+        // Função para buscar dados da Caixa Preta (API GET)
+        async function carregarHistorico() {
+            try {
+                const resposta = await fetch('/api/listar-remessas');
+                const remessas = await resposta.json();
+                
+                const tabelaBody = document.getElementById('corpo_tabela_historico');
+                tabelaBody.innerHTML = ""; // Limpa a tabela
+
+                if (remessas.length === 0) {
+                    tabelaBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #475569; padding: 20px;">Nenhum registo encontrado nesta aba.</td></tr>`;
+                    return;
+                }
+
+                remessas.forEach(remessa => {
+                    // Formata a data de AAAA-MM-DD para DD/MM/AAAA
+                    const dataFormatada = remessa.data_pagamento.split('-').reverse().join('/');
+                    
+                    const linhaHtml = `
+                        <tr>
+                            <td>${dataFormatada}</td>
+                            <td style="font-weight: 600;">${remessa.nome_remessa}</td>
+                            <td>${remessa.qtd_fornecedores}</td>
+                            <td>${remessa.qtd_processos}</td>
+                            <td><span class="badge-pontos">${remessa.pontuacao_total} pts</span></td>
+                            <td>
+                                <button class="btn-action" title="Análise detalhada/Editar"><i class="fa-solid fa-pen-to-square"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                    tabelaBody.innerHTML += linhaHtml;
+                });
+            } catch (erro) {
+                console.error("Erro ao carregar histórico:", erro);
+            }
+        }
+
+        // Função para submeter e salvar lote (API POST)
         async function registrarLote() {
             const dados = {
                 data_pagamento: document.getElementById('data_pagamento').value,
@@ -193,7 +301,10 @@
                 pagamentos_parciais: document.getElementById('pagamentos_parciais').value
             };
 
-            if(!dados.nome_remessa) { alert("Preencha a remessa."); return; }
+            if(!dados.nome_remessa) { 
+                alert("Por favor, introduza o número/nome da remessa."); 
+                return; 
+            }
 
             try {
                 const resposta = await fetch('/api/salvar-lote', {
@@ -205,14 +316,19 @@
                 const resultado = await resposta.json();
 
                 if (resposta.ok) {
-                    alert(`Sucesso! Remessa gerou ${resultado.pontos} pontos.`);
+                    alert(`Sucesso! A remessa gerou ${resultado.pontos} pontos.`);
+                    
+                    // Limpa os campos numéricos para a próxima entrada
                     document.querySelectorAll('input[type="number"]').forEach(input => input.value = "0");
                     document.getElementById('nome_remessa').value = "";
+                    
+                    // Atualiza a tabela do histórico imediatamente sem recarregar a página toda
+                    carregarHistorico();
                 } else {
-                    alert("Erro: " + resultado.mensagem);
+                    alert("Erro ao salvar: " + resultado.mensagem);
                 }
             } catch (erro) {
-                alert("Erro de conexão com o servidor.");
+                alert("Erro de ligação com o servidor.");
             }
         }
     </script>
