@@ -17,7 +17,6 @@
             overflow: hidden;
         }
 
-        /* MENU LATERAL ESCURO */
         .sidebar {
             width: 280px;
             background: rgba(6, 9, 22, 0.85);
@@ -26,75 +25,35 @@
             flex-direction: column;
             padding: 30px 20px;
         }
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 50px;
-        }
+        .logo-area { display: flex; align-items: center; gap: 15px; margin-bottom: 50px; }
         .logo-icon {
             background: #1e40af; 
-            color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
+            color: #fff; width: 40px; height: 40px;
+            border-radius: 10px; display: flex; align-items: center;
+            justify-content: center; font-size: 20px;
         }
-        .logo-text {
-            font-size: 18px;
-            font-weight: 800;
-            line-height: 1.2;
-            color: #ffffff;
-        }
-        .menu-title {
-            color: #475569;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            padding-left: 10px;
-        }
+        .logo-text { font-size: 18px; font-weight: 800; line-height: 1.2; color: #ffffff; }
+        .menu-title { color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; padding-left: 10px; }
         .menu-items { list-style: none; display: flex; flex-direction: column; gap: 5px; }
         .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            border-radius: 10px;
-            color: #94a3b8;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.2s;
-            cursor: pointer;
+            display: flex; align-items: center; gap: 15px; padding: 15px;
+            border-radius: 10px; color: #94a3b8; text-decoration: none;
+            font-weight: 600; transition: all 0.2s; cursor: pointer;
         }
         .menu-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
         .menu-item.active { background: #1e40af; color: #fff; box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3); }
 
-        /* PAINEL CENTRAL CONTEÚDO */
         .main-content {
-            flex-grow: 1;
-            padding: 40px 50px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
+            flex-grow: 1; padding: 40px 50px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 30px;
         }
 
-        /* CARD ESTILO VIDRO */
         .glass-card { 
             background: rgba(10, 15, 36, 0.7); 
             border: 1px solid rgba(255, 255, 255, 0.08); 
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 16px; 
-            padding: 40px; 
-            width: 100%; 
-            max-width: 850px; 
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); 
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px; padding: 40px; width: 100%; 
+            max-width: 850px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); 
         }
         
         h1 { margin-top: 0; color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
@@ -102,40 +61,23 @@
         label { display: block; color: #ffffff; font-size: 13px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         
         input { 
-            background: rgba(5, 7, 20, 0.8); 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            border-radius: 8px; 
-            color: #ffffff; 
-            padding: 14px; 
-            width: 100%; 
-            font-family: 'Urbanist', sans-serif; 
-            font-size: 16px; 
-            transition: all 0.3s;
+            background: rgba(5, 7, 20, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 8px; color: #ffffff; padding: 14px; width: 100%; 
+            font-family: 'Urbanist', sans-serif; font-size: 16px; transition: all 0.3s;
         }
         input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
         .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
         .btn-submit { 
-            background: #1e40af; 
-            border: none; 
-            border-radius: 8px; 
-            color: #ffffff; 
-            cursor: pointer; 
-            font-weight: 700; 
-            margin-top: 15px; 
-            padding: 18px; 
-            width: 100%; 
-            font-size: 16px; 
-            text-transform: uppercase; 
-            letter-spacing: 1px;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.2);
+            background: #1e40af; border: none; border-radius: 8px; color: #ffffff; 
+            cursor: pointer; font-weight: 700; margin-top: 15px; padding: 18px; 
+            width: 100%; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.2s; box-shadow: 0 4px 15px rgba(30, 64, 175, 0.2);
         }
         .btn-submit:hover { background: #1d4ed8; transform: translateY(-1px); }
         .divider { border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 30px 0 25px 0; padding-top: 20px; }
 
-        /* TABELA DE HISTÓRICO */
-        .table-title { font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .table-title { font-size: 20px; font-weight: 700; color: #ffffff; display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
         .table-container { width: 100%; overflow-x: auto; margin-top: 10px; }
         .glass-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 15px; }
         .glass-table th { padding: 14px; color: #94a3b8; font-weight: 700; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
@@ -144,6 +86,7 @@
         .badge-pontos { background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 14px; border: 1px solid rgba(59, 130, 246, 0.2); }
         .btn-action { color: #94a3b8; background: none; border: none; cursor: pointer; font-size: 14px; transition: color 0.2s; }
         .btn-action:hover { color: #ffffff; }
+        .btn-delete:hover { color: #ef4444 !important; }
     </style>
 </head>
 <body>
@@ -221,8 +164,17 @@
 
         <div class="glass-card" style="padding: 30px;">
             <div class="table-title">
-                <i class="fa-solid fa-clock-rotate-left" style="color: #60a5fa;"></i> Histórico de Lançamentos Recentes
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-clock-rotate-left" style="color: #60a5fa;"></i> Histórico de Lançamentos
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 14px;">
+                    <label for="filtro_data" style="margin-bottom: 0; color: #94a3b8; font-weight: 600; text-transform: none;">Filtrar por dia:</label>
+                    <input type="date" id="filtro_data" onchange="carregarHistorico()" style="padding: 8px; font-size: 14px; width: auto; background: rgba(5, 7, 20, 0.8);">
+                    <button class="btn-action" onclick="limparFiltro()" title="Limpar Filtro" style="padding: 8px; background: rgba(255,255,255,0.1); border-radius: 6px;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
+            
             <div class="table-container">
                 <table class="glass-table">
                     <thead>
@@ -232,7 +184,7 @@
                             <th>Fornecedores</th>
                             <th>Processos</th>
                             <th>Pontos Esforço</th>
-                            <th>Ações</th>
+                            <th style="text-align: right;">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="corpo_tabela_historico">
@@ -253,9 +205,13 @@
             carregarHistorico();
         };
 
+        // Carrega os dados, aplicando o filtro de data se existir
         async function carregarHistorico() {
             try {
-                const resposta = await fetch('/api/listar-remessas');
+                const dataFiltro = document.getElementById('filtro_data').value;
+                const url = dataFiltro ? `/api/listar-remessas?data=${dataFiltro}` : '/api/listar-remessas';
+                
+                const resposta = await fetch(url);
                 historicoRemessas = await resposta.json();
                 
                 const tabelaBody = document.getElementById('corpo_tabela_historico');
@@ -275,9 +231,12 @@
                             <td>${remessa.qtd_fornecedores}</td>
                             <td>${remessa.qtd_processos}</td>
                             <td><span class="badge-pontos">${remessa.pontuacao_total} pts</span></td>
-                            <td>
-                                <button class="btn-action" title="Editar Remessa" onclick="prepararEdicao(${remessa.id})">
+                            <td style="text-align: right;">
+                                <button class="btn-action" title="Editar Remessa" onclick="prepararEdicao(${remessa.id})" style="color: #60a5fa; margin-right: 15px;">
                                     <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button class="btn-action btn-delete" title="Excluir Remessa" onclick="excluirRemessa(${remessa.id})">
+                                    <i class="fa-solid fa-trash"></i>
                                 </button>
                             </td>
                         </tr>
@@ -287,6 +246,11 @@
             } catch (erro) {
                 console.error("Erro ao carregar histórico:", erro);
             }
+        }
+
+        function limparFiltro() {
+            document.getElementById('filtro_data').value = "";
+            carregarHistorico();
         }
 
         function prepararEdicao(id) {
@@ -320,6 +284,26 @@
             document.getElementById('btn_principal').innerText = "Registrar Produção";
             document.getElementById('btn_principal').style.background = "#1e40af";
             document.getElementById('btn_cancelar').style.display = "none";
+        }
+
+        // Nova função para deletar o registro
+        async function excluirRemessa(id) {
+            if(!confirm("Tem certeza que deseja excluir este registro definitivamente?")) return;
+            
+            try {
+                const resposta = await fetch(`/api/deletar-lote/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (resposta.ok) {
+                    carregarHistorico(); 
+                } else {
+                    const resultado = await resposta.json();
+                    alert("Erro ao excluir: " + resultado.mensagem);
+                }
+            } catch (erro) {
+                alert("Erro de ligação com o servidor.");
+            }
         }
 
         async function registrarLote() {
