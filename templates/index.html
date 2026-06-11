@@ -17,14 +17,11 @@
             overflow: hidden;
         }
 
+        /* MENU LATERAL */
         .sidebar {
-            width: 280px;
-            background: #0d1117;
+            width: 280px; background: #0d1117;
             border-right: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            flex-direction: column;
-            padding: 30px 20px;
-            flex-shrink: 0;
+            display: flex; flex-direction: column; padding: 30px 20px; flex-shrink: 0;
         }
         .logo-area { display: flex; align-items: center; gap: 10px; margin-bottom: 50px; }
         .logo-text { font-size: 16px; font-weight: 800; color: #ffffff; text-transform: lowercase; }
@@ -43,25 +40,20 @@
             font-weight: 600; font-size: 14px; transition: all 0.2s; cursor: pointer;
         }
         .menu-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
-        .menu-item.active { background: rgba(160, 137, 230, 0.08); color: #a089e6; font-weight: 700; }
+        .menu-item.active { background: rgba(160, 137, 230, 0.08); color: #a089e6; font-weight: 700; border-left: 4px solid #a089e6; }
 
         .profile-box {
-            margin-top: auto;
-            display: flex; align-items: center; gap: 12px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 15px; border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            margin-top: auto; display: flex; align-items: center; gap: 12px;
+            background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.06);
         }
         .profile-avatar {
-            background: #2c303d; width: 38px; height: 38px;
-            border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; font-weight: 700; color: #a089e6;
-            font-size: 15px; border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #2c303d; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-weight: 700; color: #a089e6; font-size: 15px; border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        /* CONTEÚDO PRINCIPAL */
         .main-content {
-            flex-grow: 1; padding: 30px 40px; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 20px;
+            flex-grow: 1; padding: 30px 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
         }
 
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -73,8 +65,7 @@
         .header-title { font-size: 24px; font-weight: 800; color: #ffffff; margin: 0; }
         
         .btn-reload {
-            background: #271a58; border: none; border-radius: 8px; color: #ffffff;
-            font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+            background: #271a58; border: none; border-radius: 8px; color: #ffffff; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
             padding: 10px 18px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;
         }
         .btn-reload:hover { background: #3c2a8a; }
@@ -92,77 +83,67 @@
         .internal-title { margin-top: 0; color: #ffffff; font-size: 24px; font-weight: 800; }
         .internal-subtitle { color: #94a3b8; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .unified-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; width: auto; flex-shrink: 0; }
-        .period-buttons { display: flex; gap: 5px; }
+        /* CONTROLES UNIFICADOS CORRIGIDOS */
+        .unified-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 15px; width: auto; flex-shrink: 0; }
         
-        .btn-period { 
-            background: rgba(255, 255, 255, 0.05); border: none; border-radius: 6px; color: #94a3b8; 
-            padding: 8px 15px; cursor: pointer; font-weight: 700; font-size: 12px; text-transform: uppercase; transition: all 0.2s;
+        .period-buttons { 
+            display: flex; gap: 5px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);
         }
-        .btn-period.active { background: rgba(160, 137, 230, 0.1); color: #a089e6; border: 1px solid rgba(160, 137, 230, 0.2); }
+        .btn-period { 
+            background: transparent; border: none; border-radius: 6px; color: #94a3b8; 
+            padding: 8px 18px; cursor: pointer; font-weight: 700; font-size: 12px; text-transform: uppercase; transition: all 0.2s;
+        }
+        .btn-period.active { background: #271a58; color: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .btn-period:hover:not(.active) { color: #ffffff; }
 
-        .date-selectors { display: flex; gap: 5px; }
-        .date-input-box { position: relative; display: flex; align-items: center; width: 140px; }
+        .date-selectors { display: flex; gap: 15px; }
+        .date-col { display: flex; flex-direction: column; gap: 6px; }
+        .date-label { color: #94a3b8; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
         
+        .date-input-box { position: relative; display: flex; align-items: center; width: 150px; }
         .date-input-box input { 
             background: rgba(44, 48, 61, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); 
-            border-radius: 6px; color: #ffffff; padding: 8px 10px 8px 35px; width: 100%; 
+            border-radius: 6px; color: #ffffff; padding: 10px 10px 10px 35px; width: 100%; 
             font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer;
         }
         .date-input-box i { position: absolute; left: 12px; color: #a089e6; font-size: 14px; pointer-events: none; }
+        input[type="date"]::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
 
-        /* Esconde indicador padrão para usarmos o nosso ícone FA perfeitamente */
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            display: none;
-            -webkit-appearance: none;
-        }
-
+        /* CARDS DE MÉTRICAS */
         .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; }
         .metric-card {
             background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 12px; padding: 25px; display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
-        
         .metric-label { display: block; color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
         .metric-number { font-size: 32px; font-weight: 800; color: #ffffff; margin: 0; }
-        
         .metric-icon-glass { 
-            width: 50px; height: 50px; border-radius: 10px; 
-            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            color: #a089e6; display: flex; align-items: center; justify-content: center; font-size: 20px; 
+            width: 50px; height: 50px; border-radius: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(8px); color: #a089e6; display: flex; align-items: center; justify-content: center; font-size: 20px; 
         }
 
-        #aba_remessas_view { display: none; flex-direction: column; gap: 20px; width: 100%; }
+        /* FORMULÁRIOS E TABELAS */
+        .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;}
         .divider { border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 25px 0; padding-top: 20px; }
         
         input:not([type="date"]), select { 
             background: rgba(44, 48, 61, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); 
             border-radius: 6px; color: #ffffff; padding: 12px; width: 100%; font-family: 'Montserrat', sans-serif; font-size: 14px; 
         }
-        label:not(.metric-label) { display: block; color: #ffffff; font-size: 11px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        label:not(.metric-label):not(.date-label) { display: block; color: #ffffff; font-size: 11px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .btn-submit { 
-            background: #1e40af; border: none; border-radius: 6px; color: #ffffff; 
-            cursor: pointer; font-weight: 700; padding: 16px; width: 100%; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;
+            background: #1e40af; border: none; border-radius: 6px; color: #ffffff; cursor: pointer; font-weight: 700; padding: 16px; width: 100%; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;
         }
-        .btn-submit:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .btn-submit:hover { background: #1d4ed8; }
 
-        .table-title { font-size: 18px; font-weight: 700; color: #ffffff; display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; }
-        .table-container { width: 100%; overflow-x: auto; margin-top: 5px; }
+        .table-title { font-size: 18px; font-weight: 700; color: #ffffff; display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
         .glass-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
         .glass-table th { padding: 12px; color: #94a3b8; font-weight: 700; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
         .glass-table td { padding: 12px; color: #ffffff; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         .badge-pontos { background: rgba(160, 137, 230, 0.1); color: #a089e6; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 12px; }
-        .btn-action { color: #94a3b8; background: none; border: none; cursor: pointer; font-size: 13px; }
+        .btn-action { color: #94a3b8; background: none; border: none; cursor: pointer; font-size: 14px; margin-right: 10px;}
         .btn-delete:hover { color: #ef4444 !important; }
-
-        @media (max-width: 1024px) {
-            .row-grid { grid-template-columns: 1fr; gap: 10px; }
-            .card-header-internal { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .unified-controls { align-items: flex-start; }
-        }
     </style>
 </head>
 <body>
@@ -205,11 +186,11 @@
             <span id="status_timestamp">ESTADO: ATUALIZADO --:--</span>
         </div>
 
-        <section id="aba_dashboard_view">
+        <section id="aba_dashboard_view" style="display: block;">
             <div class="glass-card">
                 <div class="card-header-internal">
                     <div class="card-title-box">
-                        <h2 class="internal-title">Painel de Produtividade Individual</h2>
+                        <h2 class="internal-title">Painel de Produtividade</h2>
                         <span class="internal-subtitle">CONTROLE UNIFICADO DE PRODUÇÃO E SERVIÇOS</span>
                     </div>
 
@@ -221,13 +202,19 @@
                         </div>
                         
                         <div class="date-selectors">
-                            <div class="date-input-box">
-                                <i class="fa-regular fa-calendar-days"></i>
-                                <input type="date" id="date_from" value="2026-06-04" onclick="this.showPicker()">
+                            <div class="date-col">
+                                <span class="date-label">DE</span>
+                                <div class="date-input-box">
+                                    <i class="fa-regular fa-calendar-days"></i>
+                                    <input type="date" id="date_from" value="2026-06-04" onclick="this.showPicker()">
+                                </div>
                             </div>
-                            <div class="date-input-box">
-                                <i class="fa-regular fa-calendar-days"></i>
-                                <input type="date" id="date_to" value="2026-06-11" onclick="this.showPicker()">
+                            <div class="date-col">
+                                <span class="date-label">ATÉ</span>
+                                <div class="date-input-box">
+                                    <i class="fa-regular fa-calendar-days"></i>
+                                    <input type="date" id="date_to" value="2026-06-11" onclick="this.showPicker()">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -247,7 +234,7 @@
                             <label class="metric-label">Processos Concluídos</label>
                             <div class="metric-number" id="dash_processos">0</div>
                         </div>
-                        <div class="metric-icon-glass"><i class="fa-solid fa-folder-check"></i></div>
+                        <div class="metric-icon-glass"><i class="fa-solid fa-clipboard-check"></i></div>
                     </div>
 
                     <div class="metric-card">
@@ -258,10 +245,14 @@
                         <div class="metric-icon-glass"><i class="fa-solid fa-file-invoice-dollar"></i></div>
                     </div>
                 </div>
+                
+                <p style="color: #94a3b8; font-size: 13px; text-align: center; margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                    Este é o seu painel individual. Lançamentos de outros analistas não são contabilizados aqui.
+                </p>
             </div>
         </section>
 
-        <section id="aba_remessas_view">
+        <section id="aba_remessas_view" style="display: none; flex-direction: column; gap: 20px; width: 100%;">
             <div class="glass-card">
                 <div class="card-header-internal">
                     <div class="card-title-box">
@@ -271,25 +262,25 @@
                 </div>
 
                 <div class="row-grid">
-                    <div class="field-group">
+                    <div>
                         <label>Data do Pagamento</label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="date" id="data_pagamento" required onclick="this.showPicker()">
+                            <input type="date" id="data_pagamento" required onclick="this.showPicker()" style="padding-right: 40px;">
                             <i class="fa-solid fa-calendar-days" style="position: absolute; right: 15px; color: #a089e6; pointer-events: none; font-size: 16px;"></i>
                         </div>
                     </div>
-                    <div class="field-group">
+                    <div>
                         <label>Nº/Nome da Remessa</label>
                         <input type="text" id="nome_remessa" placeholder="Ex: 7190 - c" required>
                     </div>
                 </div>
 
                 <div class="row-grid">
-                    <div class="field-group">
+                    <div>
                         <label>Qtd. Fornecedores</label>
                         <input type="number" id="qtd_fornecedores" value="0" min="0">
                     </div>
-                    <div class="field-group">
+                    <div>
                         <label>Qtd. Processos</label>
                         <input type="number" id="qtd_processos" value="0" min="0">
                     </div>
@@ -298,23 +289,23 @@
                 <div class="divider">
                     <p style="color: #a089e6; font-weight: 700; margin-top: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px;">Detalhamento de Esforço Adicional</p>
                     <div class="row-grid">
-                        <div class="field-group">
+                        <div>
                             <label>Processos de Contrato</label>
                             <input type="number" id="qtd_contratos" value="0" min="0">
                         </div>
-                        <div class="field-group">
+                        <div>
                             <label>Certidões Renovadas</label>
                             <input type="number" id="certidoes_renovadas" value="0" min="0">
                         </div>
                     </div>
-                    <div class="field-group">
+                    <div>
                         <label>Pagamentos Parciais</label>
                         <input type="number" id="pagamentos_parciais" value="0" min="0">
                     </div>
                 </div>
 
                 <div id="area_botoes" style="display: flex; gap: 15px; margin-top: 15px;">
-                    <button class="btn-submit" id="btn_principal" onclick="registrarLote()">Registrar Production</button>
+                    <button class="btn-submit" id="btn_principal" onclick="registrarLote()">Registrar Produção</button>
                     <button class="btn-submit" id="btn_cancelar" onclick="cancelarEdicao()" style="background: rgba(255,255,255,0.1); color: #fff; display: none;">Cancelar</button>
                 </div>
             </div>
@@ -330,10 +321,10 @@
                             <i class="fa-regular fa-calendar-days"></i>
                             <input type="date" id="filtro_data" onchange="carregarHistorico()" onclick="this.showPicker()">
                         </div>
-                        <button class="btn-action" onclick="limparFiltro()" title="Limpar Filtro" style="padding: 8px; background: rgba(255,255,255,0.1); border-radius: 6px;"><i class="fa-solid fa-xmark"></i></button>
+                        <button class="btn-action" onclick="limparFiltro()" title="Limpar Filtro" style="padding: 8px; background: rgba(255,255,255,0.1); border-radius: 6px; margin: 0;"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 </div>
-                <div class="table-container">
+                <div style="width: 100%; overflow-x: auto; margin-top: 5px;">
                     <table class="glass-table">
                         <thead>
                             <tr>
@@ -362,9 +353,13 @@
         if(dateInput) dateInput.valueAsDate = new Date();
 
         window.onload = function() {
-            carregarMetricasDashboard();
-            carregarHistorico();
-            atualizarTimestampStatus();
+            try {
+                carregarMetricasDashboard();
+                carregarHistorico();
+                atualizarTimestampStatus();
+            } catch(e) {
+                console.error("Erro na inicialização:", e);
+            }
         };
 
         function recarregarPagina() {
@@ -378,36 +373,57 @@
             document.getElementById('status_timestamp').innerText = `ESTADO: ATUALIZADO ${hours}:${minutes}`;
         }
 
+        /* LÓGICA DE TROCA DE ABAS TOTALMENTE SEGURA */
         function alternarAba(aba) {
-            const menuDash = document.getElementById('menu_dashboard');
-            const menuRemessas = document.getElementById('menu_remessas');
-            const viewDash = document.getElementById('aba_dashboard_view');
-            const viewRemessas = document.getElementById('aba_remessas_view');
+            try {
+                const menuDash = document.getElementById('menu_dashboard');
+                const menuRemessas = document.getElementById('menu_remessas');
+                const viewDash = document.getElementById('aba_dashboard_view');
+                const viewRemessas = document.getElementById('aba_remessas_view');
 
-            if (aba === 'dashboard') {
-                menuDash.classList.add('active');
-                menuRemessas.classList.remove('active');
-                viewDash.style.display = 'block';
-                viewRemessas.style.display = 'none';
-                carregarMetricasDashboard(); 
-            } else if (aba === 'remessas') {
-                menuRemessas.classList.add('active');
-                menuDash.classList.remove('active');
-                viewDash.style.display = 'none';
-                viewRemessas.style.display = 'flex';
-                carregarHistorico();
+                if (aba === 'dashboard') {
+                    menuDash.classList.add('active');
+                    menuRemessas.classList.remove('active');
+                    
+                    // Força ocultar um e mostrar o outro
+                    viewRemessas.style.display = 'none';
+                    viewDash.style.display = 'block';
+                    
+                    carregarMetricasDashboard(); 
+                } else if (aba === 'remessas') {
+                    menuRemessas.classList.add('active');
+                    menuDash.classList.remove('active');
+                    
+                    // Força ocultar um e mostrar o outro
+                    viewDash.style.display = 'none';
+                    viewRemessas.style.display = 'flex';
+                    
+                    carregarHistorico();
+                }
+                atualizarTimestampStatus();
+            } catch (e) {
+                console.error("Erro ao alternar abas: ", e);
             }
-            atualizarTimestampStatus();
         }
 
+        /* LÓGICA DOS BOTÕES DE PERÍODO SEGURA */
         function setPeriodo(periodo) {
-            const btnHoje = document.getElementById('period_hoje');
-            const btnSemanal = document.getElementById('period_semanal');
-            const btnMensal = document.getElementById('period_mensal');
-            
-            [btnHoje, btnSemanal, btnMensal].forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`period_${periodo}`).classList.add('active');
-            atualizarTimestampStatus();
+            try {
+                const btnHoje = document.getElementById('period_hoje');
+                const btnSemanal = document.getElementById('period_semanal');
+                const btnMensal = document.getElementById('period_mensal');
+                
+                // Remove a classe de todos
+                btnHoje.classList.remove('active');
+                btnSemanal.classList.remove('active');
+                btnMensal.classList.remove('active');
+                
+                // Adiciona apenas no clicado
+                document.getElementById(`period_${periodo}`).classList.add('active');
+                atualizarTimestampStatus();
+            } catch (e) {
+                console.error("Erro nos botões de período:", e);
+            }
         }
 
         async function carregarMetricasDashboard() {
@@ -450,7 +466,7 @@
                             <td>${remessa.qtd_processos}</td>
                             <td><span class="badge-pontos">${remessa.pontuacao_total} pts</span></td>
                             <td style="text-align: right;">
-                                <button class="btn-action" title="Editar" onclick="prepararEdicao(${remessa.id})" style="color: #60a5fa; margin-right: 15px;">
+                                <button class="btn-action" title="Editar" onclick="prepararEdicao(${remessa.id})" style="color: #60a5fa;">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
                                 <button class="btn-action btn-delete" title="Excluir" onclick="excluirRemessa(${remessa.id})" style="color: #94a3b8;">
