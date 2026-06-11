@@ -49,10 +49,14 @@ def metricas_dashboard():
         resultado = cursor.fetchone()
         conexao.close()
         
+        p_totais = int(resultado[0]) if resultado[0] else 0
+        proc_totais = int(resultado[1]) if resultado[1] else 0
+        rem_totais = int(resultado[2]) if resultado[2] else 0
+        
         return jsonify({
-            "pontos_totais": int(resultado[0]) if resultado[0] else 0,
-            "processos_totais": int(resultado[1]) if resultado[1] else 0,
-            "total_remessas": int(resultado[2]) if resultado[2] else 0
+            "pontos_totais": p_totais,
+            "processos_totais": proc_totais,
+            "total_remessas": rem_totais
         }), 200
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 500
@@ -112,7 +116,7 @@ def listar_remessas():
                 "nome_remessa": linha["nome_remessa"] if linha["nome_remessa"] is not None else "",
                 "qtd_fornecedores": linha["qtd_fornecedores"],
                 "qtd_processos": linha["qtd_processos"],
-                "qtd_contratos": linha["qtd_contratos"],
+                "qtd_contratos": linha["qtd_contratos"] if linha["qtd_contratos"] is not None else 0,
                 "certidoes_renovadas": linha["certidoes_renovadas"] if linha["certidoes_renovadas"] is not None else 0,
                 "pagamentos_parciais": linha["pagamentos_parciais"] if linha["pagamentos_parciais"] is not None else 0,
                 "pontuacao_total": linha["pontuacao_total"]
