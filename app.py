@@ -34,7 +34,32 @@ def calcular_esforco(processos, contratos, certidoes, parciais):
 def index():
     return render_template('index.html')
 
-# ROTA 1: Criar Lote
+# ROTA: Buscar métricas consolidadas para o Dashboard
+@app.route('/api/metricas-dashboard', methods=['GET'])
+def metricas_dashboard():
+    try:
+        conexao = sqlite3.connect(NOME_BANCO)
+        cursor = conexao.cursor()
+        
+        # Soma a pontuação total e a quantidade de processos de todos os lançamentos
+        cursor.execute('''
+            SELECT 
+                TOTAL(pontuacao_total), 
+                TOTAL(qtd_processos),
+                COUNT(id)
+            FROM lancamentos_remessas
+        ''')
+        resultado = cursor.fetchone()
+        conexao.close()
+        
+        return jsonify({
+            "pontos_totais": int(resultado[0]),
+            "processos_totais": int(resultado[1]),
+            "total_remessas": int(resultado[2])
+        }), 200
+    except Exception as e:
+        return jsonify({"status": "erro", "mensagem": str(e)}), 500
+
 @app.route('/api/salvar-lote', methods=['POST'])
 def salvar_lote_remessa():
     dados = request.json
@@ -65,11 +90,9 @@ def salvar_lote_remessa():
         conexao.close()
 
         return jsonify({"status": "sucesso", "pontos": pontuacao_final}), 201
-
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 400
 
-# ROTA 2: Listar Lotes (Agora com Filtro de Data)
 @app.route('/api/listar-remessas', methods=['GET'])
 def listar_remessas():
     data_filtro = request.args.get('data')
@@ -84,27 +107,24 @@ def listar_remessas():
             cursor.execute('SELECT * FROM lancamentos_remessas ORDER BY id DESC')
             
         linhas = cursor.fetchall()
-        
         resultado = []
         for linha in linhas:
             resultado.append({
                 "id": linha["id"],
                 "data_pagamento": linha["data_pagamento"],
-                "nome_remessa": linha["nome_remessa"],
+                "nome_remessa": inline_value if (inline_value := linha["nome_remessa"]) is not None else "",
                 "qtd_fornecedores": linha["qtd_fornecedores"],
                 "qtd_processos": linha["qtd_processos"],
                 "qtd_contratos": linha["qtd_contratos"],
-                "certidoes_renovadas": linha["certidoes_renovadas"],
-                "pagamentos_parciais": linha["pagamentos_parciais"],
+                "certidoes_renovadas": inline_value if (inline_value := linha["certidoes_renovadas"]) is not None else 0,
+                "pagamentos_parciais": inline_value if (inline_value := linha["pagamentos_parciais"]) is not None else 0,
                 "pontuacao_total": linha["pontuacao_total"]
             })
-        
         conexao.close()
         return jsonify(resultado), 200
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 500
 
-# ROTA 3: Atualizar Lote (Edição)
 @app.route('/api/atualizar-lote/<int:id_remessa>', methods=['PUT'])
 def atualizar_lote_remessa(id_remessa):
     dados = request.json
@@ -134,13 +154,10 @@ def atualizar_lote_remessa(id_remessa):
         
         conexao.commit()
         conexao.close()
-
         return jsonify({"status": "sucesso", "pontos": pontuacao_final}), 200
-
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 400
 
-# ROTA 4: Excluir Lote (Deletar)
 @app.route('/api/deletar-lote/<int:id_remessa>', methods=['DELETE'])
 def deletar_lote_remessa(id_remessa):
     try:
