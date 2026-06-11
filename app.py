@@ -25,9 +25,7 @@ def inicializar_banco_dados():
     conexao.commit()
     conexao.close()
 
-# A SOLUÇÃO ESTÁ AQUI:
-# Chamamos a função logo na raiz do código. Assim, o Gunicorn do Render 
-# é forçado a criar o banco de dados antes de processar qualquer coisa.
+# Força a criação do banco ao ligar o servidor
 inicializar_banco_dados()
 
 def calcular_esforco(processos, contratos, certidoes, parciais):
@@ -37,6 +35,7 @@ def calcular_esforco(processos, contratos, certidoes, parciais):
 def index():
     return render_template('index.html')
 
+# ROTA 1: Criar Lote
 @app.route('/api/salvar-lote', methods=['POST'])
 def salvar_lote_remessa():
     dados = request.json
@@ -71,6 +70,7 @@ def salvar_lote_remessa():
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 400
 
+# ROTA 2: Listar Lotes
 @app.route('/api/listar-remessas', methods=['GET'])
 def listar_remessas():
     try:
@@ -99,8 +99,7 @@ def listar_remessas():
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 500
 
-if __name__ == '__main__':
-    # ROTA 3: Atualizar Lote (Edição)
+# ROTA 3: Atualizar Lote (Edição)
 @app.route('/api/atualizar-lote/<int:id_remessa>', methods=['PUT'])
 def atualizar_lote_remessa(id_remessa):
     dados = request.json
@@ -135,5 +134,7 @@ def atualizar_lote_remessa(id_remessa):
 
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 400
+
+if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
