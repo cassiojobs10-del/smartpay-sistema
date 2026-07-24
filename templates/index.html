@@ -94,13 +94,11 @@
             <li class="menu-item"><i class="fa-solid fa-list-check"></i> Outros Registros</li>
             <li class="menu-item"><i class="fa-solid fa-triangle-exclamation"></i> Particularidades</li>
             
-            <!-- EXIBE MENU ADMIN SOMENTE SE FOR GESTOR -->
             {% if session.get('is_admin') %}
             <li class="menu-item" id="menu_equipe" onclick="alternarAba('equipe')" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 25px;"><i class="fa-solid fa-users-gear"></i> Gestão de Equipe</li>
             {% endif %}
         </ul>
 
-        <!-- PERFIL INJETADO AUTOMATICAMENTE -->
         <div class="profile-box">
             <div class="profile-data">
                 <div class="profile-avatar">{{ session.get('nome', 'US')[0:2] | upper }}</div>
@@ -136,6 +134,24 @@
                         <h2 class="internal-title">Visão Geral</h2>
                         <span class="internal-subtitle">CONTROLE UNIFICADO DE PRODUÇÃO</span>
                     </div>
+
+                    <div class="unified-controls">
+                        <div class="period-buttons">
+                            <button class="btn-period" id="period_hoje" onclick="setPeriodo('hoje')">HOJE</button>
+                            <button class="btn-period active" id="period_semanal" onclick="setPeriodo('semanal')">SEMANAL</button>
+                            <button class="btn-period" id="period_mensal" onclick="setPeriodo('mensal')">MENSAL</button>
+                        </div>
+                        <div class="date-selectors">
+                            <div class="date-box">
+                                <span>DE</span>
+                                <input type="date" id="date_from" onchange="atualizarPorDataManual()" onclick="this.showPicker()">
+                            </div>
+                            <div class="date-box">
+                                <span>ATÉ</span>
+                                <input type="date" id="date_to" onchange="atualizarPorDataManual()" onclick="this.showPicker()">
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="metrics-grid">
                     <div class="metric-card">
@@ -163,7 +179,7 @@
             </div>
         </section>
 
-        <!-- REMESSAS PAGAS -->
+        <!-- REMESSAS PAGAS COM TODOS OS CAMPOS DE VOLTA! -->
         <section id="aba_remessas_view" style="display: none; flex-direction: column; width: 100%;">
             <div class="glass-card">
                 <div class="card-header-internal" style="margin-bottom: 20px;">
@@ -180,13 +196,25 @@
                     <div><label>Fornecedores</label><input type="number" id="qtd_fornecedores" class="form-input" value="0" min="0"></div>
                     <div><label>Processos</label><input type="number" id="qtd_processos" class="form-input" value="0" min="0"></div>
                 </div>
+                
+                <div class="divider"></div>
+                <p style="color: #a089e6; font-weight: 700; margin-top: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px;">Detalhamento de Esforço Adicional</p>
+                <div class="row-grid">
+                    <div><label>Processos de Contrato</label><input type="number" id="qtd_contratos" class="form-input" value="0" min="0"></div>
+                    <div><label>Certidões Renovadas</label><input type="number" id="certidoes_renovadas" class="form-input" value="0" min="0"></div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label>Pagamentos Parciais</label><input type="number" id="pagamentos_parciais" class="form-input" value="0" min="0">
+                </div>
+
                 <div id="area_botoes" style="display: flex; gap: 15px; margin-top: 15px;">
-                    <button class="btn-submit" onclick="registrarLote()">Registrar Produção</button>
+                    <button class="btn-submit" id="btn_principal" onclick="registrarLote()">Registrar Produção</button>
+                    <button class="btn-submit" id="btn_cancelar" onclick="cancelarEdicao()" style="background: rgba(255,255,255,0.1); display: none;">Cancelar</button>
                 </div>
             </div>
             
             <div class="glass-card">
-                <div class="table-title">Histórico de Lançamentos</div>
+                <div class="table-title">Seu Histórico de Lançamentos</div>
                 <table class="glass-table">
                     <thead><tr><th>Data</th><th>Remessa</th><th>Fornecedores</th><th>Processos</th><th>Pontos</th><th style="text-align: right;">Ações</th></tr></thead>
                     <tbody id="corpo_tabela_historico"></tbody>
@@ -194,7 +222,7 @@
             </div>
         </section>
 
-        <!-- GESTÃO DE EQUIPE (SÓ ADMIN VERÁ ISSO) -->
+        <!-- GESTÃO DE EQUIPE -->
         {% if session.get('is_admin') %}
         <section id="aba_equipe_view" style="display: none; flex-direction: column; width: 100%;">
             <div class="glass-card">
@@ -237,9 +265,12 @@
     </main>
 
     <script>
+        let historicoRemessas = [];
+        let idSendoEditado = null;
+
         window.onload = function() {
             const d = document.getElementById('data_pagamento'); if(d) d.valueAsDate = new Date();
-            carregarMetricasDashboard();
+            setPeriodo('mensal');
         };
 
         function alternarAba(aba) {
@@ -257,23 +288,124 @@
             if(aba === 'equipe') carregarEquipe();
         }
 
-        async function carregarMetricasDashboard() {
-            const r = await fetch('/api/metricas-dashboard');
-            const m = await r.json();
-            document.getElementById('dash_pontos').innerText = m.pontos_totais || 0;
-            document.getElementById('dash_processos').innerText = m.processos_totais || 0;
-            document.getElementById('dash_remessas').innerText = m.total_remessas || 0;
+        // ============================================
+        // LÓGICA DE FILTROS DE DATA
+        // ============================================
+        function formataDataISO(data) {
+            const ano = data.getFullYear();
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const dia = String(data.getDate()).padStart(2, '0');
+            return `${ano}-${mes}-${dia}`;
         }
 
+        function setPeriodo(periodo) {
+            document.getElementById('period_hoje').classList.remove('active');
+            document.getElementById('period_semanal').classList.remove('active');
+            document.getElementById('period_mensal').classList.remove('active');
+            
+            if(periodo) document.getElementById(`period_${periodo}`).classList.add('active');
+            
+            const hoje = new Date();
+            let dataInicio = new Date();
+            let dataFim = new Date();
+
+            if (periodo === 'hoje') {
+                // Hoje e hoje
+            } else if (periodo === 'semanal') {
+                const diaDaSemana = hoje.getDay();
+                dataInicio.setDate(hoje.getDate() - diaDaSemana);
+            } else if (periodo === 'mensal') {
+                dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+            }
+
+            document.getElementById('date_from').value = formataDataISO(dataInicio);
+            document.getElementById('date_to').value = formataDataISO(dataFim);
+
+            carregarMetricasDashboard();
+        }
+
+        function atualizarPorDataManual() {
+            document.getElementById('period_hoje').classList.remove('active');
+            document.getElementById('period_semanal').classList.remove('active');
+            document.getElementById('period_mensal').classList.remove('active');
+            carregarMetricasDashboard();
+        }
+
+        async function carregarMetricasDashboard() {
+            const dataInicio = document.getElementById('date_from').value;
+            const dataFim = document.getElementById('date_to').value;
+            
+            let url = '/api/metricas-dashboard';
+            if (dataInicio && dataFim) {
+                url += `?inicio=${dataInicio}&fim=${dataFim}`;
+            }
+
+            try {
+                const r = await fetch(url);
+                const m = await r.json();
+                document.getElementById('dash_pontos').innerText = m.pontos_totais || 0;
+                document.getElementById('dash_processos').innerText = m.processos_totais || 0;
+                document.getElementById('dash_remessas').innerText = m.total_remessas || 0;
+                
+                const now = new Date();
+                document.getElementById('status_timestamp').innerText = `ESTADO: ATUALIZADO ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            } catch (e) { console.error("Erro ao carregar métricas:", e); }
+        }
+
+        // ============================================
+        // HISTÓRICO E EDIÇÃO RESTAURADOS!
+        // ============================================
         async function carregarHistorico() {
             const r = await fetch('/api/listar-remessas');
-            const hist = await r.json();
+            historicoRemessas = await r.json();
             const b = document.getElementById('corpo_tabela_historico'); b.innerHTML = "";
-            if (hist.length === 0) { b.innerHTML = `<tr><td colspan="6" style="text-align: center;">Nenhum registro.</td></tr>`; return; }
-            hist.forEach(rem => {
+            if (historicoRemessas.length === 0) { b.innerHTML = `<tr><td colspan="6" style="text-align: center;">Nenhum registro.</td></tr>`; return; }
+            historicoRemessas.forEach(rem => {
                 const dt = rem.data_pagamento.split('-').reverse().join('/');
-                b.innerHTML += `<tr><td>${dt}</td><td style="font-weight: 600;">${rem.nome_remessa}</td><td>${rem.qtd_fornecedores}</td><td>${rem.qtd_processos}</td><td><span class="badge-pontos">${rem.pontuacao_total} pts</span></td><td style="text-align: right;"><button class="btn-action btn-delete" onclick="excluirRemessa(${rem.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                // O botão de Editar e a Lixeira voltaram!
+                b.innerHTML += `<tr>
+                    <td>${dt}</td>
+                    <td style="font-weight: 600;">${rem.nome_remessa}</td>
+                    <td>${rem.qtd_fornecedores}</td>
+                    <td>${rem.qtd_processos}</td>
+                    <td><span class="badge-pontos">${rem.pontuacao_total} pts</span></td>
+                    <td style="text-align: right;">
+                        <button class="btn-action" title="Editar" onclick="prepararEdicao(${rem.id})" style="color: #a089e6;"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete" title="Excluir" onclick="excluirRemessa(${rem.id})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`;
             });
+        }
+
+        function prepararEdicao(id) {
+            const remessa = historicoRemessas.find(r => r.id === id);
+            if (!remessa) return;
+            idSendoEditado = id;
+            
+            document.getElementById('data_pagamento').value = remessa.data_pagamento;
+            document.getElementById('nome_remessa').value = remessa.nome_remessa;
+            document.getElementById('qtd_fornecedores').value = remessa.qtd_fornecedores;
+            document.getElementById('qtd_processos').value = remessa.qtd_processos;
+            document.getElementById('qtd_contratos').value = remessa.qtd_contratos;
+            document.getElementById('certidoes_renovadas').value = remessa.certidoes_renovadas;
+            document.getElementById('pagamentos_parciais').value = remessa.pagamentos_parciais;
+
+            document.getElementById('btn_principal').innerText = "Atualizar Registro";
+            document.getElementById('btn_principal').style.background = "#10b981"; 
+            document.getElementById('btn_cancelar').style.display = "block";
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelarEdicao() {
+            idSendoEditado = null;
+            document.getElementById('data_pagamento').valueAsDate = new Date();
+            document.getElementById('nome_remessa').value = "";
+            document.querySelectorAll('.form-input[type="number"]').forEach(input => input.value = "0");
+            
+            document.getElementById('btn_principal').innerText = "Registrar Produção";
+            document.getElementById('btn_principal').style.background = "#1e40af";
+            document.getElementById('btn_cancelar').style.display = "none";
         }
 
         async function registrarLote() {
@@ -281,12 +413,30 @@
                 data_pagamento: document.getElementById('data_pagamento').value,
                 nome_remessa: document.getElementById('nome_remessa').value,
                 qtd_fornecedores: document.getElementById('qtd_fornecedores').value,
-                qtd_processos: document.getElementById('qtd_processos').value
+                qtd_processos: document.getElementById('qtd_processos').value,
+                qtd_contratos: document.getElementById('qtd_contratos').value,
+                certidoes_renovadas: document.getElementById('certidoes_renovadas').value,
+                pagamentos_parciais: document.getElementById('pagamentos_parciais').value
             };
             if(!dados.nome_remessa) { alert("Introduza a remessa."); return; }
-            await fetch('/api/salvar-lote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-            alert("Sucesso!"); document.getElementById('nome_remessa').value = "";
-            carregarHistorico(); carregarMetricasDashboard();
+
+            const url = idSendoEditado ? `/api/atualizar-lote/${idSendoEditado}` : '/api/salvar-lote';
+            const metodo = idSendoEditado ? 'PUT' : 'POST';
+
+            try {
+                const r = await fetch(url, {
+                    method: metodo,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dados)
+                });
+                
+                if (r.ok) {
+                    alert("Sucesso!");
+                    cancelarEdicao();
+                    carregarHistorico();
+                    carregarMetricasDashboard();
+                }
+            } catch (e) { alert("Erro ao salvar."); }
         }
 
         async function excluirRemessa(id) {
@@ -295,6 +445,9 @@
             carregarHistorico(); carregarMetricasDashboard();
         }
 
+        // ============================================
+        // GESTÃO DE EQUIPE
+        // ============================================
         async function carregarEquipe() {
             const r = await fetch('/api/colaboradores');
             const colabs = await r.json();
