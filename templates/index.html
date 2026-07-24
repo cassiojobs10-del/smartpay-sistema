@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Smartpay</title>
+    <title>Dashboard - Gerência Financeira</title>
     <!-- Fonte super moderna usada em painéis premium -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -12,7 +12,7 @@
            SISTEMA DE TEMAS (CLARO E ESCURO)
            ========================================== */
         :root {
-            /* TEMA CLARO (Padrão da imagem enviada) */
+            /* TEMA CLARO */
             --bg-body: #f3f4f6;
             --bg-card: #ffffff;
             --bg-input: #f9fafb;
@@ -57,7 +57,7 @@
         .sidebar { width: 260px; display: flex; flex-direction: column; padding: 30px 20px; flex-shrink: 0; }
         .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 50px; padding-left: 10px; }
         .logo-icon { width: 36px; height: 36px; background-color: var(--text-main); color: var(--bg-body); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .logo-text { font-size: 18px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+        .logo-text { font-size: 16px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
 
         .menu-items { list-style: none; display: flex; flex-direction: column; gap: 6px; }
         .menu-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 12px; color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 14px; cursor: pointer; }
@@ -139,7 +139,7 @@
     <nav class="sidebar">
         <div class="logo-area">
             <div class="logo-icon"><i class="fa-solid fa-layer-group"></i></div>
-            <div class="logo-text">Smartpay</div>
+            <div class="logo-text">Gerência Financeira</div>
         </div>
 
         <ul class="menu-items">
@@ -254,7 +254,8 @@
                     <div class="form-group"><label>Qtd. Processos</label><input type="number" id="qtd_processos" class="form-input" value="0"></div>
                 </div>
                 
-                <h3 style="font-size: 14px; font-weight: 700; margin: 24px 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid var(--border);">Esforço Adicional</h3>
+                <!-- Título atualizado -->
+                <h3 style="font-size: 14px; font-weight: 700; margin: 24px 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid var(--border);">Detalhamento da Remessa</h3>
                 
                 <div class="row-grid">
                     <div class="form-group"><label>Contratos</label><input type="number" id="qtd_contratos" class="form-input" value="0"></div>
@@ -325,7 +326,8 @@
             
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Histórico de Gargalos</h2>
+                    <!-- Título atualizado -->
+                    <h2 class="card-title">Histórico de inconsistências</h2>
                     <button class="btn-export" onclick="exportarCSV('ocorrencias')"><i class="fa-solid fa-download"></i> Exportar CSV</button>
                 </div>
                 <div class="table-wrapper">
@@ -353,7 +355,7 @@
                         <label>Base de Dados</label>
                         <select id="rel_tipo" class="form-input">
                             <option value="remessas">Produção (Remessas)</option>
-                            <option value="ocorrencias">Gargalos (Ocorrências)</option>
+                            <option value="ocorrencias">Inconsistências (Pendências)</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -442,7 +444,7 @@
 
     <script>
         // =====================================
-        // TEMA DARK / LIGHT (NOVIDADE!)
+        // TEMA DARK / LIGHT
         // =====================================
         function toggleTheme() {
             const body = document.documentElement;
