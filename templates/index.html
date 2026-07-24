@@ -3,343 +3,391 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerência Financeira - Painel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Dashboard - Smartpay</title>
+    <!-- Fonte super moderna usada em painéis premium -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: linear-gradient(135deg, #0a0f24 0%, #04060d 100%); color: #ffffff; font-family: 'Montserrat', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        /* ==========================================
+           SISTEMA DE TEMAS (CLARO E ESCURO)
+           ========================================== */
+        :root {
+            /* TEMA CLARO (Padrão da imagem enviada) */
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --bg-input: #f9fafb;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --btn-primary: #111827;
+            --btn-primary-text: #ffffff;
+            --menu-active-bg: #111827;
+            --menu-active-text: #ffffff;
+            --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.03);
+            --shadow-btn: 0 4px 12px rgba(17, 24, 39, 0.2);
+            --accent: #10b981;
+        }
 
-        .sidebar { width: 280px; background: #0d1117; border-right: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; padding: 30px 20px; flex-shrink: 0; }
-        .logo-area { display: flex; align-items: center; gap: 10px; margin-bottom: 50px; }
-        .logo-text { font-size: 16px; font-weight: 800; color: #ffffff; text-transform: lowercase; }
-        .logo-icon-wallet { background: rgba(160, 137, 230, 0.1); color: #a089e6; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        [data-theme="dark"] {
+            /* TEMA ESCURO */
+            --bg-body: #09090b;
+            --bg-card: #18181b;
+            --bg-input: #27272a;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --border: #27272a;
+            --btn-primary: #ffffff;
+            --btn-primary-text: #000000;
+            --menu-active-bg: #ffffff;
+            --menu-active-text: #000000;
+            --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --shadow-btn: 0 4px 12px rgba(255, 255, 255, 0.1);
+        }
 
-        .menu-title { color: #475569; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; padding-left: 10px; }
-        .menu-items { list-style: none; display: flex; flex-direction: column; gap: 5px; }
-        .menu-item { display: flex; align-items: center; gap: 15px; padding: 14px 15px; border-radius: 10px; color: #94a3b8; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.2s; cursor: pointer; }
-        .menu-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
-        .menu-item.active { background: rgba(160, 137, 230, 0.08); color: #a089e6; font-weight: 700; border-left: 4px solid #a089e6; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s; }
+        
+        body { background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        .profile-box { margin-top: auto; display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.06); }
+        /* SCROLLBAR INVISÍVEL PARA FICAR CLEAN */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        /* SIDEBAR (MENU LATERAL) */
+        .sidebar { width: 260px; display: flex; flex-direction: column; padding: 30px 20px; flex-shrink: 0; }
+        .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 50px; padding-left: 10px; }
+        .logo-icon { width: 36px; height: 36px; background-color: var(--text-main); color: var(--bg-body); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .logo-text { font-size: 18px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+
+        .menu-items { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+        .menu-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 12px; color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 14px; cursor: pointer; }
+        .menu-item:hover { color: var(--text-main); }
+        .menu-item.active { background-color: var(--menu-active-bg); color: var(--menu-active-text); box-shadow: var(--shadow-btn); }
+
+        .profile-box { margin-top: auto; display: flex; align-items: center; justify-content: space-between; padding: 16px; background-color: var(--bg-card); border-radius: 16px; box-shadow: var(--shadow-card); }
         .profile-data { display: flex; align-items: center; gap: 12px; }
-        .profile-avatar { background: #2c303d; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #a089e6; font-size: 14px; border: 1px solid rgba(255, 255, 255, 0.1); text-transform: uppercase;}
+        .profile-avatar { width: 36px; height: 36px; border-radius: 50%; background-color: var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-main); font-size: 13px; }
         
-        .btn-logout { color: #ef4444; background: none; border: none; cursor: pointer; font-size: 16px; transition: 0.2s; padding: 5px;}
-        .btn-logout:hover { color: #f87171; transform: scale(1.1); }
+        .btn-logout { color: var(--text-muted); background: none; border: none; cursor: pointer; font-size: 16px; }
+        .btn-logout:hover { color: #ef4444; }
 
-        .main-content { flex-grow: 1; padding: 30px 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .header-title-box { display: flex; align-items: center; gap: 10px; }
-        .header-brilliant { background: rgba(160, 137, 230, 0.1); color: #a089e6; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-        .header-title { font-size: 24px; font-weight: 800; color: #ffffff; margin: 0; }
-        .btn-reload { background: #271a58; border: none; border-radius: 8px; color: #ffffff; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 18px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
-        .btn-reload:hover { background: #3c2a8a; }
+        /* CONTEÚDO PRINCIPAL */
+        .main-content { flex-grow: 1; padding: 30px 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+        
+        .topbar { display: flex; justify-content: space-between; align-items: center; }
+        .header-title { font-size: 24px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+        
+        .topbar-actions { display: flex; align-items: center; gap: 12px; }
+        .btn-icon { width: 42px; height: 42px; border-radius: 50%; background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow-card); }
+        .btn-icon:hover { border-color: var(--text-muted); }
 
-        .status-line { color: #94a3b8; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
-        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #a089e6; }
+        /* CARTÕES (CARDS FLOATING) */
+        .card { background-color: var(--bg-card); border-radius: 24px; padding: 30px; box-shadow: var(--shadow-card); width: 100%; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .card-title { font-size: 18px; font-weight: 700; color: var(--text-main); }
+        .card-subtitle { font-size: 13px; color: var(--text-muted); font-weight: 500; }
 
-        .glass-card { background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 40px; width: 100%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); margin-bottom: 20px;}
-        .card-header-internal { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; gap: 30px; width: 100%; }
-        .internal-title { margin-top: 0; color: #ffffff; font-size: 24px; font-weight: 800; }
-        .internal-subtitle { color: #a089e6; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        /* FILTROS E BOTÕES */
+        .filter-group { display: flex; align-items: center; gap: 10px; background-color: var(--bg-input); padding: 6px; border-radius: 12px; }
+        .btn-period { background: transparent; border: none; border-radius: 8px; color: var(--text-muted); padding: 8px 16px; font-weight: 600; font-size: 12px; cursor: pointer; }
+        .btn-period.active { background-color: var(--bg-card); color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 
-        .unified-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; width: auto; flex-shrink: 0; }
-        .period-buttons { display: flex; gap: 4px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
-        .btn-period { background: transparent; border: none; border-radius: 6px; color: #94a3b8; padding: 8px 16px; cursor: pointer; font-weight: 700; font-size: 11px; text-transform: uppercase; transition: all 0.2s; }
-        .btn-period.active { background: #271a58; color: #ffffff; }
+        /* METRICS (DASHBOARD) */
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; width: 100%; }
+        .metric-card { background-color: var(--bg-card); border-radius: 24px; padding: 24px; box-shadow: var(--shadow-card); display: flex; align-items: flex-start; justify-content: space-between; }
+        .metric-label { display: block; color: var(--text-muted); font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+        .metric-number { font-size: 42px; font-weight: 800; color: var(--text-main); letter-spacing: -1px; line-height: 1; }
+        .metric-icon { width: 48px; height: 48px; border-radius: 14px; background-color: var(--bg-input); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
-        .date-selectors { display: flex; gap: 10px; }
-        .date-box { background: rgba(44, 48, 61, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 6px 12px; display: flex; flex-direction: column; width: 140px; }
-        .date-box span { font-size: 9px; color: #94a3b8; font-weight: 700; margin-bottom: 2px; text-transform: uppercase; }
-        .date-box input { background: transparent; border: none; color: #ffffff; font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 600; width: 100%; outline: none; cursor: pointer; }
-        input[type="date"]::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
-
-        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; }
-        .metric-card { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 25px; display: flex; align-items: center; justify-content: space-between; }
-        .metric-label { display: block; color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
-        .metric-number { font-size: 32px; font-weight: 800; color: #ffffff; margin: 0; }
-        .metric-icon-glass { width: 50px; height: 50px; border-radius: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); backdrop-filter: blur(8px); color: #a089e6; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-
+        /* FORMULÁRIOS MINIMALISTAS */
         .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;}
-        .divider { border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 25px 0; padding-top: 20px; }
-        .form-input { background: rgba(44, 48, 61, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; color: #ffffff; padding: 14px; width: 100%; font-family: 'Montserrat', sans-serif; font-size: 14px; outline: none; transition: all 0.2s; }
-        .checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fff; font-size: 13px; font-weight: 600; }
-        label:not(.metric-label):not(.checkbox-label) { display: block; color: #ffffff; font-size: 11px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        .btn-submit { background: #1e40af; border: none; border-radius: 8px; color: #ffffff; cursor: pointer; font-weight: 700; padding: 16px; width: 100%; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; }
-        .btn-submit:hover { background: #1d4ed8; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { color: var(--text-muted); font-size: 12px; font-weight: 600; }
+        .form-input { background-color: var(--bg-input); border: 1px solid transparent; border-radius: 12px; color: var(--text-main); padding: 14px 16px; font-size: 14px; font-weight: 500; outline: none; width: 100%; }
+        .form-input:focus { border-color: var(--text-muted); background-color: var(--bg-card); }
         
-        .btn-export { background: #10b981; color: #ffffff; border: none; border-radius: 6px; padding: 8px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
-        .btn-export:hover { background: #059669; }
+        .date-pickers { display: flex; gap: 10px; }
+        input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
 
-        .table-title { font-size: 18px; font-weight: 700; color: #ffffff; display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
-        .glass-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-        .glass-table th { padding: 12px; color: #94a3b8; font-weight: 700; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-        .glass-table td { padding: 12px; color: #ffffff; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .badge-pontos { background: rgba(160, 137, 230, 0.1); color: #a089e6; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 12px; }
-        .badge-motivo { background: rgba(239, 68, 68, 0.1); color: #f87171; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px; text-transform: uppercase; }
-        .btn-action { color: #94a3b8; background: none; border: none; cursor: pointer; font-size: 14px; margin-right: 10px;}
-        .btn-delete:hover { color: #ef4444 !important; }
+        /* BOTÕES DE AÇÃO */
+        .btn-submit { background-color: var(--btn-primary); color: var(--btn-primary-text); border: none; border-radius: 12px; font-weight: 600; padding: 16px 24px; font-size: 14px; cursor: pointer; box-shadow: var(--shadow-btn); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-secondary { background-color: var(--bg-input); color: var(--text-main); border: none; border-radius: 12px; font-weight: 600; padding: 16px 24px; cursor: pointer; }
+        
+        .btn-export { background-color: var(--bg-input); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .btn-export:hover { background-color: var(--border); }
+
+        /* TABELAS MODERNAS */
+        .table-wrapper { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 16px; color: var(--text-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 16px; color: var(--text-main); font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--border); }
+        tr:last-child td { border-bottom: none; }
+        
+        .badge { background-color: var(--bg-input); padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 12px; }
+        .badge-green { color: #10b981; background-color: rgba(16, 185, 129, 0.1); }
+        .badge-red { color: #ef4444; background-color: rgba(239, 68, 68, 0.1); }
+        
+        .btn-action { color: var(--text-muted); background: none; border: none; cursor: pointer; font-size: 15px; margin-right: 12px; }
+        .btn-action:hover { color: var(--text-main); }
+        .btn-delete:hover { color: #ef4444; }
     </style>
 </head>
 <body>
 
+    <!-- MENU LATERAL -->
     <nav class="sidebar">
         <div class="logo-area">
-            <div class="logo-icon-wallet"><i class="fa-solid fa-wallet"></i></div>
-            <div class="logo-text">Gerência<br>Financeira</div>
+            <div class="logo-icon"><i class="fa-solid fa-layer-group"></i></div>
+            <div class="logo-text">Smartpay</div>
         </div>
 
-        <div class="menu-title">Menu Principal</div>
         <ul class="menu-items">
-            <li class="menu-item active" id="menu_dashboard" onclick="alternarAba('dashboard')"><i class="fa-solid fa-chart-pie"></i> Meu Dashboard</li>
-            <li class="menu-item" id="menu_remessas" onclick="alternarAba('remessas')"><i class="fa-solid fa-file-invoice-dollar"></i> Remessas Pagas</li>
-            <li class="menu-item" id="menu_ocorrencias" onclick="alternarAba('ocorrencias')"><i class="fa-solid fa-triangle-exclamation"></i> Ocorrências e Pendências</li>
+            <li class="menu-item active" id="menu_dashboard" onclick="alternarAba('dashboard')">
+                <i class="fa-solid fa-chart-pie"></i> Meu Dashboard
+            </li>
+            <li class="menu-item" id="menu_remessas" onclick="alternarAba('remessas')">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Remessas Pagas
+            </li>
+            <li class="menu-item" id="menu_ocorrencias" onclick="alternarAba('ocorrencias')">
+                <i class="fa-solid fa-triangle-exclamation"></i> Pendências
+            </li>
             
             {% if session.get('is_admin') %}
-            <!-- NOVAS ABAS DE ADMIN -->
-            <li class="menu-item" id="menu_relatorios" onclick="alternarAba('relatorios')" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 25px;"><i class="fa-solid fa-globe"></i> Relatórios (Visão Global)</li>
-            <li class="menu-item" id="menu_equipe" onclick="alternarAba('equipe')"><i class="fa-solid fa-users-gear"></i> Gestão de Equipe</li>
+            <div style="margin: 20px 0 10px 16px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Gestão Global</div>
+            <li class="menu-item" id="menu_relatorios" onclick="alternarAba('relatorios')">
+                <i class="fa-solid fa-globe"></i> Relatórios
+            </li>
+            <li class="menu-item" id="menu_equipe" onclick="alternarAba('equipe')">
+                <i class="fa-solid fa-users"></i> Equipe
+            </li>
             {% endif %}
         </ul>
 
         <div class="profile-box">
             <div class="profile-data">
                 <div class="profile-avatar">{{ session.get('nome', 'US')[0:2] | upper }}</div>
-                <div class="profile-info">
-                    <p style="font-size: 14px; font-weight: 700; color: #ffffff; margin: 0;">{{ session.get('nome', 'Usuário') }}</p>
-                    <p style="font-size: 11px; color: #94a3b8; font-weight: 500; margin: 0;">{{ session.get('cargo', 'Colaborador') }}</p>
+                <div>
+                    <p style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">{{ session.get('nome', 'Usuário') }}</p>
+                    <p style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ session.get('cargo', 'Colaborador') }}</p>
                 </div>
             </div>
             <button onclick="window.location.href='/logout'" class="btn-logout" title="Sair"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
         </div>
     </nav>
 
+    <!-- CONTEÚDO PRINCIPAL -->
     <main class="main-content">
         
-        <div class="header-top">
-            <div class="header-title-box">
-                <div class="header-brilliant"><i class="fa-solid fa-gem"></i></div>
-                <h1 class="header-title">Painel de Produtividade</h1>
+        <div class="topbar">
+            <h1 class="header-title">Visão Geral</h1>
+            
+            <div class="topbar-actions">
+                <button class="btn-icon" onclick="carregarMetricasDashboard()" title="Atualizar">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+                <button class="btn-icon" onclick="toggleTheme()" title="Mudar Tema">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
             </div>
-            <button class="btn-reload" onclick="window.location.reload()"><i class="fa-solid fa-rotate"></i> Atualizar Dados</button>
-        </div>
-        
-        <div class="status-line">
-            <div class="status-dot"></div>
-            <span id="status_timestamp">ESTADO: ONLINE</span>
         </div>
 
-        <!-- DASHBOARD INDIVIDUAL -->
+        <!-- ABA: DASHBOARD INDIVIDUAL -->
         <section id="aba_dashboard_view" style="display: block;">
-            <div class="glass-card">
-                <div class="card-header-internal">
-                    <div class="card-title-box">
-                        <h2 class="internal-title">Visão Individual</h2>
-                        <span class="internal-subtitle">SUA PRODUÇÃO</span>
-                    </div>
-
-                    <div class="unified-controls">
-                        <div class="period-buttons">
-                            <button class="btn-period" id="period_hoje" onclick="setPeriodo('hoje')">HOJE</button>
-                            <button class="btn-period active" id="period_semanal" onclick="setPeriodo('semanal')">SEMANAL</button>
-                            <button class="btn-period" id="period_mensal" onclick="setPeriodo('mensal')">MENSAL</button>
-                        </div>
-                        <div class="date-selectors">
-                            <div class="date-box">
-                                <span>DE</span>
-                                <input type="date" id="date_from" onchange="atualizarPorDataManual()" onclick="this.showPicker()">
-                            </div>
-                            <div class="date-box">
-                                <span>ATÉ</span>
-                                <input type="date" id="date_to" onchange="atualizarPorDataManual()" onclick="this.showPicker()">
-                            </div>
-                        </div>
-                    </div>
+            
+            <!-- FILTROS FLOATING -->
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 24px; gap: 16px;">
+                <div class="filter-group">
+                    <button class="btn-period" id="period_hoje" onclick="setPeriodo('hoje')">Hoje</button>
+                    <button class="btn-period active" id="period_semanal" onclick="setPeriodo('semanal')">Semanal</button>
+                    <button class="btn-period" id="period_mensal" onclick="setPeriodo('mensal')">Mensal</button>
                 </div>
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div>
-                            <label class="metric-label">Seus Pontos</label>
-                            <div class="metric-number" id="dash_pontos">0</div>
-                        </div>
-                        <div class="metric-icon-glass"><i class="fa-solid fa-bolt"></i></div>
+                <div class="date-pickers filter-group">
+                    <input type="date" id="date_from" class="form-input" style="padding: 8px 12px; background: transparent;" onchange="atualizarPorDataManual()">
+                    <span style="color: var(--text-muted); align-self: center; font-size: 12px;">até</span>
+                    <input type="date" id="date_to" class="form-input" style="padding: 8px 12px; background: transparent;" onchange="atualizarPorDataManual()">
+                </div>
+            </div>
+
+            <!-- CARDS DE METRICAS -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div>
+                        <label class="metric-label">Pontos Adquiridos</label>
+                        <div class="metric-number" id="dash_pontos">0</div>
                     </div>
-                    <div class="metric-card">
-                        <div>
-                            <label class="metric-label">Seus Processos</label>
-                            <div class="metric-number" id="dash_processos">0</div>
-                        </div>
-                        <div class="metric-icon-glass"><i class="fa-solid fa-clipboard-check"></i></div>
+                    <div class="metric-icon"><i class="fa-solid fa-bolt"></i></div>
+                </div>
+                <div class="metric-card">
+                    <div>
+                        <label class="metric-label">Processos Concluídos</label>
+                        <div class="metric-number" id="dash_processos">0</div>
                     </div>
-                    <div class="metric-card">
-                        <div>
-                            <label class="metric-label">Remessas Auditadas</label>
-                            <div class="metric-number" id="dash_remessas">0</div>
-                        </div>
-                        <div class="metric-icon-glass"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                    <div class="metric-icon"><i class="fa-solid fa-check-double"></i></div>
+                </div>
+                <div class="metric-card">
+                    <div>
+                        <label class="metric-label">Remessas Auditadas</label>
+                        <div class="metric-number" id="dash_remessas">0</div>
                     </div>
+                    <div class="metric-icon"><i class="fa-solid fa-file-invoice"></i></div>
                 </div>
             </div>
         </section>
 
-        <!-- REMESSAS PAGAS (INDIVIDUAL) -->
+        <!-- ABA: REMESSAS PAGAS -->
         <section id="aba_remessas_view" style="display: none; flex-direction: column; width: 100%;">
-            <div class="glass-card">
-                <div class="card-header-internal" style="margin-bottom: 20px;">
-                    <div class="card-title-box">
-                        <h2 class="internal-title">Registro de Remessas</h2>
-                        <span class="internal-subtitle">LANÇAMENTO DE LOTE</span>
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Novo Lançamento</h2>
+                        <span class="card-subtitle">Registe a sua produção de remessas.</span>
                     </div>
                 </div>
+
                 <div class="row-grid">
-                    <div><label>Data</label><input type="date" id="data_pagamento" class="form-input" required onclick="this.showPicker()"></div>
-                    <div><label>Nº/Nome</label><input type="text" id="nome_remessa" class="form-input" placeholder="Ex: 7190 - c" required></div>
-                </div>
-                <div class="row-grid">
-                    <div><label>Fornecedores</label><input type="number" id="qtd_fornecedores" class="form-input" value="0" min="0"></div>
-                    <div><label>Processos</label><input type="number" id="qtd_processos" class="form-input" value="0" min="0"></div>
-                </div>
-                <div class="divider"></div>
-                <p style="color: #a089e6; font-weight: 700; margin-top: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px;">Detalhamento de Esforço Adicional</p>
-                <div class="row-grid">
-                    <div><label>Processos de Contrato</label><input type="number" id="qtd_contratos" class="form-input" value="0" min="0"></div>
-                    <div><label>Certidões Renovadas</label><input type="number" id="certidoes_renovadas" class="form-input" value="0" min="0"></div>
+                    <div class="form-group"><label>Data Pagamento</label><input type="date" id="data_pagamento" class="form-input"></div>
+                    <div class="form-group"><label>Nº/Nome Remessa</label><input type="text" id="nome_remessa" class="form-input" placeholder="Ex: 7190 - c"></div>
                 </div>
                 <div class="row-grid">
-                    <div><label>Pagamentos Parciais</label><input type="number" id="pagamentos_parciais" class="form-input" value="0" min="0"></div>
-                    <div><label>Glosas Lançadas</label><input type="number" id="glosas_lancadas" class="form-input" value="0" min="0"></div>
+                    <div class="form-group"><label>Qtd. Fornecedores</label><input type="number" id="qtd_fornecedores" class="form-input" value="0"></div>
+                    <div class="form-group"><label>Qtd. Processos</label><input type="number" id="qtd_processos" class="form-input" value="0"></div>
                 </div>
-                <div style="margin-bottom: 20px;">
-                    <label>Apostilamentos Bancários</label><input type="number" id="apostilamentos_bancarios" class="form-input" value="0" min="0" style="width: 50%;">
+                
+                <h3 style="font-size: 14px; font-weight: 700; margin: 24px 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid var(--border);">Esforço Adicional</h3>
+                
+                <div class="row-grid">
+                    <div class="form-group"><label>Contratos</label><input type="number" id="qtd_contratos" class="form-input" value="0"></div>
+                    <div class="form-group"><label>Certidões</label><input type="number" id="certidoes_renovadas" class="form-input" value="0"></div>
                 </div>
-                <div id="area_botoes" style="display: flex; gap: 15px; margin-top: 15px;">
-                    <button class="btn-submit" id="btn_principal" onclick="registrarLote()">Registrar Produção</button>
-                    <button class="btn-submit" id="btn_cancelar" onclick="cancelarEdicao()" style="background: rgba(255,255,255,0.1); display: none;">Cancelar</button>
+                <div class="row-grid">
+                    <div class="form-group"><label>Pag. Parciais</label><input type="number" id="pagamentos_parciais" class="form-input" value="0"></div>
+                    <div class="form-group"><label>Glosas</label><input type="number" id="glosas_lancadas" class="form-input" value="0"></div>
+                </div>
+                <div class="form-group" style="width: 49%;"><label>Apostilamentos</label><input type="number" id="apostilamentos_bancarios" class="form-input" value="0"></div>
+
+                <div style="display: flex; gap: 16px; margin-top: 30px;">
+                    <button class="btn-submit" id="btn_principal" onclick="registrarLote()">Salvar Produção</button>
+                    <button class="btn-secondary" id="btn_cancelar" onclick="cancelarEdicao()" style="display: none;">Cancelar</button>
                 </div>
             </div>
             
-            <div class="glass-card">
-                <div class="table-title">Seu Histórico de Lançamentos</div>
-                <table class="glass-table">
-                    <thead><tr><th>Data</th><th>Remessa</th><th>Fornecedores</th><th>Processos</th><th>Pontos</th><th style="text-align: right;">Ações</th></tr></thead>
-                    <tbody id="corpo_tabela_historico"></tbody>
-                </table>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Histórico de Remessas</h2>
+                    <button class="btn-export" onclick="exportarCSV('remessas')"><i class="fa-solid fa-download"></i> Exportar CSV</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Data</th><th>Remessa</th><th>Fornec.</th><th>Processos</th><th>Pontos</th><th style="text-align: right;">Ações</th></tr></thead>
+                        <tbody id="corpo_tabela_historico"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
-        <!-- OCORRÊNCIAS (INDIVIDUAL) -->
+        <!-- ABA: OCORRÊNCIAS -->
         <section id="aba_ocorrencias_view" style="display: none; flex-direction: column; width: 100%;">
-            <div class="glass-card">
-                <div class="card-header-internal" style="margin-bottom: 20px;">
-                    <div class="card-title-box">
-                        <h2 class="internal-title">Registrar Pendência</h2>
-                        <span class="internal-subtitle">MAPEAMENTO DE GARGALOS E PROBLEMAS TÉCNICOS</span>
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Registrar Pendência</h2>
+                        <span class="card-subtitle">Mapeamento de gargalos e paralisações.</span>
                     </div>
                 </div>
                 <div class="row-grid">
-                    <div><label>Data</label><input type="date" id="oco_data" class="form-input" required onclick="this.showPicker()"></div>
-                    <div>
+                    <div class="form-group"><label>Data</label><input type="date" id="oco_data" class="form-input"></div>
+                    <div class="form-group">
                         <label>Motivo da Pendência</label>
-                        <select id="oco_motivo" class="form-input" required style="background: rgba(44, 48, 61, 0.6); color: #fff; cursor: pointer;">
+                        <select id="oco_motivo" class="form-input" style="cursor: pointer;">
                             <option value="Falta de volume">Falta de volume / Processos insuficientes</option>
-                            <option value="Pendência de Pagamento">Pendência de Pagamento / Aguardando liberação</option>
-                            <option value="Sistema fora do ar">Sistema fora do ar / Instabilidade técnica</option>
+                            <option value="Pendência de Pagamento">Pendência de Pagamento</option>
+                            <option value="Sistema fora do ar">Sistema fora do ar</option>
                             <option value="Aguardando retorno">Aguardando retorno de outro setor</option>
                             <option value="Outros">Outros motivos</option>
                         </select>
                     </div>
                 </div>
                 <div class="row-grid">
-                    <div><label>Nº Remessa/Processo (Opcional)</label><input type="text" id="oco_ref" class="form-input" placeholder="Ex: 7190 - c"></div>
-                    <div><label>Tempo de Impacto (Horas)</label><input type="number" id="oco_tempo" class="form-input" placeholder="Ex: 2" step="0.5" min="0"></div>
+                    <div class="form-group"><label>Nº Remessa/Ref.</label><input type="text" id="oco_ref" class="form-input" placeholder="Opcional"></div>
+                    <div class="form-group"><label>Horas Paradas</label><input type="number" id="oco_tempo" class="form-input" placeholder="Ex: 2" step="0.5" min="0"></div>
                 </div>
-                <div style="margin-bottom: 20px;">
-                    <label>Observações / Detalhes</label>
-                    <input type="text" id="oco_obs" class="form-input" placeholder="Descreva brevemente a situação que gerou a pendência...">
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>Observações</label>
+                    <input type="text" id="oco_obs" class="form-input" placeholder="Descreva brevemente...">
                 </div>
-                <div style="display: flex; gap: 15px; margin-top: 15px;">
-                    <button class="btn-submit" id="btn_oco_principal" onclick="registrarOcorrencia()" style="background: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Registrar Ocorrência</button>
-                    <button class="btn-submit" id="btn_oco_cancelar" onclick="cancelarEdicaoOcorrencia()" style="background: rgba(255,255,255,0.1); display: none;">Cancelar</button>
+
+                <div style="display: flex; gap: 16px; margin-top: 30px;">
+                    <button class="btn-submit" id="btn_oco_principal" onclick="registrarOcorrencia()">Salvar Pendência</button>
+                    <button class="btn-secondary" id="btn_oco_cancelar" onclick="cancelarEdicaoOcorrencia()" style="display: none;">Cancelar</button>
                 </div>
             </div>
             
-            <div class="glass-card">
-                <div class="table-title">Seu Histórico de Ocorrências</div>
-                <table class="glass-table">
-                    <thead><tr><th>Data</th><th>Motivo</th><th>Remessa</th><th>Horas Paradas</th><th>Observação</th><th style="text-align: right;">Ações</th></tr></thead>
-                    <tbody id="corpo_tabela_ocorrencias"></tbody>
-                </table>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Histórico de Gargalos</h2>
+                    <button class="btn-export" onclick="exportarCSV('ocorrencias')"><i class="fa-solid fa-download"></i> Exportar CSV</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Data</th><th>Motivo</th><th>Remessa</th><th>Tempo</th><th>Obs</th><th style="text-align: right;">Ações</th></tr></thead>
+                        <tbody id="corpo_tabela_ocorrencias"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
-        <!-- NOVO MÓDULO: RELATÓRIOS GERENCIAIS (SÓ ADMIN) -->
+        <!-- ABA: RELATÓRIOS (ADMIN) -->
         {% if session.get('is_admin') %}
         <section id="aba_relatorios_view" style="display: none; flex-direction: column; width: 100%;">
-            <div class="glass-card">
-                <div class="card-header-internal" style="margin-bottom: 20px;">
-                    <div class="card-title-box">
-                        <h2 class="internal-title" style="color: #a089e6;">Visão Global e Exportação</h2>
-                        <span class="internal-subtitle">ACOMPANHAMENTO DA EQUIPE</span>
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Relatório Global</h2>
+                        <span class="card-subtitle">Visão de administrador da equipe.</span>
                     </div>
                 </div>
                 
-                <div class="row-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr; align-items: end; gap: 15px;">
-                    <div>
-                        <label>Tipo de Relatório</label>
-                        <select id="rel_tipo" class="form-input" style="background: rgba(44,48,61,0.6); cursor:pointer;">
+                <div class="row-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr; align-items: end;">
+                    <div class="form-group">
+                        <label>Base de Dados</label>
+                        <select id="rel_tipo" class="form-input">
                             <option value="remessas">Produção (Remessas)</option>
                             <option value="ocorrencias">Gargalos (Ocorrências)</option>
                         </select>
                     </div>
-                    <div>
-                        <label>Colaborador</label>
-                        <select id="rel_colab" class="form-input" style="background: rgba(44,48,61,0.6); cursor:pointer;">
-                            <option value="todos">Todos da Equipe</option>
-                            <!-- Injetado via JS -->
+                    <div class="form-group">
+                        <label>Analista</label>
+                        <select id="rel_colab" class="form-input">
+                            <option value="todos">Toda a Equipe</option>
                         </select>
                     </div>
-                    <div><label>Data Inicial</label><input type="date" id="rel_data_ini" class="form-input" onclick="this.showPicker()"></div>
-                    <div><label>Data Final</label><input type="date" id="rel_data_fim" class="form-input" onclick="this.showPicker()"></div>
+                    <div class="form-group"><label>De</label><input type="date" id="rel_data_ini" class="form-input"></div>
+                    <div class="form-group"><label>Até</label><input type="date" id="rel_data_fim" class="form-input"></div>
                 </div>
-                
-                <button class="btn-submit" onclick="gerarRelatorioAdmin()" style="margin-top: 20px; background: #4f46e5;"><i class="fa-solid fa-magnifying-glass"></i> Consultar Banco de Dados</button>
+                <button class="btn-submit" onclick="gerarRelatorioAdmin()" style="margin-top: 24px; width: 100%;">Filtrar Resultados</button>
             </div>
 
-            <!-- DASHBOARD DO RELATORIO DA EQUIPE -->
-            <div class="metrics-grid" style="margin-bottom: 20px;">
+            <!-- DASHBOARD RELATORIO -->
+            <div class="metrics-grid" style="margin-bottom: 24px;">
                 <div class="metric-card">
-                    <div>
-                        <label class="metric-label" id="rel_lbl_1">Pontos Globais</label>
-                        <div class="metric-number" id="rel_val_1">0</div>
-                    </div>
-                    <div class="metric-icon-glass"><i class="fa-solid fa-chart-line"></i></div>
+                    <div><label class="metric-label" id="rel_lbl_1">Pontos Globais</label><div class="metric-number" id="rel_val_1">0</div></div>
                 </div>
                 <div class="metric-card">
-                    <div>
-                        <label class="metric-label" id="rel_lbl_2">Processos Totais</label>
-                        <div class="metric-number" id="rel_val_2">0</div>
-                    </div>
-                    <div class="metric-icon-glass"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <div><label class="metric-label" id="rel_lbl_2">Processos Totais</label><div class="metric-number" id="rel_val_2">0</div></div>
                 </div>
                 <div class="metric-card">
-                    <div>
-                        <label class="metric-label" id="rel_lbl_3">Registros Encontrados</label>
-                        <div class="metric-number" id="rel_val_3">0</div>
-                    </div>
-                    <div class="metric-icon-glass"><i class="fa-solid fa-database"></i></div>
+                    <div><label class="metric-label" id="rel_lbl_3">Registros</label><div class="metric-number" id="rel_val_3">0</div></div>
                 </div>
             </div>
 
-            <!-- TABELA DO RELATÓRIO DA EQUIPE -->
-            <div class="glass-card">
-                <div class="table-title">
-                    <span>Resultados da Busca</span>
-                    <button class="btn-export" onclick="exportarRelatorioAdminCSV()"><i class="fa-solid fa-file-excel"></i> Exportar Resultado para Excel/CSV</button>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Resultados</h2>
+                    <button class="btn-export" onclick="exportarRelatorioAdminCSV()"><i class="fa-solid fa-download"></i> Baixar Planilha</button>
                 </div>
-                <div style="width: 100%; overflow-x: auto;">
-                    <table class="glass-table">
+                <div class="table-wrapper">
+                    <table>
                         <thead id="rel_tabela_head"></thead>
                         <tbody id="rel_tabela_body"></tbody>
                     </table>
@@ -347,45 +395,45 @@
             </div>
         </section>
 
-        <!-- GESTÃO DE EQUIPE -->
+        <!-- ABA: GESTÃO DE EQUIPE (ADMIN) -->
         <section id="aba_equipe_view" style="display: none; flex-direction: column; width: 100%;">
-            <div class="glass-card">
-                <div class="card-header-internal" style="margin-bottom: 20px;">
-                    <div class="card-title-box">
-                        <h2 class="internal-title">Gestão de Colaborador</h2>
-                        <span class="internal-subtitle">CADASTRAR E EDITAR ACESSOS AO SISTEMA</span>
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Acessos da Equipe</h2>
+                        <span class="card-subtitle">Cadastre ou edite as matrículas de acesso.</span>
                     </div>
                 </div>
                 
                 <div class="row-grid">
-                    <div><label>Matrícula (Login)</label><input type="text" id="colab_matricula" class="form-input" placeholder="Ex: 12345" required></div>
-                    <div><label>Nome Completo</label><input type="text" id="colab_nome" class="form-input" placeholder="Nome do Analista" required></div>
+                    <div class="form-group"><label>Matrícula</label><input type="text" id="colab_matricula" class="form-input" placeholder="Ex: 12345"></div>
+                    <div class="form-group"><label>Nome Completo</label><input type="text" id="colab_nome" class="form-input"></div>
                 </div>
-                
                 <div class="row-grid">
-                    <div><label>Cargo / Função</label><input type="text" id="colab_cargo" class="form-input" placeholder="Ex: Analista de RH" required></div>
-                    <div><label>Data de Nascimento (Senha)</label><input type="text" id="colab_data" class="form-input" placeholder="dd/mm/aa" required></div>
+                    <div class="form-group"><label>Cargo</label><input type="text" id="colab_cargo" class="form-input"></div>
+                    <div class="form-group"><label>Senha (Data Nasc.)</label><input type="text" id="colab_data" class="form-input" placeholder="dd/mm/aa"></div>
                 </div>
 
-                <div style="margin-bottom: 25px;">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="colab_admin" style="width: 18px; height: 18px;">
-                        Tornar este usuário um Administrador
+                <div style="margin: 20px 0;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-main); font-weight: 600; font-size: 13px;">
+                        <input type="checkbox" id="colab_admin" style="width: 16px; height: 16px;"> Dar permissões de Gestor
                     </label>
                 </div>
 
-                <div style="display: flex; gap: 15px;">
-                    <button class="btn-submit" id="btn_colab_principal" onclick="salvarColaborador()" style="background: #10b981;">Cadastrar na Equipe</button>
-                    <button class="btn-submit" id="btn_colab_cancelar" onclick="cancelarEdicaoColaborador()" style="background: rgba(255,255,255,0.1); display: none;">Cancelar</button>
+                <div style="display: flex; gap: 16px;">
+                    <button class="btn-submit" id="btn_colab_principal" onclick="salvarColaborador()">Salvar Colaborador</button>
+                    <button class="btn-secondary" id="btn_colab_cancelar" onclick="cancelarEdicaoColaborador()" style="display: none;">Cancelar</button>
                 </div>
             </div>
 
-            <div class="glass-card">
-                <div class="table-title">Colaboradores Ativos</div>
-                <table class="glass-table">
-                    <thead><tr><th>Matrícula</th><th>Nome</th><th>Cargo</th><th>Senha</th><th>Admin</th><th style="text-align: right;">Ações</th></tr></thead>
-                    <tbody id="corpo_tabela_equipe"></tbody>
-                </table>
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Colaboradores Cadastrados</h2></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Matrícula</th><th>Nome</th><th>Cargo</th><th>Senha</th><th>Admin</th><th style="text-align: right;">Ações</th></tr></thead>
+                        <tbody id="corpo_tabela_equipe"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
         {% endif %}
@@ -393,62 +441,68 @@
     </main>
 
     <script>
-        let historicoRemessas = [];
-        let historicoOcorrencias = [];
-        let listaColaboradores = [];
-        let dadosRelatorioAtual = [];
-        let tipoRelatorioAtual = '';
-        
-        let idSendoEditado = null;
-        let idOcoEditado = null;
-        let idColabEditado = null;
+        // =====================================
+        // TEMA DARK / LIGHT (NOVIDADE!)
+        // =====================================
+        function toggleTheme() {
+            const body = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                icon.className = 'fa-solid fa-moon';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                icon.className = 'fa-solid fa-sun';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Verifica a preferência salva ao carregar
+        if(localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.getElementById('theme-icon').className = 'fa-solid fa-sun';
+        }
+
+        // =====================================
+        // VARIÁVEIS E LÓGICA DE DADOS MANTIDAS
+        // =====================================
+        let historicoRemessas = []; let historicoOcorrencias = []; let listaColaboradores = []; let dadosRelatorioAtual = []; let tipoRelatorioAtual = '';
+        let idSendoEditado = null; let idOcoEditado = null; let idColabEditado = null;
 
         window.onload = function() {
             const dp = document.getElementById('data_pagamento'); if(dp) dp.valueAsDate = new Date();
             const do_ = document.getElementById('oco_data'); if(do_) do_.valueAsDate = new Date();
-            
-            // Seta datas iniciais no relatório
-            const r1 = document.getElementById('rel_data_ini'); if(r1) {
-                const hoje = new Date(); const prim = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-                r1.value = formataDataISO(prim);
-            }
+            const r1 = document.getElementById('rel_data_ini'); if(r1) r1.value = formataDataISO(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
             const r2 = document.getElementById('rel_data_fim'); if(r2) r2.valueAsDate = new Date();
-
             setPeriodo('mensal');
         };
 
         function alternarAba(aba) {
             const menus = ['menu_dashboard', 'menu_remessas', 'menu_ocorrencias', 'menu_relatorios', 'menu_equipe'];
             const views = ['aba_dashboard_view', 'aba_remessas_view', 'aba_ocorrencias_view', 'aba_relatorios_view', 'aba_equipe_view'];
-            
             menus.forEach(m => { const el = document.getElementById(m); if(el) el.classList.remove('active'); });
             views.forEach(v => { const el = document.getElementById(v); if(el) el.style.display = 'none'; });
-            
             const mAtivo = document.getElementById(`menu_${aba}`); if(mAtivo) mAtivo.classList.add('active');
             const vAtivo = document.getElementById(`aba_${aba}_view`); if(vAtivo) vAtivo.style.display = aba === 'dashboard' ? 'block' : 'flex';
 
-            if(aba === 'dashboard') carregarMetricasDashboard();
-            if(aba === 'remessas') carregarHistorico();
-            if(aba === 'ocorrencias') carregarOcorrencias();
-            if(aba === 'equipe') carregarEquipe();
+            if(aba === 'dashboard') carregarMetricasDashboard(); if(aba === 'remessas') carregarHistorico();
+            if(aba === 'ocorrencias') carregarOcorrencias(); if(aba === 'equipe') carregarEquipe();
             if(aba === 'relatorios') preencherDropdownColaboradores();
         }
 
-        function formataDataISO(data) {
-            return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
-        }
+        function formataDataISO(data) { return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`; }
 
-        // --- DASHBOARD INDIVIDUAL ---
         function setPeriodo(periodo) {
             ['hoje', 'semanal', 'mensal'].forEach(p => document.getElementById(`period_${p}`).classList.remove('active'));
             if(periodo) document.getElementById(`period_${periodo}`).classList.add('active');
             const hoje = new Date(); let dataInicio = new Date(); let dataFim = new Date();
             if (periodo === 'semanal') dataInicio.setDate(hoje.getDate() - hoje.getDay());
             else if (periodo === 'mensal') dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-            document.getElementById('date_from').value = formataDataISO(dataInicio);
-            document.getElementById('date_to').value = formataDataISO(dataFim);
+            document.getElementById('date_from').value = formataDataISO(dataInicio); document.getElementById('date_to').value = formataDataISO(dataFim);
             carregarMetricasDashboard();
         }
+
         function atualizarPorDataManual() { ['hoje', 'semanal', 'mensal'].forEach(p => document.getElementById(`period_${p}`).classList.remove('active')); carregarMetricasDashboard(); }
 
         async function carregarMetricasDashboard() {
@@ -462,175 +516,144 @@
             } catch (e) {}
         }
 
-        // --- REMESSAS INDIVIDUAIS ---
         async function carregarHistorico() {
             const r = await fetch('/api/listar-remessas'); historicoRemessas = await r.json();
             const b = document.getElementById('corpo_tabela_historico'); b.innerHTML = "";
-            if (historicoRemessas.length === 0) { b.innerHTML = `<tr><td colspan="6" style="text-align: center;">Nenhum registro.</td></tr>`; return; }
+            if (historicoRemessas.length === 0) { b.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum registo.</td></tr>`; return; }
             historicoRemessas.forEach(rem => {
                 const dt = rem.data_pagamento.split('-').reverse().join('/');
-                b.innerHTML += `<tr><td>${dt}</td><td style="font-weight: 600;">${rem.nome_remessa}</td><td>${rem.qtd_fornecedores}</td><td>${rem.qtd_processos}</td><td><span class="badge-pontos">${rem.pontuacao_total} pts</span></td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicao(${rem.id})" style="color: #a089e6;"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirRemessa(${rem.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                b.innerHTML += `<tr><td>${dt}</td><td style="font-weight: 700;">${rem.nome_remessa}</td><td>${rem.qtd_fornecedores}</td><td>${rem.qtd_processos}</td><td><span class="badge badge-green">${rem.pontuacao_total} pts</span></td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicao(${rem.id})"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirRemessa(${rem.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
             });
         }
         function prepararEdicao(id) {
-            const rem = historicoRemessas.find(r => r.id === id); if (!rem) return;
-            idSendoEditado = id;
-            document.getElementById('data_pagamento').value = rem.data_pagamento; document.getElementById('nome_remessa').value = rem.nome_remessa;
-            document.getElementById('qtd_fornecedores').value = rem.qtd_fornecedores; document.getElementById('qtd_processos').value = rem.qtd_processos;
-            document.getElementById('qtd_contratos').value = rem.qtd_contratos; document.getElementById('certidoes_renovadas').value = rem.certidoes_renovadas;
-            document.getElementById('pagamentos_parciais').value = rem.pagamentos_parciais; document.getElementById('glosas_lancadas').value = rem.glosas_lancadas || 0;
-            document.getElementById('apostilamentos_bancarios').value = rem.apostilamentos_bancarios || 0;
-            document.getElementById('btn_principal').innerText = "Atualizar Registro"; document.getElementById('btn_principal').style.background = "#10b981"; document.getElementById('btn_cancelar').style.display = "block";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const rem = historicoRemessas.find(r => r.id === id); if (!rem) return; idSendoEditado = id;
+            document.getElementById('data_pagamento').value = rem.data_pagamento; document.getElementById('nome_remessa').value = rem.nome_remessa; document.getElementById('qtd_fornecedores').value = rem.qtd_fornecedores; document.getElementById('qtd_processos').value = rem.qtd_processos; document.getElementById('qtd_contratos').value = rem.qtd_contratos; document.getElementById('certidoes_renovadas').value = rem.certidoes_renovadas; document.getElementById('pagamentos_parciais').value = rem.pagamentos_parciais; document.getElementById('glosas_lancadas').value = rem.glosas_lancadas || 0; document.getElementById('apostilamentos_bancarios').value = rem.apostilamentos_bancarios || 0;
+            document.getElementById('btn_principal').innerText = "Atualizar Produção"; document.getElementById('btn_cancelar').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         function cancelarEdicao() {
-            idSendoEditado = null; document.getElementById('data_pagamento').valueAsDate = new Date(); document.getElementById('nome_remessa').value = "";
-            document.querySelectorAll('#aba_remessas_view .form-input[type="number"]').forEach(i => i.value = "0");
-            document.getElementById('btn_principal').innerText = "Registrar Produção"; document.getElementById('btn_principal').style.background = "#1e40af"; document.getElementById('btn_cancelar').style.display = "none";
+            idSendoEditado = null; document.getElementById('data_pagamento').valueAsDate = new Date(); document.getElementById('nome_remessa').value = ""; document.querySelectorAll('#aba_remessas_view .form-input[type="number"]').forEach(i => i.value = "0");
+            document.getElementById('btn_principal').innerText = "Salvar Produção"; document.getElementById('btn_cancelar').style.display = "none";
         }
         async function registrarLote() {
             const dados = { data_pagamento: document.getElementById('data_pagamento').value, nome_remessa: document.getElementById('nome_remessa').value, qtd_fornecedores: document.getElementById('qtd_fornecedores').value, qtd_processos: document.getElementById('qtd_processos').value, qtd_contratos: document.getElementById('qtd_contratos').value, certidoes_renovadas: document.getElementById('certidoes_renovadas').value, pagamentos_parciais: document.getElementById('pagamentos_parciais').value, glosas_lancadas: document.getElementById('glosas_lancadas').value, apostilamentos_bancarios: document.getElementById('apostilamentos_bancarios').value };
-            if(!dados.nome_remessa) { alert("Introduza a remessa."); return; }
+            if(!dados.nome_remessa) return;
             await fetch(idSendoEditado ? `/api/atualizar-lote/${idSendoEditado}` : '/api/salvar-lote', { method: idSendoEditado ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-            alert("Sucesso!"); cancelarEdicao(); carregarHistorico(); carregarMetricasDashboard();
+            cancelarEdicao(); carregarHistorico(); carregarMetricasDashboard();
         }
-        async function excluirRemessa(id) { if(!confirm("Excluir registro?")) return; await fetch(`/api/deletar-lote/${id}`, { method: 'DELETE' }); carregarHistorico(); carregarMetricasDashboard(); }
+        async function excluirRemessa(id) { if(!confirm("Excluir?")) return; await fetch(`/api/deletar-lote/${id}`, { method: 'DELETE' }); carregarHistorico(); carregarMetricasDashboard(); }
 
-        // --- OCORRÊNCIAS INDIVIDUAIS ---
+        // --- OCORRENCIAS ---
         async function carregarOcorrencias() {
             const r = await fetch('/api/listar-ocorrencias'); historicoOcorrencias = await r.json();
             const b = document.getElementById('corpo_tabela_ocorrencias'); b.innerHTML = "";
-            if (historicoOcorrencias.length === 0) { b.innerHTML = `<tr><td colspan="6" style="text-align: center;">Nenhum registro.</td></tr>`; return; }
+            if (historicoOcorrencias.length === 0) { b.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum registo.</td></tr>`; return; }
             historicoOcorrencias.forEach(oco => {
                 const dt = oco.data_registro.split('-').reverse().join('/'); const ref = oco.referencia ? oco.referencia : '-';
-                b.innerHTML += `<tr><td>${dt}</td><td><span class="badge-motivo">${oco.motivo}</span></td><td style="font-weight: 600;">${ref}</td><td>${oco.tempo_impacto}h</td><td>${oco.observacoes}</td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicaoOcorrencia(${oco.id})" style="color: #a089e6;"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirOcorrencia(${oco.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                b.innerHTML += `<tr><td>${dt}</td><td><span class="badge badge-red">${oco.motivo}</span></td><td style="font-weight: 700;">${ref}</td><td>${oco.tempo_impacto}h</td><td>${oco.observacoes}</td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicaoOcorrencia(${oco.id})"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirOcorrencia(${oco.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
             });
         }
         function prepararEdicaoOcorrencia(id) {
-            const oco = historicoOcorrencias.find(o => o.id === id); if (!oco) return;
-            idOcoEditado = id; document.getElementById('oco_data').value = oco.data_registro; document.getElementById('oco_motivo').value = oco.motivo; document.getElementById('oco_ref').value = oco.referencia; document.getElementById('oco_tempo').value = oco.tempo_impacto; document.getElementById('oco_obs').value = oco.observacoes;
-            document.getElementById('btn_oco_principal').innerText = "Atualizar Ocorrência"; document.getElementById('btn_oco_principal').style.background = "#10b981"; document.getElementById('btn_oco_cancelar').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
+            const oco = historicoOcorrencias.find(o => o.id === id); if (!oco) return; idOcoEditado = id;
+            document.getElementById('oco_data').value = oco.data_registro; document.getElementById('oco_motivo').value = oco.motivo; document.getElementById('oco_ref').value = oco.referencia; document.getElementById('oco_tempo').value = oco.tempo_impacto; document.getElementById('oco_obs').value = oco.observacoes;
+            document.getElementById('btn_oco_principal').innerText = "Atualizar Pendência"; document.getElementById('btn_oco_cancelar').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         function cancelarEdicaoOcorrencia() {
             idOcoEditado = null; document.getElementById('oco_data').valueAsDate = new Date(); document.getElementById('oco_motivo').value = "Falta de volume"; document.getElementById('oco_ref').value = ""; document.getElementById('oco_tempo').value = ""; document.getElementById('oco_obs').value = "";
-            document.getElementById('btn_oco_principal').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Registrar Ocorrência'; document.getElementById('btn_oco_principal').style.background = "#ef4444"; document.getElementById('btn_oco_cancelar').style.display = "none";
+            document.getElementById('btn_oco_principal').innerText = "Salvar Pendência"; document.getElementById('btn_oco_cancelar').style.display = "none";
         }
         async function registrarOcorrencia() {
             const dados = { data_registro: document.getElementById('oco_data').value, motivo: document.getElementById('oco_motivo').value, referencia: document.getElementById('oco_ref').value, tempo_impacto: document.getElementById('oco_tempo').value, observacoes: document.getElementById('oco_obs').value };
             await fetch(idOcoEditado ? `/api/atualizar-ocorrencia/${idOcoEditado}` : '/api/salvar-ocorrencia', { method: idOcoEditado ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-            alert("Registrado!"); cancelarEdicaoOcorrencia(); carregarOcorrencias();
+            cancelarEdicaoOcorrencia(); carregarOcorrencias();
         }
-        async function excluirOcorrencia(id) { if(!confirm("Excluir esta ocorrência?")) return; await fetch(`/api/deletar-ocorrencia/${id}`, { method: 'DELETE' }); carregarOcorrencias(); }
+        async function excluirOcorrencia(id) { if(!confirm("Excluir?")) return; await fetch(`/api/deletar-ocorrencia/${id}`, { method: 'DELETE' }); carregarOcorrencias(); }
 
         // --- EQUIPE ---
         async function carregarEquipe() {
             const r = await fetch('/api/colaboradores'); listaColaboradores = await r.json();
             const b = document.getElementById('corpo_tabela_equipe'); b.innerHTML = "";
             listaColaboradores.forEach(c => {
-                const badge = c.is_admin ? '<span style="color:#10b981; font-weight:700;">Sim</span>' : '<span style="color:#94a3b8;">Não</span>';
-                b.innerHTML += `<tr><td style="font-weight: 700;">${c.matricula}</td><td>${c.nome}</td><td>${c.cargo}</td><td style="color: #60a5fa;">${c.data_nascimento}</td><td>${badge}</td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicaoColaborador(${c.id})" style="color: #a089e6;"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirColab(${c.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                const badge = c.is_admin ? '<span class="badge badge-green">Gestor</span>' : '<span style="color: var(--text-muted);">Comum</span>';
+                b.innerHTML += `<tr><td style="font-weight: 700;">${c.matricula}</td><td>${c.nome}</td><td>${c.cargo}</td><td>${c.data_nascimento}</td><td>${badge}</td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicaoColaborador(${c.id})"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirColab(${c.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
             });
         }
         function prepararEdicaoColaborador(id) {
-            const colab = listaColaboradores.find(c => c.id === id); if (!colab) return;
-            idColabEditado = id; document.getElementById('colab_matricula').value = colab.matricula; document.getElementById('colab_nome').value = colab.nome; document.getElementById('colab_cargo').value = colab.cargo; document.getElementById('colab_data').value = colab.data_nascimento; document.getElementById('colab_admin').checked = colab.is_admin ? true : false;
-            document.getElementById('btn_colab_principal').innerText = "Atualizar Colaborador"; document.getElementById('btn_colab_principal').style.background = "#2563eb"; document.getElementById('btn_colab_cancelar').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
+            const colab = listaColaboradores.find(c => c.id === id); if (!colab) return; idColabEditado = id;
+            document.getElementById('colab_matricula').value = colab.matricula; document.getElementById('colab_nome').value = colab.nome; document.getElementById('colab_cargo').value = colab.cargo; document.getElementById('colab_data').value = colab.data_nascimento; document.getElementById('colab_admin').checked = colab.is_admin ? true : false;
+            document.getElementById('btn_colab_principal').innerText = "Atualizar Colaborador"; document.getElementById('btn_colab_cancelar').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         function cancelarEdicaoColaborador() {
             idColabEditado = null; ['colab_matricula', 'colab_nome', 'colab_cargo', 'colab_data'].forEach(id => document.getElementById(id).value = ""); document.getElementById('colab_admin').checked = false;
-            document.getElementById('btn_colab_principal').innerText = "Cadastrar na Equipe"; document.getElementById('btn_colab_principal').style.background = "#10b981"; document.getElementById('btn_colab_cancelar').style.display = "none";
+            document.getElementById('btn_colab_principal').innerText = "Salvar Colaborador"; document.getElementById('btn_colab_cancelar').style.display = "none";
         }
         async function salvarColaborador() {
             const dados = { matricula: document.getElementById('colab_matricula').value, nome: document.getElementById('colab_nome').value, cargo: document.getElementById('colab_cargo').value, data_nascimento: document.getElementById('colab_data').value, is_admin: document.getElementById('colab_admin').checked };
-            if(!dados.matricula || !dados.nome) return alert("Preencha matrícula e nome.");
+            if(!dados.matricula || !dados.nome) return;
             const r = await fetch(idColabEditado ? `/api/colaboradores/${idColabEditado}` : '/api/colaboradores', { method: idColabEditado ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-            if(r.ok) { alert(idColabEditado ? "Colaborador Atualizado!" : "Colaborador Cadastrado!"); cancelarEdicaoColaborador(); carregarEquipe(); } else { const d = await r.json(); alert("Erro: " + d.mensagem); }
+            if(r.ok) { cancelarEdicaoColaborador(); carregarEquipe(); } else { const d = await r.json(); alert(d.mensagem); }
         }
         async function excluirColab(id) { if(!confirm("Remover acesso?")) return; await fetch(`/api/colaboradores/${id}`, { method: 'DELETE' }); carregarEquipe(); }
 
-        // ============================================
-        // NOVO: RELATÓRIOS GLOBAIS E EXPORTAÇÃO (ADMIN)
-        // ============================================
+        // --- RELATORIOS ADMIN ---
         async function preencherDropdownColaboradores() {
-            const seletor = document.getElementById('rel_colab');
-            seletor.innerHTML = '<option value="todos">Todos da Equipe</option>';
-            const r = await fetch('/api/colaboradores');
-            const colabs = await r.json();
-            colabs.forEach(c => {
-                seletor.innerHTML += `<option value="${c.matricula}">${c.nome}</option>`;
-            });
+            const seletor = document.getElementById('rel_colab'); seletor.innerHTML = '<option value="todos">Toda a Equipe</option>';
+            const r = await fetch('/api/colaboradores'); const colabs = await r.json();
+            colabs.forEach(c => seletor.innerHTML += `<option value="${c.matricula}">${c.nome}</option>`);
         }
-
         async function gerarRelatorioAdmin() {
-            const tipo = document.getElementById('rel_tipo').value;
-            tipoRelatorioAtual = tipo;
-            const mat = document.getElementById('rel_colab').value;
-            const ini = document.getElementById('rel_data_ini').value;
-            const fim = document.getElementById('rel_data_fim').value;
+            const tipo = document.getElementById('rel_tipo').value; tipoRelatorioAtual = tipo;
+            const mat = document.getElementById('rel_colab').value; const ini = document.getElementById('rel_data_ini').value; const fim = document.getElementById('rel_data_fim').value;
+            const r = await fetch(`/api/admin/relatorios/${tipo}?matricula=${mat}&inicio=${ini}&fim=${fim}`);
+            const resposta = await r.json(); dadosRelatorioAtual = resposta.dados;
 
-            let url = `/api/admin/relatorios/${tipo}?matricula=${mat}&inicio=${ini}&fim=${fim}`;
-            const r = await fetch(url);
-            const resposta = await r.json();
-            dadosRelatorioAtual = resposta.dados;
-
-            // Atualiza os Cards do Dashboard Relatório
             if(tipo === 'remessas') {
                 document.getElementById('rel_lbl_1').innerText = "Pontos Globais"; document.getElementById('rel_val_1').innerText = resposta.metricas.pontos_totais;
                 document.getElementById('rel_lbl_2').innerText = "Processos Totais"; document.getElementById('rel_val_2').innerText = resposta.metricas.processos_totais;
-                document.getElementById('rel_lbl_3').innerText = "Remessas Auditadas"; document.getElementById('rel_val_3').innerText = resposta.metricas.total_remessas;
+                document.getElementById('rel_lbl_3').innerText = "Remessas"; document.getElementById('rel_val_3').innerText = resposta.metricas.total_remessas;
             } else {
                 document.getElementById('rel_lbl_1').innerText = "Horas Paradas"; document.getElementById('rel_val_1').innerText = resposta.metricas.total_horas + "h";
-                document.getElementById('rel_lbl_2').innerText = "Ocorrências Registradas"; document.getElementById('rel_val_2').innerText = resposta.metricas.total_ocorrencias;
+                document.getElementById('rel_lbl_2').innerText = "Ocorrências"; document.getElementById('rel_val_2').innerText = resposta.metricas.total_ocorrencias;
                 document.getElementById('rel_lbl_3').innerText = "-"; document.getElementById('rel_val_3').innerText = "-";
             }
 
-            // Atualiza a Tabela
-            const thead = document.getElementById('rel_tabela_head');
-            const tbody = document.getElementById('rel_tabela_body');
-            tbody.innerHTML = "";
-
+            const thead = document.getElementById('rel_tabela_head'); const tbody = document.getElementById('rel_tabela_body'); tbody.innerHTML = "";
             if(tipo === 'remessas') {
                 thead.innerHTML = `<tr><th>Colaborador</th><th>Data</th><th>Remessa</th><th>Processos</th><th>Pontos</th></tr>`;
-                dadosRelatorioAtual.forEach(d => {
-                    const dt = d.data_pagamento.split('-').reverse().join('/');
-                    tbody.innerHTML += `<tr><td style="color:#a089e6; font-weight:700;">${d.nome_colaborador || d.matricula_usuario}</td><td>${dt}</td><td>${d.nome_remessa}</td><td>${d.qtd_processos}</td><td><span class="badge-pontos">${d.pontuacao_total} pts</span></td></tr>`;
-                });
+                dadosRelatorioAtual.forEach(d => tbody.innerHTML += `<tr><td style="font-weight:700;">${d.nome_colaborador || d.matricula_usuario}</td><td>${d.data_pagamento.split('-').reverse().join('/')}</td><td>${d.nome_remessa}</td><td>${d.qtd_processos}</td><td><span class="badge badge-green">${d.pontuacao_total} pts</span></td></tr>`);
             } else {
                 thead.innerHTML = `<tr><th>Colaborador</th><th>Data</th><th>Motivo</th><th>Impacto</th><th>Ref</th></tr>`;
-                dadosRelatorioAtual.forEach(d => {
-                    const dt = d.data_registro.split('-').reverse().join('/');
-                    tbody.innerHTML += `<tr><td style="color:#a089e6; font-weight:700;">${d.nome_colaborador || d.matricula_usuario}</td><td>${dt}</td><td><span class="badge-motivo">${d.motivo}</span></td><td>${d.tempo_impacto}h</td><td>${d.referencia}</td></tr>`;
-                });
+                dadosRelatorioAtual.forEach(d => tbody.innerHTML += `<tr><td style="font-weight:700;">${d.nome_colaborador || d.matricula_usuario}</td><td>${d.data_registro.split('-').reverse().join('/')}</td><td><span class="badge badge-red">${d.motivo}</span></td><td>${d.tempo_impacto}h</td><td>${d.referencia}</td></tr>`);
             }
+            if(dadosRelatorioAtual.length === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum dado encontrado.</td></tr>`;
+        }
 
-            if(dadosRelatorioAtual.length === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Nenhum dado encontrado no período.</td></tr>`;
+        function exportarCSV(tipo) {
+            let csv = '\uFEFF'; let filename = '';
+            if (tipo === 'remessas') {
+                if (historicoRemessas.length === 0) return; filename = 'remessas.csv';
+                csv += "Data;Remessa;Fornecedores;Processos;Contratos;Certidoes;Pag. Parciais;Glosas;Apostilamentos;Pontos\n";
+                historicoRemessas.forEach(r => csv += `${r.data_pagamento.split('-').reverse().join('/')};"${r.nome_remessa}";${r.qtd_fornecedores};${r.qtd_processos};${r.qtd_contratos};${r.certidoes_renovadas};${r.pagamentos_parciais};${r.glosas_lancadas};${r.apostilamentos_bancarios};${r.pontuacao_total}\n`);
+            } else if (tipo === 'ocorrencias') {
+                if (historicoOcorrencias.length === 0) return; filename = 'ocorrencias.csv';
+                csv += "Data;Motivo;Ref;Horas;Obs\n";
+                historicoOcorrencias.forEach(o => csv += `${o.data_registro.split('-').reverse().join('/')};"${o.motivo}";"${o.referencia || ''}";${o.tempo_impacto};"${o.observacoes || ''}"\n`);
+            }
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = filename; link.click();
         }
 
         function exportarRelatorioAdminCSV() {
-            if (dadosRelatorioAtual.length === 0) { alert("Gere o relatório primeiro."); return; }
-            
-            let csv = '\uFEFF'; 
-            let filename = `relatorio_gerencial_${tipoRelatorioAtual}.csv`;
-
+            if (dadosRelatorioAtual.length === 0) return;
+            let csv = '\uFEFF'; let filename = `relatorio_gerencial.csv`;
             if (tipoRelatorioAtual === 'remessas') {
-                csv += "Analista Responsavel;Matricula;Data Pagamento;Nome Remessa;Fornecedores;Processos;Contratos;Certidoes;Pag. Parciais;Glosas;Apostilamentos;Pontuacao Total\n";
-                dadosRelatorioAtual.forEach(r => {
-                    const dt = r.data_pagamento.split('-').reverse().join('/');
-                    csv += `"${r.nome_colaborador || ''}";${r.matricula_usuario};${dt};"${r.nome_remessa}";${r.qtd_fornecedores};${r.qtd_processos};${r.qtd_contratos};${r.certidoes_renovadas};${r.pagamentos_parciais};${r.glosas_lancadas};${r.apostilamentos_bancarios};${r.pontuacao_total}\n`;
-                });
+                csv += "Analista;Matricula;Data;Remessa;Fornec.;Processos;Contratos;Certidoes;Pag. Parciais;Glosas;Apostilamentos;Pontos\n";
+                dadosRelatorioAtual.forEach(r => csv += `"${r.nome_colaborador || ''}";${r.matricula_usuario};${r.data_pagamento.split('-').reverse().join('/')};"${r.nome_remessa}";${r.qtd_fornecedores};${r.qtd_processos};${r.qtd_contratos};${r.certidoes_renovadas};${r.pagamentos_parciais};${r.glosas_lancadas};${r.apostilamentos_bancarios};${r.pontuacao_total}\n`);
             } else {
-                csv += "Analista Responsavel;Matricula;Data Registro;Motivo da Parada;Referencia/Processo;Horas Paradas;Observacao do Analista\n";
-                dadosRelatorioAtual.forEach(o => {
-                    const dt = o.data_registro.split('-').reverse().join('/');
-                    csv += `"${o.nome_colaborador || ''}";${o.matricula_usuario};${dt};"${o.motivo}";"${o.referencia || ''}";${o.tempo_impacto};"${o.observacoes || ''}"\n`;
-                });
+                csv += "Analista;Matricula;Data;Motivo;Ref;Horas;Obs\n";
+                dadosRelatorioAtual.forEach(o => csv += `"${o.nome_colaborador || ''}";${o.matricula_usuario};${o.data_registro.split('-').reverse().join('/')};"${o.motivo}";"${o.referencia || ''}";${o.tempo_impacto};"${o.observacoes || ''}"\n`);
             }
-
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a"); const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url); link.setAttribute("download", filename);
-            link.style.visibility = 'hidden'; document.body.appendChild(link);
-            link.click(); document.body.removeChild(link);
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = filename; link.click();
         }
     </script>
 </body>
