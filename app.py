@@ -11,6 +11,7 @@ def inicializar_banco_dados():
     conexao = sqlite3.connect(NOME_BANCO)
     cursor = conexao.cursor()
     
+    # Tabela Remessas
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS lancamentos_remessas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,7 +30,6 @@ def inicializar_banco_dados():
         )
     ''')
     
-    # Atualiza a tabela existente de forma segura, adicionando as novas colunas se não existirem
     try: cursor.execute("ALTER TABLE lancamentos_remessas ADD COLUMN matricula_usuario TEXT")
     except: pass
     try: cursor.execute("ALTER TABLE lancamentos_remessas ADD COLUMN glosas_lancadas INTEGER DEFAULT 0")
@@ -37,6 +37,21 @@ def inicializar_banco_dados():
     try: cursor.execute("ALTER TABLE lancamentos_remessas ADD COLUMN apostilamentos_bancarios INTEGER DEFAULT 0")
     except: pass
     
+    # NOVA TABELA: Ocorrências e Pendências
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS ocorrencias (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            data_registro DATE NOT NULL,
+            motivo TEXT NOT NULL,
+            referencia TEXT,
+            tempo_impacto REAL,
+            observacoes TEXT,
+            matricula_usuario TEXT,
+            data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Tabela Colaboradores
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS colaboradores (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,14 +75,12 @@ def inicializar_banco_dados():
 
 inicializar_banco_dados()
 
-# MATEMÁTICA ATUALIZADA COM OS NOVOS PESOS
 def calcular_esforco(processos, contratos, certidoes, parciais, glosas, apostilamentos):
     return (processos * 1) + (contratos * 2) + (certidoes * 1) + (parciais * 1) + (glosas * 1) + (apostilamentos * 2)
 
 @app.route('/')
 def index():
-    if 'usuario' not in session:
-        return redirect(url_for('login'))
+    if 'usuario' not in session: return redirect(url_for('login'))
     return render_template('index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -88,8 +101,7 @@ def login():
             session['nome'] = user[0]
             session['cargo'] = user[1]
             session['is_admin'] = user[2]
-            if request.is_json:
-                return jsonify({"status": "sucesso", "redirect": url_for('index')}), 200
+            if request.is_json: return jsonify({"status": "sucesso", "redirect": url_for('index')}), 200
             return redirect(url_for('index'))
         else:
             msg_erro = "Matrícula ou data de nascimento incorretos."
@@ -118,10 +130,7 @@ def api_colaboradores():
         dados = request.json
         try:
             is_admin = 1 if dados.get('is_admin') else 0
-            cursor.execute('''
-                INSERT INTO colaboradores (matricula, nome, cargo, data_nascimento, is_admin)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (dados['matricula'], dados['nome'], dados['cargo'], dados['data_nascimento'], is_admin))
+            cursor.execute('INSERT INTO colaboradores (matricula, nome, cargo, data_nascimento, is_admin) VALUES (?, ?, ?, ?, ?)', (dados['matricula'], dados['nome'], dados['cargo'], dados['data_nascimento'], is_admin))
             conexao.commit()
             conexao.close()
             return jsonify({"status": "sucesso"}), 201
@@ -163,18 +172,13 @@ def salvar_lote_remessa():
     dados = request.json
     matricula = session['usuario']
     pontuacao = calcular_esforco(
-        int(dados.get('qtd_processos', 0)), 
-        int(dados.get('qtd_contratos', 0)), 
-        int(dados.get('certidoes_renovadas', 0)), 
-        int(dados.get('pagamentos_parciais', 0)),
-        int(dados.get('glosas_lancadas', 0)),
-        int(dados.get('apostilamentos_bancarios', 0))
+        int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), 
+        int(dados.get('pagamentos_parciais', 0)), int(dados.get('glosas_lancadas', 0)), int(dados.get('apostilamentos_bancarios', 0))
     )
     conexao = sqlite3.connect(NOME_BANCO)
     cursor = conexao.cursor()
     cursor.execute('''
-        INSERT INTO lancamentos_remessas 
-        (data_pagamento, nome_remessa, qtd_fornecedores, qtd_processos, qtd_contratos, certidoes_renovadas, pagamentos_parciais, glosas_lancadas, apostilamentos_bancarios, pontuacao_total, matricula_usuario) 
+        INSERT INTO lancamentos_remessas (data_pagamento, nome_remessa, qtd_fornecedores, qtd_processos, qtd_contratos, certidoes_renovadas, pagamentos_parciais, glosas_lancadas, apostilamentos_bancarios, pontuacao_total, matricula_usuario) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (dados.get('data_pagamento'), dados.get('nome_remessa'), int(dados.get('qtd_fornecedores', 0)), int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), int(dados.get('pagamentos_parciais', 0)), int(dados.get('glosas_lancadas', 0)), int(dados.get('apostilamentos_bancarios', 0)), pontuacao, matricula))
     conexao.commit()
@@ -186,12 +190,8 @@ def atualizar_lote_remessa(id_remessa):
     if 'usuario' not in session: return jsonify({"status": "erro"}), 401
     dados = request.json
     pontuacao = calcular_esforco(
-        int(dados.get('qtd_processos', 0)), 
-        int(dados.get('qtd_contratos', 0)), 
-        int(dados.get('certidoes_renovadas', 0)), 
-        int(dados.get('pagamentos_parciais', 0)),
-        int(dados.get('glosas_lancadas', 0)),
-        int(dados.get('apostilamentos_bancarios', 0))
+        int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), 
+        int(dados.get('pagamentos_parciais', 0)), int(dados.get('glosas_lancadas', 0)), int(dados.get('apostilamentos_bancarios', 0))
     )
     conexao = sqlite3.connect(NOME_BANCO)
     cursor = conexao.cursor()
@@ -213,21 +213,7 @@ def listar_remessas():
     cursor = conexao.cursor()
     cursor.execute('SELECT * FROM lancamentos_remessas WHERE matricula_usuario = ? ORDER BY id DESC', (matricula,))
     linhas = cursor.fetchall()
-    
-    resultado = [{
-        "id": r["id"], 
-        "data_pagamento": r["data_pagamento"], 
-        "nome_remessa": r["nome_remessa"], 
-        "qtd_fornecedores": r["qtd_fornecedores"], 
-        "qtd_processos": r["qtd_processos"], 
-        "qtd_contratos": r["qtd_contratos"], 
-        "certidoes_renovadas": r["certidoes_renovadas"], 
-        "pagamentos_parciais": r["pagamentos_parciais"], 
-        "glosas_lancadas": r["glosas_lancadas"] if "glosas_lancadas" in r.keys() else 0, 
-        "apostilamentos_bancarios": r["apostilamentos_bancarios"] if "apostilamentos_bancarios" in r.keys() else 0, 
-        "pontuacao_total": r["pontuacao_total"]
-    } for r in linhas]
-    
+    resultado = [{"id": r["id"], "data_pagamento": r["data_pagamento"], "nome_remessa": r["nome_remessa"], "qtd_fornecedores": r["qtd_fornecedores"], "qtd_processos": r["qtd_processos"], "qtd_contratos": r["qtd_contratos"], "certidoes_renovadas": r["certidoes_renovadas"], "pagamentos_parciais": r["pagamentos_parciais"], "glosas_lancadas": r["glosas_lancadas"] if "glosas_lancadas" in r.keys() else 0, "apostilamentos_bancarios": r["apostilamentos_bancarios"] if "apostilamentos_bancarios" in r.keys() else 0, "pontuacao_total": r["pontuacao_total"]} for r in linhas]
     conexao.close()
     return jsonify(resultado), 200
 
@@ -237,6 +223,63 @@ def deletar_lote_remessa(id_remessa):
     conexao = sqlite3.connect(NOME_BANCO)
     cursor = conexao.cursor()
     cursor.execute('DELETE FROM lancamentos_remessas WHERE id = ? AND matricula_usuario = ?', (id_remessa, session['usuario']))
+    conexao.commit()
+    conexao.close()
+    return jsonify({"status": "sucesso"}), 200
+
+# ==========================================
+# ROTAS: OCORRÊNCIAS E PENDÊNCIAS
+# ==========================================
+@app.route('/api/salvar-ocorrencia', methods=['POST'])
+def salvar_ocorrencia():
+    if 'usuario' not in session: return jsonify({"status": "erro"}), 401
+    dados = request.json
+    matricula = session['usuario']
+    
+    conexao = sqlite3.connect(NOME_BANCO)
+    cursor = conexao.cursor()
+    cursor.execute('''
+        INSERT INTO ocorrencias (data_registro, motivo, referencia, tempo_impacto, observacoes, matricula_usuario) 
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (dados.get('data_registro'), dados.get('motivo'), dados.get('referencia', ''), float(dados.get('tempo_impacto', 0)), dados.get('observacoes', ''), matricula))
+    conexao.commit()
+    conexao.close()
+    return jsonify({"status": "sucesso"}), 201
+
+@app.route('/api/atualizar-ocorrencia/<int:id_oco>', methods=['PUT'])
+def atualizar_ocorrencia(id_oco):
+    if 'usuario' not in session: return jsonify({"status": "erro"}), 401
+    dados = request.json
+    conexao = sqlite3.connect(NOME_BANCO)
+    cursor = conexao.cursor()
+    cursor.execute('''
+        UPDATE ocorrencias 
+        SET data_registro = ?, motivo = ?, referencia = ?, tempo_impacto = ?, observacoes = ?
+        WHERE id = ? AND matricula_usuario = ?
+    ''', (dados.get('data_registro'), dados.get('motivo'), dados.get('referencia', ''), float(dados.get('tempo_impacto', 0)), dados.get('observacoes', ''), id_oco, session['usuario']))
+    conexao.commit()
+    conexao.close()
+    return jsonify({"status": "sucesso"}), 200
+
+@app.route('/api/listar-ocorrencias', methods=['GET'])
+def listar_ocorrencias():
+    if 'usuario' not in session: return jsonify({"status": "erro"}), 401
+    matricula = session['usuario']
+    conexao = sqlite3.connect(NOME_BANCO)
+    conexao.row_factory = sqlite3.Row  
+    cursor = conexao.cursor()
+    cursor.execute('SELECT * FROM ocorrencias WHERE matricula_usuario = ? ORDER BY id DESC', (matricula,))
+    linhas = cursor.fetchall()
+    resultado = [{"id": r["id"], "data_registro": r["data_registro"], "motivo": r["motivo"], "referencia": r["referencia"], "tempo_impacto": r["tempo_impacto"], "observacoes": r["observacoes"]} for r in linhas]
+    conexao.close()
+    return jsonify(resultado), 200
+
+@app.route('/api/deletar-ocorrencia/<int:id_oco>', methods=['DELETE'])
+def deletar_ocorrencia(id_oco):
+    if 'usuario' not in session: return jsonify({"status": "erro"}), 401
+    conexao = sqlite3.connect(NOME_BANCO)
+    cursor = conexao.cursor()
+    cursor.execute('DELETE FROM ocorrencias WHERE id = ? AND matricula_usuario = ?', (id_oco, session['usuario']))
     conexao.commit()
     conexao.close()
     return jsonify({"status": "sucesso"}), 200
