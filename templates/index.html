@@ -179,7 +179,7 @@
             </div>
         </section>
 
-        <!-- REMESSAS PAGAS COM TODOS OS CAMPOS DE VOLTA! -->
+        <!-- REMESSAS PAGAS (COM OS NOVOS CAMPOS) -->
         <section id="aba_remessas_view" style="display: none; flex-direction: column; width: 100%;">
             <div class="glass-card">
                 <div class="card-header-internal" style="margin-bottom: 20px;">
@@ -203,8 +203,12 @@
                     <div><label>Processos de Contrato</label><input type="number" id="qtd_contratos" class="form-input" value="0" min="0"></div>
                     <div><label>Certidões Renovadas</label><input type="number" id="certidoes_renovadas" class="form-input" value="0" min="0"></div>
                 </div>
+                <div class="row-grid">
+                    <div><label>Pagamentos Parciais</label><input type="number" id="pagamentos_parciais" class="form-input" value="0" min="0"></div>
+                    <div><label>Glosas Lançadas</label><input type="number" id="glosas_lancadas" class="form-input" value="0" min="0"></div>
+                </div>
                 <div style="margin-bottom: 20px;">
-                    <label>Pagamentos Parciais</label><input type="number" id="pagamentos_parciais" class="form-input" value="0" min="0">
+                    <label>Apostilamentos Bancários</label><input type="number" id="apostilamentos_bancarios" class="form-input" value="0" min="0" style="width: 50%;">
                 </div>
 
                 <div id="area_botoes" style="display: flex; gap: 15px; margin-top: 15px;">
@@ -353,7 +357,7 @@
         }
 
         // ============================================
-        // HISTÓRICO E EDIÇÃO RESTAURADOS!
+        // HISTÓRICO E EDIÇÃO COM NOVOS CAMPOS
         // ============================================
         async function carregarHistorico() {
             const r = await fetch('/api/listar-remessas');
@@ -362,7 +366,6 @@
             if (historicoRemessas.length === 0) { b.innerHTML = `<tr><td colspan="6" style="text-align: center;">Nenhum registro.</td></tr>`; return; }
             historicoRemessas.forEach(rem => {
                 const dt = rem.data_pagamento.split('-').reverse().join('/');
-                // O botão de Editar e a Lixeira voltaram!
                 b.innerHTML += `<tr>
                     <td>${dt}</td>
                     <td style="font-weight: 600;">${rem.nome_remessa}</td>
@@ -389,6 +392,8 @@
             document.getElementById('qtd_contratos').value = remessa.qtd_contratos;
             document.getElementById('certidoes_renovadas').value = remessa.certidoes_renovadas;
             document.getElementById('pagamentos_parciais').value = remessa.pagamentos_parciais;
+            document.getElementById('glosas_lancadas').value = remessa.glosas_lancadas || 0;
+            document.getElementById('apostilamentos_bancarios').value = remessa.apostilamentos_bancarios || 0;
 
             document.getElementById('btn_principal').innerText = "Atualizar Registro";
             document.getElementById('btn_principal').style.background = "#10b981"; 
@@ -416,7 +421,9 @@
                 qtd_processos: document.getElementById('qtd_processos').value,
                 qtd_contratos: document.getElementById('qtd_contratos').value,
                 certidoes_renovadas: document.getElementById('certidoes_renovadas').value,
-                pagamentos_parciais: document.getElementById('pagamentos_parciais').value
+                pagamentos_parciais: document.getElementById('pagamentos_parciais').value,
+                glosas_lancadas: document.getElementById('glosas_lancadas').value,
+                apostilamentos_bancarios: document.getElementById('apostilamentos_bancarios').value
             };
             if(!dados.nome_remessa) { alert("Introduza a remessa."); return; }
 
