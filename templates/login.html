@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerência Financeira - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: linear-gradient(135deg, #0a0f24 0%, #04060d 100%); color: #ffffff; font-family: 'Montserrat', sans-serif; display: flex; height: 100vh; align-items: center; justify-content: center; overflow: hidden; }
+        
+        .login-card { background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 45px 40px; width: 100%; max-width: 420px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; align-items: center; }
+        .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 35px; }
+        .logo-text { font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; }
+        .logo-icon { background: rgba(160, 137, 230, 0.1); color: #a089e6; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+        .welcome-text { text-align: center; margin-bottom: 30px; }
+        .welcome-text h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+        .welcome-text p { font-size: 13px; color: #94a3b8; font-weight: 500; }
+
+        .form-group { width: 100%; margin-bottom: 20px; position: relative; }
+        .form-group label { display: block; color: #94a3b8; font-size: 11px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-wrapper i { position: absolute; left: 15px; color: #a089e6; font-size: 16px; pointer-events: none; }
+        
+        .form-input { background: rgba(44, 48, 61, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; color: #ffffff; padding: 14px 14px 14px 45px; width: 100%; font-family: 'Montserrat', sans-serif; font-size: 14px; outline: none; transition: all 0.2s; }
+        .form-input:focus { border-color: #a089e6; background: rgba(44, 48, 61, 0.8); }
+
+        .btn-login { background: #271a58; border: none; border-radius: 8px; color: #ffffff; cursor: pointer; font-weight: 700; padding: 16px; width: 100%; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; transition: all 0.2s; }
+        .btn-login:hover { background: #3c2a8a; transform: translateY(-1px); }
+
+        .error-message { width: 100%; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; font-size: 13px; font-weight: 600; padding: 12px; border-radius: 6px; margin-bottom: 20px; text-align: center; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fa-solid fa-wallet"></i></div>
+            <div class="logo-text">Gerência Financeira</div>
+        </div>
+
+        <div class="welcome-text">
+            <h2>Autenticação de Colaborador</h2>
+            <p>Acesse o painel com seus dados corporativos</p>
+        </div>
+
+        <div class="error-message" id="error_alert"></div>
+
+        <form style="width: 100%;" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>Matrícula</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-id-card"></i>
+                    <input type="text" id="username" class="form-input" placeholder="Ex: 12345" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Data de Nascimento</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-cake-candles"></i>
+                    <input type="password" id="password" class="form-input" placeholder="dd/mm/aa" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login">Entrar no Sistema</button>
+        </form>
+    </div>
+
+    <script>
+        async function handleLogin(e) {
+            e.preventDefault();
+            const errorAlert = document.getElementById('error_alert');
+            errorAlert.style.display = 'none';
+
+            const usuario = document.getElementById('username').value;
+            const senha = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario, senha })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    errorAlert.innerText = data.mensagem || "Dados incorretos.";
+                    errorAlert.style.display = 'block';
+                }
+            } catch (err) {
+                errorAlert.innerText = "Erro de conexão.";
+                errorAlert.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
