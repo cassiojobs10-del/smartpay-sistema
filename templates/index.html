@@ -93,12 +93,14 @@
 
         <div class="menu-title">Menu Principal</div>
         <ul class="menu-items">
-            <li class="menu-item active" id="menu_dashboard" onclick="alternarAba('dashboard')"><i class="fa-solid fa-chart-pie"></i> Dashboard</li>
+            <li class="menu-item active" id="menu_dashboard" onclick="alternarAba('dashboard')"><i class="fa-solid fa-chart-pie"></i> Meu Dashboard</li>
             <li class="menu-item" id="menu_remessas" onclick="alternarAba('remessas')"><i class="fa-solid fa-file-invoice-dollar"></i> Remessas Pagas</li>
             <li class="menu-item" id="menu_ocorrencias" onclick="alternarAba('ocorrencias')"><i class="fa-solid fa-triangle-exclamation"></i> Ocorrências e Pendências</li>
             
             {% if session.get('is_admin') %}
-            <li class="menu-item" id="menu_equipe" onclick="alternarAba('equipe')" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 25px;"><i class="fa-solid fa-users-gear"></i> Gestão de Equipe</li>
+            <!-- NOVAS ABAS DE ADMIN -->
+            <li class="menu-item" id="menu_relatorios" onclick="alternarAba('relatorios')" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 25px;"><i class="fa-solid fa-globe"></i> Relatórios (Visão Global)</li>
+            <li class="menu-item" id="menu_equipe" onclick="alternarAba('equipe')"><i class="fa-solid fa-users-gear"></i> Gestão de Equipe</li>
             {% endif %}
         </ul>
 
@@ -129,13 +131,13 @@
             <span id="status_timestamp">ESTADO: ONLINE</span>
         </div>
 
-        <!-- DASHBOARD -->
+        <!-- DASHBOARD INDIVIDUAL -->
         <section id="aba_dashboard_view" style="display: block;">
             <div class="glass-card">
                 <div class="card-header-internal">
                     <div class="card-title-box">
-                        <h2 class="internal-title">Visão Geral</h2>
-                        <span class="internal-subtitle">CONTROLE UNIFICADO DE PRODUÇÃO</span>
+                        <h2 class="internal-title">Visão Individual</h2>
+                        <span class="internal-subtitle">SUA PRODUÇÃO</span>
                     </div>
 
                     <div class="unified-controls">
@@ -159,14 +161,14 @@
                 <div class="metrics-grid">
                     <div class="metric-card">
                         <div>
-                            <label class="metric-label">Pontos Guardados</label>
+                            <label class="metric-label">Seus Pontos</label>
                             <div class="metric-number" id="dash_pontos">0</div>
                         </div>
                         <div class="metric-icon-glass"><i class="fa-solid fa-bolt"></i></div>
                     </div>
                     <div class="metric-card">
                         <div>
-                            <label class="metric-label">Processos Concluídos</label>
+                            <label class="metric-label">Seus Processos</label>
                             <div class="metric-number" id="dash_processos">0</div>
                         </div>
                         <div class="metric-icon-glass"><i class="fa-solid fa-clipboard-check"></i></div>
@@ -182,7 +184,7 @@
             </div>
         </section>
 
-        <!-- REMESSAS PAGAS -->
+        <!-- REMESSAS PAGAS (INDIVIDUAL) -->
         <section id="aba_remessas_view" style="display: none; flex-direction: column; width: 100%;">
             <div class="glass-card">
                 <div class="card-header-internal" style="margin-bottom: 20px;">
@@ -199,7 +201,6 @@
                     <div><label>Fornecedores</label><input type="number" id="qtd_fornecedores" class="form-input" value="0" min="0"></div>
                     <div><label>Processos</label><input type="number" id="qtd_processos" class="form-input" value="0" min="0"></div>
                 </div>
-                
                 <div class="divider"></div>
                 <p style="color: #a089e6; font-weight: 700; margin-top: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px;">Detalhamento de Esforço Adicional</p>
                 <div class="row-grid">
@@ -213,7 +214,6 @@
                 <div style="margin-bottom: 20px;">
                     <label>Apostilamentos Bancários</label><input type="number" id="apostilamentos_bancarios" class="form-input" value="0" min="0" style="width: 50%;">
                 </div>
-
                 <div id="area_botoes" style="display: flex; gap: 15px; margin-top: 15px;">
                     <button class="btn-submit" id="btn_principal" onclick="registrarLote()">Registrar Produção</button>
                     <button class="btn-submit" id="btn_cancelar" onclick="cancelarEdicao()" style="background: rgba(255,255,255,0.1); display: none;">Cancelar</button>
@@ -221,11 +221,7 @@
             </div>
             
             <div class="glass-card">
-                <!-- AQUI ESTÁ O BOTÃO DE EXPORTAR -->
-                <div class="table-title">
-                    <span>Seu Histórico de Lançamentos</span>
-                    <button class="btn-export" onclick="exportarCSV('remessas')"><i class="fa-solid fa-file-excel"></i> Exportar CSV</button>
-                </div>
+                <div class="table-title">Seu Histórico de Lançamentos</div>
                 <table class="glass-table">
                     <thead><tr><th>Data</th><th>Remessa</th><th>Fornecedores</th><th>Processos</th><th>Pontos</th><th style="text-align: right;">Ações</th></tr></thead>
                     <tbody id="corpo_tabela_historico"></tbody>
@@ -233,7 +229,7 @@
             </div>
         </section>
 
-        <!-- OCORRÊNCIAS -->
+        <!-- OCORRÊNCIAS (INDIVIDUAL) -->
         <section id="aba_ocorrencias_view" style="display: none; flex-direction: column; width: 100%;">
             <div class="glass-card">
                 <div class="card-header-internal" style="margin-bottom: 20px;">
@@ -263,7 +259,6 @@
                     <label>Observações / Detalhes</label>
                     <input type="text" id="oco_obs" class="form-input" placeholder="Descreva brevemente a situação que gerou a pendência...">
                 </div>
-
                 <div style="display: flex; gap: 15px; margin-top: 15px;">
                     <button class="btn-submit" id="btn_oco_principal" onclick="registrarOcorrencia()" style="background: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Registrar Ocorrência</button>
                     <button class="btn-submit" id="btn_oco_cancelar" onclick="cancelarEdicaoOcorrencia()" style="background: rgba(255,255,255,0.1); display: none;">Cancelar</button>
@@ -271,11 +266,7 @@
             </div>
             
             <div class="glass-card">
-                <!-- AQUI ESTÁ O BOTÃO DE EXPORTAR -->
-                <div class="table-title">
-                    <span>Histórico de Ocorrências</span>
-                    <button class="btn-export" onclick="exportarCSV('ocorrencias')"><i class="fa-solid fa-file-excel"></i> Exportar CSV</button>
-                </div>
+                <div class="table-title">Seu Histórico de Ocorrências</div>
                 <table class="glass-table">
                     <thead><tr><th>Data</th><th>Motivo</th><th>Remessa</th><th>Horas Paradas</th><th>Observação</th><th style="text-align: right;">Ações</th></tr></thead>
                     <tbody id="corpo_tabela_ocorrencias"></tbody>
@@ -283,8 +274,80 @@
             </div>
         </section>
 
-        <!-- GESTÃO DE EQUIPE -->
+        <!-- NOVO MÓDULO: RELATÓRIOS GERENCIAIS (SÓ ADMIN) -->
         {% if session.get('is_admin') %}
+        <section id="aba_relatorios_view" style="display: none; flex-direction: column; width: 100%;">
+            <div class="glass-card">
+                <div class="card-header-internal" style="margin-bottom: 20px;">
+                    <div class="card-title-box">
+                        <h2 class="internal-title" style="color: #a089e6;">Visão Global e Exportação</h2>
+                        <span class="internal-subtitle">ACOMPANHAMENTO DA EQUIPE</span>
+                    </div>
+                </div>
+                
+                <div class="row-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr; align-items: end; gap: 15px;">
+                    <div>
+                        <label>Tipo de Relatório</label>
+                        <select id="rel_tipo" class="form-input" style="background: rgba(44,48,61,0.6); cursor:pointer;">
+                            <option value="remessas">Produção (Remessas)</option>
+                            <option value="ocorrencias">Gargalos (Ocorrências)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Colaborador</label>
+                        <select id="rel_colab" class="form-input" style="background: rgba(44,48,61,0.6); cursor:pointer;">
+                            <option value="todos">Todos da Equipe</option>
+                            <!-- Injetado via JS -->
+                        </select>
+                    </div>
+                    <div><label>Data Inicial</label><input type="date" id="rel_data_ini" class="form-input" onclick="this.showPicker()"></div>
+                    <div><label>Data Final</label><input type="date" id="rel_data_fim" class="form-input" onclick="this.showPicker()"></div>
+                </div>
+                
+                <button class="btn-submit" onclick="gerarRelatorioAdmin()" style="margin-top: 20px; background: #4f46e5;"><i class="fa-solid fa-magnifying-glass"></i> Consultar Banco de Dados</button>
+            </div>
+
+            <!-- DASHBOARD DO RELATORIO DA EQUIPE -->
+            <div class="metrics-grid" style="margin-bottom: 20px;">
+                <div class="metric-card">
+                    <div>
+                        <label class="metric-label" id="rel_lbl_1">Pontos Globais</label>
+                        <div class="metric-number" id="rel_val_1">0</div>
+                    </div>
+                    <div class="metric-icon-glass"><i class="fa-solid fa-chart-line"></i></div>
+                </div>
+                <div class="metric-card">
+                    <div>
+                        <label class="metric-label" id="rel_lbl_2">Processos Totais</label>
+                        <div class="metric-number" id="rel_val_2">0</div>
+                    </div>
+                    <div class="metric-icon-glass"><i class="fa-solid fa-clipboard-list"></i></div>
+                </div>
+                <div class="metric-card">
+                    <div>
+                        <label class="metric-label" id="rel_lbl_3">Registros Encontrados</label>
+                        <div class="metric-number" id="rel_val_3">0</div>
+                    </div>
+                    <div class="metric-icon-glass"><i class="fa-solid fa-database"></i></div>
+                </div>
+            </div>
+
+            <!-- TABELA DO RELATÓRIO DA EQUIPE -->
+            <div class="glass-card">
+                <div class="table-title">
+                    <span>Resultados da Busca</span>
+                    <button class="btn-export" onclick="exportarRelatorioAdminCSV()"><i class="fa-solid fa-file-excel"></i> Exportar Resultado para Excel/CSV</button>
+                </div>
+                <div style="width: 100%; overflow-x: auto;">
+                    <table class="glass-table">
+                        <thead id="rel_tabela_head"></thead>
+                        <tbody id="rel_tabela_body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- GESTÃO DE EQUIPE -->
         <section id="aba_equipe_view" style="display: none; flex-direction: column; width: 100%;">
             <div class="glass-card">
                 <div class="card-header-internal" style="margin-bottom: 20px;">
@@ -333,6 +396,9 @@
         let historicoRemessas = [];
         let historicoOcorrencias = [];
         let listaColaboradores = [];
+        let dadosRelatorioAtual = [];
+        let tipoRelatorioAtual = '';
+        
         let idSendoEditado = null;
         let idOcoEditado = null;
         let idColabEditado = null;
@@ -340,12 +406,20 @@
         window.onload = function() {
             const dp = document.getElementById('data_pagamento'); if(dp) dp.valueAsDate = new Date();
             const do_ = document.getElementById('oco_data'); if(do_) do_.valueAsDate = new Date();
+            
+            // Seta datas iniciais no relatório
+            const r1 = document.getElementById('rel_data_ini'); if(r1) {
+                const hoje = new Date(); const prim = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+                r1.value = formataDataISO(prim);
+            }
+            const r2 = document.getElementById('rel_data_fim'); if(r2) r2.valueAsDate = new Date();
+
             setPeriodo('mensal');
         };
 
         function alternarAba(aba) {
-            const menus = ['menu_dashboard', 'menu_remessas', 'menu_ocorrencias', 'menu_equipe'];
-            const views = ['aba_dashboard_view', 'aba_remessas_view', 'aba_ocorrencias_view', 'aba_equipe_view'];
+            const menus = ['menu_dashboard', 'menu_remessas', 'menu_ocorrencias', 'menu_relatorios', 'menu_equipe'];
+            const views = ['aba_dashboard_view', 'aba_remessas_view', 'aba_ocorrencias_view', 'aba_relatorios_view', 'aba_equipe_view'];
             
             menus.forEach(m => { const el = document.getElementById(m); if(el) el.classList.remove('active'); });
             views.forEach(v => { const el = document.getElementById(v); if(el) el.style.display = 'none'; });
@@ -357,30 +431,25 @@
             if(aba === 'remessas') carregarHistorico();
             if(aba === 'ocorrencias') carregarOcorrencias();
             if(aba === 'equipe') carregarEquipe();
+            if(aba === 'relatorios') preencherDropdownColaboradores();
         }
 
-        // --- DASHBOARD ---
         function formataDataISO(data) {
             return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
         }
 
+        // --- DASHBOARD INDIVIDUAL ---
         function setPeriodo(periodo) {
             ['hoje', 'semanal', 'mensal'].forEach(p => document.getElementById(`period_${p}`).classList.remove('active'));
             if(periodo) document.getElementById(`period_${periodo}`).classList.add('active');
-            
             const hoje = new Date(); let dataInicio = new Date(); let dataFim = new Date();
             if (periodo === 'semanal') dataInicio.setDate(hoje.getDate() - hoje.getDay());
             else if (periodo === 'mensal') dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-
             document.getElementById('date_from').value = formataDataISO(dataInicio);
             document.getElementById('date_to').value = formataDataISO(dataFim);
             carregarMetricasDashboard();
         }
-
-        function atualizarPorDataManual() {
-            ['hoje', 'semanal', 'mensal'].forEach(p => document.getElementById(`period_${p}`).classList.remove('active'));
-            carregarMetricasDashboard();
-        }
+        function atualizarPorDataManual() { ['hoje', 'semanal', 'mensal'].forEach(p => document.getElementById(`period_${p}`).classList.remove('active')); carregarMetricasDashboard(); }
 
         async function carregarMetricasDashboard() {
             const i = document.getElementById('date_from').value; const f = document.getElementById('date_to').value;
@@ -390,11 +459,10 @@
                 document.getElementById('dash_pontos').innerText = m.pontos_totais || 0;
                 document.getElementById('dash_processos').innerText = m.processos_totais || 0;
                 document.getElementById('dash_remessas').innerText = m.total_remessas || 0;
-                const now = new Date(); document.getElementById('status_timestamp').innerText = `ESTADO: ATUALIZADO ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-            } catch (e) { console.error(e); }
+            } catch (e) {}
         }
 
-        // --- REMESSAS ---
+        // --- REMESSAS INDIVIDUAIS ---
         async function carregarHistorico() {
             const r = await fetch('/api/listar-remessas'); historicoRemessas = await r.json();
             const b = document.getElementById('corpo_tabela_historico'); b.innerHTML = "";
@@ -404,116 +472,55 @@
                 b.innerHTML += `<tr><td>${dt}</td><td style="font-weight: 600;">${rem.nome_remessa}</td><td>${rem.qtd_fornecedores}</td><td>${rem.qtd_processos}</td><td><span class="badge-pontos">${rem.pontuacao_total} pts</span></td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicao(${rem.id})" style="color: #a089e6;"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirRemessa(${rem.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
             });
         }
-
         function prepararEdicao(id) {
             const rem = historicoRemessas.find(r => r.id === id); if (!rem) return;
             idSendoEditado = id;
-            document.getElementById('data_pagamento').value = rem.data_pagamento;
-            document.getElementById('nome_remessa').value = rem.nome_remessa;
-            document.getElementById('qtd_fornecedores').value = rem.qtd_fornecedores;
-            document.getElementById('qtd_processos').value = rem.qtd_processos;
-            document.getElementById('qtd_contratos').value = rem.qtd_contratos;
-            document.getElementById('certidoes_renovadas').value = rem.certidoes_renovadas;
-            document.getElementById('pagamentos_parciais').value = rem.pagamentos_parciais;
-            document.getElementById('glosas_lancadas').value = rem.glosas_lancadas || 0;
+            document.getElementById('data_pagamento').value = rem.data_pagamento; document.getElementById('nome_remessa').value = rem.nome_remessa;
+            document.getElementById('qtd_fornecedores').value = rem.qtd_fornecedores; document.getElementById('qtd_processos').value = rem.qtd_processos;
+            document.getElementById('qtd_contratos').value = rem.qtd_contratos; document.getElementById('certidoes_renovadas').value = rem.certidoes_renovadas;
+            document.getElementById('pagamentos_parciais').value = rem.pagamentos_parciais; document.getElementById('glosas_lancadas').value = rem.glosas_lancadas || 0;
             document.getElementById('apostilamentos_bancarios').value = rem.apostilamentos_bancarios || 0;
-            document.getElementById('btn_principal').innerText = "Atualizar Registro";
-            document.getElementById('btn_principal').style.background = "#10b981"; 
-            document.getElementById('btn_cancelar').style.display = "block";
+            document.getElementById('btn_principal').innerText = "Atualizar Registro"; document.getElementById('btn_principal').style.background = "#10b981"; document.getElementById('btn_cancelar').style.display = "block";
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-
         function cancelarEdicao() {
-            idSendoEditado = null; document.getElementById('data_pagamento').valueAsDate = new Date();
-            document.getElementById('nome_remessa').value = "";
+            idSendoEditado = null; document.getElementById('data_pagamento').valueAsDate = new Date(); document.getElementById('nome_remessa').value = "";
             document.querySelectorAll('#aba_remessas_view .form-input[type="number"]').forEach(i => i.value = "0");
-            document.getElementById('btn_principal').innerText = "Registrar Produção";
-            document.getElementById('btn_principal').style.background = "#1e40af";
-            document.getElementById('btn_cancelar').style.display = "none";
+            document.getElementById('btn_principal').innerText = "Registrar Produção"; document.getElementById('btn_principal').style.background = "#1e40af"; document.getElementById('btn_cancelar').style.display = "none";
         }
-
         async function registrarLote() {
-            const dados = {
-                data_pagamento: document.getElementById('data_pagamento').value,
-                nome_remessa: document.getElementById('nome_remessa').value,
-                qtd_fornecedores: document.getElementById('qtd_fornecedores').value,
-                qtd_processos: document.getElementById('qtd_processos').value,
-                qtd_contratos: document.getElementById('qtd_contratos').value,
-                certidoes_renovadas: document.getElementById('certidoes_renovadas').value,
-                pagamentos_parciais: document.getElementById('pagamentos_parciais').value,
-                glosas_lancadas: document.getElementById('glosas_lancadas').value,
-                apostilamentos_bancarios: document.getElementById('apostilamentos_bancarios').value
-            };
+            const dados = { data_pagamento: document.getElementById('data_pagamento').value, nome_remessa: document.getElementById('nome_remessa').value, qtd_fornecedores: document.getElementById('qtd_fornecedores').value, qtd_processos: document.getElementById('qtd_processos').value, qtd_contratos: document.getElementById('qtd_contratos').value, certidoes_renovadas: document.getElementById('certidoes_renovadas').value, pagamentos_parciais: document.getElementById('pagamentos_parciais').value, glosas_lancadas: document.getElementById('glosas_lancadas').value, apostilamentos_bancarios: document.getElementById('apostilamentos_bancarios').value };
             if(!dados.nome_remessa) { alert("Introduza a remessa."); return; }
-            const url = idSendoEditado ? `/api/atualizar-lote/${idSendoEditado}` : '/api/salvar-lote';
-            const m = idSendoEditado ? 'PUT' : 'POST';
-            await fetch(url, { method: m, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+            await fetch(idSendoEditado ? `/api/atualizar-lote/${idSendoEditado}` : '/api/salvar-lote', { method: idSendoEditado ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
             alert("Sucesso!"); cancelarEdicao(); carregarHistorico(); carregarMetricasDashboard();
         }
+        async function excluirRemessa(id) { if(!confirm("Excluir registro?")) return; await fetch(`/api/deletar-lote/${id}`, { method: 'DELETE' }); carregarHistorico(); carregarMetricasDashboard(); }
 
-        async function excluirRemessa(id) {
-            if(!confirm("Excluir registro?")) return;
-            await fetch(`/api/deletar-lote/${id}`, { method: 'DELETE' });
-            carregarHistorico(); carregarMetricasDashboard();
-        }
-
-        // --- OCORRÊNCIAS E PENDÊNCIAS ---
+        // --- OCORRÊNCIAS INDIVIDUAIS ---
         async function carregarOcorrencias() {
             const r = await fetch('/api/listar-ocorrencias'); historicoOcorrencias = await r.json();
             const b = document.getElementById('corpo_tabela_ocorrencias'); b.innerHTML = "";
             if (historicoOcorrencias.length === 0) { b.innerHTML = `<tr><td colspan="6" style="text-align: center;">Nenhum registro.</td></tr>`; return; }
             historicoOcorrencias.forEach(oco => {
-                const dt = oco.data_registro.split('-').reverse().join('/');
-                const ref = oco.referencia ? oco.referencia : '-';
+                const dt = oco.data_registro.split('-').reverse().join('/'); const ref = oco.referencia ? oco.referencia : '-';
                 b.innerHTML += `<tr><td>${dt}</td><td><span class="badge-motivo">${oco.motivo}</span></td><td style="font-weight: 600;">${ref}</td><td>${oco.tempo_impacto}h</td><td>${oco.observacoes}</td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicaoOcorrencia(${oco.id})" style="color: #a089e6;"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirOcorrencia(${oco.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
             });
         }
-
         function prepararEdicaoOcorrencia(id) {
             const oco = historicoOcorrencias.find(o => o.id === id); if (!oco) return;
-            idOcoEditado = id;
-            document.getElementById('oco_data').value = oco.data_registro;
-            document.getElementById('oco_motivo').value = oco.motivo;
-            document.getElementById('oco_ref').value = oco.referencia;
-            document.getElementById('oco_tempo').value = oco.tempo_impacto;
-            document.getElementById('oco_obs').value = oco.observacoes;
-
-            document.getElementById('btn_oco_principal').innerText = "Atualizar Ocorrência";
-            document.getElementById('btn_oco_principal').style.background = "#10b981"; 
-            document.getElementById('btn_oco_cancelar').style.display = "block";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            idOcoEditado = id; document.getElementById('oco_data').value = oco.data_registro; document.getElementById('oco_motivo').value = oco.motivo; document.getElementById('oco_ref').value = oco.referencia; document.getElementById('oco_tempo').value = oco.tempo_impacto; document.getElementById('oco_obs').value = oco.observacoes;
+            document.getElementById('btn_oco_principal').innerText = "Atualizar Ocorrência"; document.getElementById('btn_oco_principal').style.background = "#10b981"; document.getElementById('btn_oco_cancelar').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-
         function cancelarEdicaoOcorrencia() {
-            idOcoEditado = null; document.getElementById('oco_data').valueAsDate = new Date();
-            document.getElementById('oco_motivo').value = "Falta de volume";
-            document.getElementById('oco_ref').value = "";
-            document.getElementById('oco_tempo').value = "";
-            document.getElementById('oco_obs').value = "";
-            document.getElementById('btn_oco_principal').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Registrar Ocorrência';
-            document.getElementById('btn_oco_principal').style.background = "#ef4444";
-            document.getElementById('btn_oco_cancelar').style.display = "none";
+            idOcoEditado = null; document.getElementById('oco_data').valueAsDate = new Date(); document.getElementById('oco_motivo').value = "Falta de volume"; document.getElementById('oco_ref').value = ""; document.getElementById('oco_tempo').value = ""; document.getElementById('oco_obs').value = "";
+            document.getElementById('btn_oco_principal').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Registrar Ocorrência'; document.getElementById('btn_oco_principal').style.background = "#ef4444"; document.getElementById('btn_oco_cancelar').style.display = "none";
         }
-
         async function registrarOcorrencia() {
-            const dados = {
-                data_registro: document.getElementById('oco_data').value,
-                motivo: document.getElementById('oco_motivo').value,
-                referencia: document.getElementById('oco_ref').value,
-                tempo_impacto: document.getElementById('oco_tempo').value,
-                observacoes: document.getElementById('oco_obs').value
-            };
-            const url = idOcoEditado ? `/api/atualizar-ocorrencia/${idOcoEditado}` : '/api/salvar-ocorrencia';
-            const m = idOcoEditado ? 'PUT' : 'POST';
-            await fetch(url, { method: m, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-            alert("Ocorrência Registrada!"); cancelarEdicaoOcorrencia(); carregarOcorrencias();
+            const dados = { data_registro: document.getElementById('oco_data').value, motivo: document.getElementById('oco_motivo').value, referencia: document.getElementById('oco_ref').value, tempo_impacto: document.getElementById('oco_tempo').value, observacoes: document.getElementById('oco_obs').value };
+            await fetch(idOcoEditado ? `/api/atualizar-ocorrencia/${idOcoEditado}` : '/api/salvar-ocorrencia', { method: idOcoEditado ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+            alert("Registrado!"); cancelarEdicaoOcorrencia(); carregarOcorrencias();
         }
-
-        async function excluirOcorrencia(id) {
-            if(!confirm("Excluir esta ocorrência?")) return;
-            await fetch(`/api/deletar-ocorrencia/${id}`, { method: 'DELETE' });
-            carregarOcorrencias();
-        }
+        async function excluirOcorrencia(id) { if(!confirm("Excluir esta ocorrência?")) return; await fetch(`/api/deletar-ocorrencia/${id}`, { method: 'DELETE' }); carregarOcorrencias(); }
 
         // --- EQUIPE ---
         async function carregarEquipe() {
@@ -521,116 +528,109 @@
             const b = document.getElementById('corpo_tabela_equipe'); b.innerHTML = "";
             listaColaboradores.forEach(c => {
                 const badge = c.is_admin ? '<span style="color:#10b981; font-weight:700;">Sim</span>' : '<span style="color:#94a3b8;">Não</span>';
-                b.innerHTML += `<tr>
-                    <td style="font-weight: 700;">${c.matricula}</td>
-                    <td>${c.nome}</td>
-                    <td>${c.cargo}</td>
-                    <td style="color: #60a5fa;">${c.data_nascimento}</td>
-                    <td>${badge}</td>
-                    <td style="text-align: right;">
-                        <button class="btn-action" onclick="prepararEdicaoColaborador(${c.id})" style="color: #a089e6;" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
-                        <button class="btn-action btn-delete" onclick="excluirColab(${c.id})" title="Excluir"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>`;
+                b.innerHTML += `<tr><td style="font-weight: 700;">${c.matricula}</td><td>${c.nome}</td><td>${c.cargo}</td><td style="color: #60a5fa;">${c.data_nascimento}</td><td>${badge}</td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicaoColaborador(${c.id})" style="color: #a089e6;"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirColab(${c.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+            });
+        }
+        function prepararEdicaoColaborador(id) {
+            const colab = listaColaboradores.find(c => c.id === id); if (!colab) return;
+            idColabEditado = id; document.getElementById('colab_matricula').value = colab.matricula; document.getElementById('colab_nome').value = colab.nome; document.getElementById('colab_cargo').value = colab.cargo; document.getElementById('colab_data').value = colab.data_nascimento; document.getElementById('colab_admin').checked = colab.is_admin ? true : false;
+            document.getElementById('btn_colab_principal').innerText = "Atualizar Colaborador"; document.getElementById('btn_colab_principal').style.background = "#2563eb"; document.getElementById('btn_colab_cancelar').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function cancelarEdicaoColaborador() {
+            idColabEditado = null; ['colab_matricula', 'colab_nome', 'colab_cargo', 'colab_data'].forEach(id => document.getElementById(id).value = ""); document.getElementById('colab_admin').checked = false;
+            document.getElementById('btn_colab_principal').innerText = "Cadastrar na Equipe"; document.getElementById('btn_colab_principal').style.background = "#10b981"; document.getElementById('btn_colab_cancelar').style.display = "none";
+        }
+        async function salvarColaborador() {
+            const dados = { matricula: document.getElementById('colab_matricula').value, nome: document.getElementById('colab_nome').value, cargo: document.getElementById('colab_cargo').value, data_nascimento: document.getElementById('colab_data').value, is_admin: document.getElementById('colab_admin').checked };
+            if(!dados.matricula || !dados.nome) return alert("Preencha matrícula e nome.");
+            const r = await fetch(idColabEditado ? `/api/colaboradores/${idColabEditado}` : '/api/colaboradores', { method: idColabEditado ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+            if(r.ok) { alert(idColabEditado ? "Colaborador Atualizado!" : "Colaborador Cadastrado!"); cancelarEdicaoColaborador(); carregarEquipe(); } else { const d = await r.json(); alert("Erro: " + d.mensagem); }
+        }
+        async function excluirColab(id) { if(!confirm("Remover acesso?")) return; await fetch(`/api/colaboradores/${id}`, { method: 'DELETE' }); carregarEquipe(); }
+
+        // ============================================
+        // NOVO: RELATÓRIOS GLOBAIS E EXPORTAÇÃO (ADMIN)
+        // ============================================
+        async function preencherDropdownColaboradores() {
+            const seletor = document.getElementById('rel_colab');
+            seletor.innerHTML = '<option value="todos">Todos da Equipe</option>';
+            const r = await fetch('/api/colaboradores');
+            const colabs = await r.json();
+            colabs.forEach(c => {
+                seletor.innerHTML += `<option value="${c.matricula}">${c.nome}</option>`;
             });
         }
 
-        function prepararEdicaoColaborador(id) {
-            const colab = listaColaboradores.find(c => c.id === id); if (!colab) return;
-            idColabEditado = id;
-            document.getElementById('colab_matricula').value = colab.matricula;
-            document.getElementById('colab_nome').value = colab.nome;
-            document.getElementById('colab_cargo').value = colab.cargo;
-            document.getElementById('colab_data').value = colab.data_nascimento;
-            document.getElementById('colab_admin').checked = colab.is_admin ? true : false;
+        async function gerarRelatorioAdmin() {
+            const tipo = document.getElementById('rel_tipo').value;
+            tipoRelatorioAtual = tipo;
+            const mat = document.getElementById('rel_colab').value;
+            const ini = document.getElementById('rel_data_ini').value;
+            const fim = document.getElementById('rel_data_fim').value;
 
-            document.getElementById('btn_colab_principal').innerText = "Atualizar Colaborador";
-            document.getElementById('btn_colab_principal').style.background = "#2563eb"; 
-            document.getElementById('btn_colab_cancelar').style.display = "block";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+            let url = `/api/admin/relatorios/${tipo}?matricula=${mat}&inicio=${ini}&fim=${fim}`;
+            const r = await fetch(url);
+            const resposta = await r.json();
+            dadosRelatorioAtual = resposta.dados;
 
-        function cancelarEdicaoColaborador() {
-            idColabEditado = null;
-            ['colab_matricula', 'colab_nome', 'colab_cargo', 'colab_data'].forEach(id => document.getElementById(id).value = "");
-            document.getElementById('colab_admin').checked = false;
-            
-            document.getElementById('btn_colab_principal').innerText = "Cadastrar na Equipe";
-            document.getElementById('btn_colab_principal').style.background = "#10b981";
-            document.getElementById('btn_colab_cancelar').style.display = "none";
-        }
+            // Atualiza os Cards do Dashboard Relatório
+            if(tipo === 'remessas') {
+                document.getElementById('rel_lbl_1').innerText = "Pontos Globais"; document.getElementById('rel_val_1').innerText = resposta.metricas.pontos_totais;
+                document.getElementById('rel_lbl_2').innerText = "Processos Totais"; document.getElementById('rel_val_2').innerText = resposta.metricas.processos_totais;
+                document.getElementById('rel_lbl_3').innerText = "Remessas Auditadas"; document.getElementById('rel_val_3').innerText = resposta.metricas.total_remessas;
+            } else {
+                document.getElementById('rel_lbl_1').innerText = "Horas Paradas"; document.getElementById('rel_val_1').innerText = resposta.metricas.total_horas + "h";
+                document.getElementById('rel_lbl_2').innerText = "Ocorrências Registradas"; document.getElementById('rel_val_2').innerText = resposta.metricas.total_ocorrencias;
+                document.getElementById('rel_lbl_3').innerText = "-"; document.getElementById('rel_val_3').innerText = "-";
+            }
 
-        async function salvarColaborador() {
-            const dados = { 
-                matricula: document.getElementById('colab_matricula').value, 
-                nome: document.getElementById('colab_nome').value, 
-                cargo: document.getElementById('colab_cargo').value, 
-                data_nascimento: document.getElementById('colab_data').value, 
-                is_admin: document.getElementById('colab_admin').checked 
-            };
-            if(!dados.matricula || !dados.nome) { alert("Preencha matrícula e nome."); return; }
-            
-            const url = idColabEditado ? `/api/colaboradores/${idColabEditado}` : '/api/colaboradores';
-            const m = idColabEditado ? 'PUT' : 'POST';
-            
-            const r = await fetch(url, { method: m, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-            if(r.ok) { 
-                alert(idColabEditado ? "Colaborador Atualizado!" : "Colaborador Cadastrado!"); 
-                cancelarEdicaoColaborador();
-                carregarEquipe(); 
-            } 
-            else { const d = await r.json(); alert("Erro: " + d.mensagem); }
-        }
+            // Atualiza a Tabela
+            const thead = document.getElementById('rel_tabela_head');
+            const tbody = document.getElementById('rel_tabela_body');
+            tbody.innerHTML = "";
 
-        async function excluirColab(id) {
-            if(!confirm("Remover o acesso deste colaborador?")) return;
-            await fetch(`/api/colaboradores/${id}`, { method: 'DELETE' }); 
-            carregarEquipe();
-        }
-
-        // ============================================
-        // LÓGICA DE EXPORTAÇÃO PARA CSV/EXCEL
-        // ============================================
-        function exportarCSV(tipo) {
-            let csv = '\uFEFF'; // Permite que o Excel leia os acentos sem erros
-            let filename = '';
-
-            if (tipo === 'remessas') {
-                if (historicoRemessas.length === 0) { alert("Não há dados para exportar."); return; }
-                filename = 'relatorio_remessas_produtividade.csv';
-                
-                // Cabeçalho da Planilha
-                csv += "Data Pagamento;Nome Remessa;Fornecedores;Processos;Contratos;Certidoes;Pag. Parciais;Glosas;Apostilamentos;Pontuacao Total\n";
-                
-                // Linhas da Planilha
-                historicoRemessas.forEach(r => {
-                    const dt = r.data_pagamento.split('-').reverse().join('/');
-                    csv += `${dt};"${r.nome_remessa}";${r.qtd_fornecedores};${r.qtd_processos};${r.qtd_contratos};${r.certidoes_renovadas};${r.pagamentos_parciais};${r.glosas_lancadas};${r.apostilamentos_bancarios};${r.pontuacao_total}\n`;
+            if(tipo === 'remessas') {
+                thead.innerHTML = `<tr><th>Colaborador</th><th>Data</th><th>Remessa</th><th>Processos</th><th>Pontos</th></tr>`;
+                dadosRelatorioAtual.forEach(d => {
+                    const dt = d.data_pagamento.split('-').reverse().join('/');
+                    tbody.innerHTML += `<tr><td style="color:#a089e6; font-weight:700;">${d.nome_colaborador || d.matricula_usuario}</td><td>${dt}</td><td>${d.nome_remessa}</td><td>${d.qtd_processos}</td><td><span class="badge-pontos">${d.pontuacao_total} pts</span></td></tr>`;
                 });
-            } else if (tipo === 'ocorrencias') {
-                if (historicoOcorrencias.length === 0) { alert("Não há dados para exportar."); return; }
-                filename = 'relatorio_ocorrencias_gargalos.csv';
-                
-                // Cabeçalho da Planilha
-                csv += "Data Registro;Motivo;Remessa/Processo;Horas Paradas;Observacao\n";
-                
-                // Linhas da Planilha
-                historicoOcorrencias.forEach(o => {
-                    const dt = o.data_registro.split('-').reverse().join('/');
-                    csv += `${dt};"${o.motivo}";"${o.referencia || ''}";${o.tempo_impacto};"${o.observacoes || ''}"\n`;
+            } else {
+                thead.innerHTML = `<tr><th>Colaborador</th><th>Data</th><th>Motivo</th><th>Impacto</th><th>Ref</th></tr>`;
+                dadosRelatorioAtual.forEach(d => {
+                    const dt = d.data_registro.split('-').reverse().join('/');
+                    tbody.innerHTML += `<tr><td style="color:#a089e6; font-weight:700;">${d.nome_colaborador || d.matricula_usuario}</td><td>${dt}</td><td><span class="badge-motivo">${d.motivo}</span></td><td>${d.tempo_impacto}h</td><td>${d.referencia}</td></tr>`;
                 });
             }
 
-            // Gerar o Ficheiro e Forçar o Download
+            if(dadosRelatorioAtual.length === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Nenhum dado encontrado no período.</td></tr>`;
+        }
+
+        function exportarRelatorioAdminCSV() {
+            if (dadosRelatorioAtual.length === 0) { alert("Gere o relatório primeiro."); return; }
+            
+            let csv = '\uFEFF'; 
+            let filename = `relatorio_gerencial_${tipoRelatorioAtual}.csv`;
+
+            if (tipoRelatorioAtual === 'remessas') {
+                csv += "Analista Responsavel;Matricula;Data Pagamento;Nome Remessa;Fornecedores;Processos;Contratos;Certidoes;Pag. Parciais;Glosas;Apostilamentos;Pontuacao Total\n";
+                dadosRelatorioAtual.forEach(r => {
+                    const dt = r.data_pagamento.split('-').reverse().join('/');
+                    csv += `"${r.nome_colaborador || ''}";${r.matricula_usuario};${dt};"${r.nome_remessa}";${r.qtd_fornecedores};${r.qtd_processos};${r.qtd_contratos};${r.certidoes_renovadas};${r.pagamentos_parciais};${r.glosas_lancadas};${r.apostilamentos_bancarios};${r.pontuacao_total}\n`;
+                });
+            } else {
+                csv += "Analista Responsavel;Matricula;Data Registro;Motivo da Parada;Referencia/Processo;Horas Paradas;Observacao do Analista\n";
+                dadosRelatorioAtual.forEach(o => {
+                    const dt = o.data_registro.split('-').reverse().join('/');
+                    csv += `"${o.nome_colaborador || ''}";${o.matricula_usuario};${dt};"${o.motivo}";"${o.referencia || ''}";${o.tempo_impacto};"${o.observacoes || ''}"\n`;
+                });
+            }
+
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", filename);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const link = document.createElement("a"); const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url); link.setAttribute("download", filename);
+            link.style.visibility = 'hidden'; document.body.appendChild(link);
+            link.click(); document.body.removeChild(link);
         }
     </script>
 </body>
