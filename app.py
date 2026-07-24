@@ -21,16 +21,21 @@ def inicializar_banco_dados():
             qtd_contratos INTEGER NOT NULL DEFAULT 0,
             certidoes_renovadas INTEGER NOT NULL DEFAULT 0,
             pagamentos_parciais INTEGER NOT NULL DEFAULT 0,
+            glosas_lancadas INTEGER NOT NULL DEFAULT 0,
+            apostilamentos_bancarios INTEGER NOT NULL DEFAULT 0,
             pontuacao_total INTEGER NOT NULL,
             data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             matricula_usuario TEXT
         )
     ''')
     
-    try:
-        cursor.execute("ALTER TABLE lancamentos_remessas ADD COLUMN matricula_usuario TEXT")
-    except sqlite3.OperationalError:
-        pass
+    # Atualiza a tabela existente de forma segura, adicionando as novas colunas se não existirem
+    try: cursor.execute("ALTER TABLE lancamentos_remessas ADD COLUMN matricula_usuario TEXT")
+    except: pass
+    try: cursor.execute("ALTER TABLE lancamentos_remessas ADD COLUMN glosas_lancadas INTEGER DEFAULT 0")
+    except: pass
+    try: cursor.execute("ALTER TABLE lancamentos_remessas ADD COLUMN apostilamentos_bancarios INTEGER DEFAULT 0")
+    except: pass
     
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS colaboradores (
@@ -55,8 +60,9 @@ def inicializar_banco_dados():
 
 inicializar_banco_dados()
 
-def calcular_esforco(processos, contratos, certidoes, parciais):
-    return (processos * 1) + (contratos * 2) + (certidoes * 1) + (parciais * 2)
+# MATEMÁTICA ATUALIZADA COM OS NOVOS PESOS
+def calcular_esforco(processos, contratos, certidoes, parciais, glosas, apostilamentos):
+    return (processos * 1) + (contratos * 2) + (certidoes * 1) + (parciais * 1) + (glosas * 1) + (apostilamentos * 2)
 
 @app.route('/')
 def index():
@@ -156,14 +162,21 @@ def salvar_lote_remessa():
     if 'usuario' not in session: return jsonify({"status": "erro"}), 401
     dados = request.json
     matricula = session['usuario']
-    pontuacao = calcular_esforco(int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), int(dados.get('pagamentos_parciais', 0)))
+    pontuacao = calcular_esforco(
+        int(dados.get('qtd_processos', 0)), 
+        int(dados.get('qtd_contratos', 0)), 
+        int(dados.get('certidoes_renovadas', 0)), 
+        int(dados.get('pagamentos_parciais', 0)),
+        int(dados.get('glosas_lancadas', 0)),
+        int(dados.get('apostilamentos_bancarios', 0))
+    )
     conexao = sqlite3.connect(NOME_BANCO)
     cursor = conexao.cursor()
     cursor.execute('''
         INSERT INTO lancamentos_remessas 
-        (data_pagamento, nome_remessa, qtd_fornecedores, qtd_processos, qtd_contratos, certidoes_renovadas, pagamentos_parciais, pontuacao_total, matricula_usuario) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (dados.get('data_pagamento'), dados.get('nome_remessa'), int(dados.get('qtd_fornecedores', 0)), int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), int(dados.get('pagamentos_parciais', 0)), pontuacao, matricula))
+        (data_pagamento, nome_remessa, qtd_fornecedores, qtd_processos, qtd_contratos, certidoes_renovadas, pagamentos_parciais, glosas_lancadas, apostilamentos_bancarios, pontuacao_total, matricula_usuario) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (dados.get('data_pagamento'), dados.get('nome_remessa'), int(dados.get('qtd_fornecedores', 0)), int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), int(dados.get('pagamentos_parciais', 0)), int(dados.get('glosas_lancadas', 0)), int(dados.get('apostilamentos_bancarios', 0)), pontuacao, matricula))
     conexao.commit()
     conexao.close()
     return jsonify({"status": "sucesso"}), 201
@@ -172,14 +185,21 @@ def salvar_lote_remessa():
 def atualizar_lote_remessa(id_remessa):
     if 'usuario' not in session: return jsonify({"status": "erro"}), 401
     dados = request.json
-    pontuacao = calcular_esforco(int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), int(dados.get('pagamentos_parciais', 0)))
+    pontuacao = calcular_esforco(
+        int(dados.get('qtd_processos', 0)), 
+        int(dados.get('qtd_contratos', 0)), 
+        int(dados.get('certidoes_renovadas', 0)), 
+        int(dados.get('pagamentos_parciais', 0)),
+        int(dados.get('glosas_lancadas', 0)),
+        int(dados.get('apostilamentos_bancarios', 0))
+    )
     conexao = sqlite3.connect(NOME_BANCO)
     cursor = conexao.cursor()
     cursor.execute('''
         UPDATE lancamentos_remessas 
-        SET data_pagamento = ?, nome_remessa = ?, qtd_fornecedores = ?, qtd_processos = ?, qtd_contratos = ?, certidoes_renovadas = ?, pagamentos_parciais = ?, pontuacao_total = ?
+        SET data_pagamento = ?, nome_remessa = ?, qtd_fornecedores = ?, qtd_processos = ?, qtd_contratos = ?, certidoes_renovadas = ?, pagamentos_parciais = ?, glosas_lancadas = ?, apostilamentos_bancarios = ?, pontuacao_total = ?
         WHERE id = ? AND matricula_usuario = ?
-    ''', (dados.get('data_pagamento'), dados.get('nome_remessa'), int(dados.get('qtd_fornecedores', 0)), int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), int(dados.get('pagamentos_parciais', 0)), pontuacao, id_remessa, session['usuario']))
+    ''', (dados.get('data_pagamento'), dados.get('nome_remessa'), int(dados.get('qtd_fornecedores', 0)), int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), int(dados.get('pagamentos_parciais', 0)), int(dados.get('glosas_lancadas', 0)), int(dados.get('apostilamentos_bancarios', 0)), pontuacao, id_remessa, session['usuario']))
     conexao.commit()
     conexao.close()
     return jsonify({"status": "sucesso"}), 200
@@ -194,7 +214,6 @@ def listar_remessas():
     cursor.execute('SELECT * FROM lancamentos_remessas WHERE matricula_usuario = ? ORDER BY id DESC', (matricula,))
     linhas = cursor.fetchall()
     
-    # AGORA COM TODOS OS DADOS INCLUÍDOS DE VOLTA!
     resultado = [{
         "id": r["id"], 
         "data_pagamento": r["data_pagamento"], 
@@ -204,6 +223,8 @@ def listar_remessas():
         "qtd_contratos": r["qtd_contratos"], 
         "certidoes_renovadas": r["certidoes_renovadas"], 
         "pagamentos_parciais": r["pagamentos_parciais"], 
+        "glosas_lancadas": r["glosas_lancadas"] if "glosas_lancadas" in r.keys() else 0, 
+        "apostilamentos_bancarios": r["apostilamentos_bancarios"] if "apostilamentos_bancarios" in r.keys() else 0, 
         "pontuacao_total": r["pontuacao_total"]
     } for r in linhas]
     
