@@ -11,7 +11,6 @@ def inicializar_banco_dados():
     conexao = sqlite3.connect(NOME_BANCO)
     cursor = conexao.cursor()
     
-    # 1. Tabela de Lançamentos de Remessas
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS lancamentos_remessas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,11 +22,16 @@ def inicializar_banco_dados():
             certidoes_renovadas INTEGER NOT NULL DEFAULT 0,
             pagamentos_parciais INTEGER NOT NULL DEFAULT 0,
             pontuacao_total INTEGER NOT NULL,
-            data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            matricula_usuario TEXT
         )
     ''')
     
-    # 2. Tabela de Colaboradores (Login)
+    try:
+        cursor.execute("ALTER TABLE lancamentos_remessas ADD COLUMN matricula_usuario TEXT")
+    except sqlite3.OperationalError:
+        pass
+    
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS colaboradores (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,7 +43,6 @@ def inicializar_banco_dados():
         )
     ''')
     
-    # 3. Força a criação do seu usuário Admin padrão (Cássio)
     cursor.execute('SELECT COUNT(*) FROM colaboradores WHERE matricula = "12345"')
     if cursor.fetchone()[0] == 0:
         cursor.execute('''
@@ -55,9 +58,6 @@ inicializar_banco_dados()
 def calcular_esforco(processos, contratos, certidoes, parciais):
     return (processos * 1) + (contratos * 2) + (certidoes * 1) + (parciais * 2)
 
-# ==========================================
-# ROTAS DE ACESSO E LOGIN
-# ==========================================
 @app.route('/')
 def index():
     if 'usuario' not in session:
@@ -68,8 +68,8 @@ def index():
 def login():
     if request.method == 'POST':
         dados = request.json if request.is_json else request.form
-        usuario = dados.get('usuario') # Matrícula
-        senha = dados.get('senha')     # Data de Nascimento
+        usuario = dados.get('usuario')
+        senha = dados.get('senha')
 
         conexao = sqlite3.connect(NOME_BANCO)
         cursor = conexao.cursor()
@@ -82,14 +82,12 @@ def login():
             session['nome'] = user[0]
             session['cargo'] = user[1]
             session['is_admin'] = user[2]
-            
             if request.is_json:
                 return jsonify({"status": "sucesso", "redirect": url_for('index')}), 200
             return redirect(url_for('index'))
         else:
             msg_erro = "Matrícula ou data de nascimento incorretos."
-            if request.is_json:
-                return jsonify({"status": "erro", "mensagem": msg_erro}), 401
+            if request.is_json: return jsonify({"status": "erro", "mensagem": msg_erro}), 401
             return render_template('login.html', erro=msg_erro)
             
     return render_template('login.html')
@@ -99,24 +97,17 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# ==========================================
-# ROTAS DE GESTÃO DE EQUIPE (Somente Admin)
-# ==========================================
 @app.route('/api/colaboradores', methods=['GET', 'POST'])
 def api_colaboradores():
-    if 'usuario' not in session or not session.get('is_admin'):
-        return jsonify({"status": "erro", "mensagem": "Acesso negado"}), 403
-        
+    if 'usuario' not in session or not session.get('is_admin'): return jsonify({"status": "erro", "mensagem": "Acesso negado"}), 403
     conexao = sqlite3.connect(NOME_BANCO)
     conexao.row_factory = sqlite3.Row
     cursor = conexao.cursor()
-    
     if request.method == 'GET':
         cursor.execute('SELECT id, matricula, nome, cargo, data_nascimento, is_admin FROM colaboradores ORDER BY nome')
         colabs = [dict(row) for row in cursor.fetchall()]
         conexao.close()
         return jsonify(colabs), 200
-        
     elif request.method == 'POST':
         dados = request.json
         try:
@@ -134,9 +125,7 @@ def api_colaboradores():
 
 @app.route('/api/colaboradores/<int:id_colab>', methods=['DELETE'])
 def deletar_colaborador(id_colab):
-    if 'usuario' not in session or not session.get('is_admin'):
-        return jsonify({"status": "erro", "mensagem": "Acesso negado"}), 403
-        
+    if 'usuario' not in session or not session.get('is_admin'): return jsonify({"status": "erro"}), 403
     conexao = sqlite3.connect(NOME_BANCO)
     cursor = conexao.cursor()
     cursor.execute('DELETE FROM colaboradores WHERE id = ?', (id_colab,))
@@ -144,48 +133,80 @@ def deletar_colaborador(id_colab):
     conexao.close()
     return jsonify({"status": "sucesso"}), 200
 
-# ==========================================
-# ROTAS DE REMESSAS (O SEU MOTOR PADRÃO)
-# ==========================================
 @app.route('/api/metricas-dashboard', methods=['GET'])
 def metricas_dashboard():
-    if 'usuario' not in session: return jsonify({"status": "erro", "mensagem": "Não autorizado"}), 401
+    if 'usuario' not in session: return jsonify({"status": "erro"}), 401
+    matricula = session['usuario']
+    data_inicio = request.args.get('inicio')
+    data_fim = request.args.get('fim')
     try:
         conexao = sqlite3.connect(NOME_BANCO)
         cursor = conexao.cursor()
-        cursor.execute('SELECT TOTAL(pontuacao_total), TOTAL(qtd_processos), COUNT(id) FROM lancamentos_remessas')
+        if data_inicio and data_fim:
+            cursor.execute('SELECT TOTAL(pontuacao_total), TOTAL(qtd_processos), COUNT(id) FROM lancamentos_remessas WHERE matricula_usuario = ? AND data_pagamento BETWEEN ? AND ?', (matricula, data_inicio, data_fim))
+        else:
+            cursor.execute('SELECT TOTAL(pontuacao_total), TOTAL(qtd_processos), COUNT(id) FROM lancamentos_remessas WHERE matricula_usuario = ?', (matricula,))
         resultado = cursor.fetchone()
         conexao.close()
-        return jsonify({
-            "pontos_totais": int(resultado[0]) if resultado[0] else 0,
-            "processos_totais": int(resultado[1]) if resultado[1] else 0,
-            "total_remessas": int(resultado[2]) if resultado[2] else 0
-        }), 200
+        return jsonify({"pontos_totais": int(resultado[0]) if resultado[0] else 0, "processos_totais": int(resultado[1]) if resultado[1] else 0, "total_remessas": int(resultado[2]) if resultado[2] else 0}), 200
     except Exception as e: return jsonify({"status": "erro", "mensagem": str(e)}), 500
 
 @app.route('/api/salvar-lote', methods=['POST'])
 def salvar_lote_remessa():
     if 'usuario' not in session: return jsonify({"status": "erro"}), 401
     dados = request.json
+    matricula = session['usuario']
     pontuacao = calcular_esforco(int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), int(dados.get('pagamentos_parciais', 0)))
-    
     conexao = sqlite3.connect(NOME_BANCO)
     cursor = conexao.cursor()
-    cursor.execute('INSERT INTO lancamentos_remessas (data_pagamento, nome_remessa, qtd_fornecedores, qtd_processos, qtd_contratos, certidoes_renovadas, pagamentos_parciais, pontuacao_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', 
-                   (dados.get('data_pagamento'), dados.get('nome_remessa'), int(dados.get('qtd_fornecedores', 0)), int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), int(dados.get('pagamentos_parciais', 0)), pontuacao))
+    cursor.execute('''
+        INSERT INTO lancamentos_remessas 
+        (data_pagamento, nome_remessa, qtd_fornecedores, qtd_processos, qtd_contratos, certidoes_renovadas, pagamentos_parciais, pontuacao_total, matricula_usuario) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (dados.get('data_pagamento'), dados.get('nome_remessa'), int(dados.get('qtd_fornecedores', 0)), int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), int(dados.get('pagamentos_parciais', 0)), pontuacao, matricula))
     conexao.commit()
     conexao.close()
     return jsonify({"status": "sucesso"}), 201
 
+@app.route('/api/atualizar-lote/<int:id_remessa>', methods=['PUT'])
+def atualizar_lote_remessa(id_remessa):
+    if 'usuario' not in session: return jsonify({"status": "erro"}), 401
+    dados = request.json
+    pontuacao = calcular_esforco(int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), int(dados.get('pagamentos_parciais', 0)))
+    conexao = sqlite3.connect(NOME_BANCO)
+    cursor = conexao.cursor()
+    cursor.execute('''
+        UPDATE lancamentos_remessas 
+        SET data_pagamento = ?, nome_remessa = ?, qtd_fornecedores = ?, qtd_processos = ?, qtd_contratos = ?, certidoes_renovadas = ?, pagamentos_parciais = ?, pontuacao_total = ?
+        WHERE id = ? AND matricula_usuario = ?
+    ''', (dados.get('data_pagamento'), dados.get('nome_remessa'), int(dados.get('qtd_fornecedores', 0)), int(dados.get('qtd_processos', 0)), int(dados.get('qtd_contratos', 0)), int(dados.get('certidoes_renovadas', 0)), int(dados.get('pagamentos_parciais', 0)), pontuacao, id_remessa, session['usuario']))
+    conexao.commit()
+    conexao.close()
+    return jsonify({"status": "sucesso"}), 200
+
 @app.route('/api/listar-remessas', methods=['GET'])
 def listar_remessas():
     if 'usuario' not in session: return jsonify({"status": "erro"}), 401
+    matricula = session['usuario']
     conexao = sqlite3.connect(NOME_BANCO)
     conexao.row_factory = sqlite3.Row  
     cursor = conexao.cursor()
-    cursor.execute('SELECT * FROM lancamentos_remessas ORDER BY id DESC')
+    cursor.execute('SELECT * FROM lancamentos_remessas WHERE matricula_usuario = ? ORDER BY id DESC', (matricula,))
     linhas = cursor.fetchall()
-    resultado = [{"id": r["id"], "data_pagamento": r["data_pagamento"], "nome_remessa": r["nome_remessa"], "qtd_fornecedores": r["qtd_fornecedores"], "qtd_processos": r["qtd_processos"], "pontuacao_total": r["pontuacao_total"]} for r in linhas]
+    
+    # AGORA COM TODOS OS DADOS INCLUÍDOS DE VOLTA!
+    resultado = [{
+        "id": r["id"], 
+        "data_pagamento": r["data_pagamento"], 
+        "nome_remessa": r["nome_remessa"], 
+        "qtd_fornecedores": r["qtd_fornecedores"], 
+        "qtd_processos": r["qtd_processos"], 
+        "qtd_contratos": r["qtd_contratos"], 
+        "certidoes_renovadas": r["certidoes_renovadas"], 
+        "pagamentos_parciais": r["pagamentos_parciais"], 
+        "pontuacao_total": r["pontuacao_total"]
+    } for r in linhas]
+    
     conexao.close()
     return jsonify(resultado), 200
 
@@ -194,7 +215,7 @@ def deletar_lote_remessa(id_remessa):
     if 'usuario' not in session: return jsonify({"status": "erro"}), 401
     conexao = sqlite3.connect(NOME_BANCO)
     cursor = conexao.cursor()
-    cursor.execute('DELETE FROM lancamentos_remessas WHERE id = ?', (id_remessa,))
+    cursor.execute('DELETE FROM lancamentos_remessas WHERE id = ? AND matricula_usuario = ?', (id_remessa, session['usuario']))
     conexao.commit()
     conexao.close()
     return jsonify({"status": "sucesso"}), 200
