@@ -75,6 +75,7 @@
         .glass-table th { padding: 12px; color: #94a3b8; font-weight: 700; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
         .glass-table td { padding: 12px; color: #ffffff; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         .badge-pontos { background: rgba(160, 137, 230, 0.1); color: #a089e6; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 12px; }
+        .badge-motivo { background: rgba(239, 68, 68, 0.1); color: #f87171; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px; text-transform: uppercase; }
         .btn-action { color: #94a3b8; background: none; border: none; cursor: pointer; font-size: 14px; margin-right: 10px;}
         .btn-delete:hover { color: #ef4444 !important; }
     </style>
@@ -91,8 +92,7 @@
         <ul class="menu-items">
             <li class="menu-item active" id="menu_dashboard" onclick="alternarAba('dashboard')"><i class="fa-solid fa-chart-pie"></i> Dashboard</li>
             <li class="menu-item" id="menu_remessas" onclick="alternarAba('remessas')"><i class="fa-solid fa-file-invoice-dollar"></i> Remessas Pagas</li>
-            <li class="menu-item"><i class="fa-solid fa-list-check"></i> Outros Registros</li>
-            <li class="menu-item"><i class="fa-solid fa-triangle-exclamation"></i> Particularidades</li>
+            <li class="menu-item" id="menu_ocorrencias" onclick="alternarAba('ocorrencias')"><i class="fa-solid fa-triangle-exclamation"></i> Ocorrências e Pendências</li>
             
             {% if session.get('is_admin') %}
             <li class="menu-item" id="menu_equipe" onclick="alternarAba('equipe')" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 25px;"><i class="fa-solid fa-users-gear"></i> Gestão de Equipe</li>
@@ -179,7 +179,7 @@
             </div>
         </section>
 
-        <!-- REMESSAS PAGAS (COM OS NOVOS CAMPOS) -->
+        <!-- REMESSAS PAGAS -->
         <section id="aba_remessas_view" style="display: none; flex-direction: column; width: 100%;">
             <div class="glass-card">
                 <div class="card-header-internal" style="margin-bottom: 20px;">
@@ -226,6 +226,52 @@
             </div>
         </section>
 
+        <!-- NOVA ABA: OCORRÊNCIAS E PENDÊNCIAS -->
+        <section id="aba_ocorrencias_view" style="display: none; flex-direction: column; width: 100%;">
+            <div class="glass-card">
+                <div class="card-header-internal" style="margin-bottom: 20px;">
+                    <div class="card-title-box">
+                        <h2 class="internal-title">Registrar Pendência</h2>
+                        <span class="internal-subtitle">MAPEAMENTO DE GARGALOS E PROBLEMAS TÉCNICOS</span>
+                    </div>
+                </div>
+                <div class="row-grid">
+                    <div><label>Data</label><input type="date" id="oco_data" class="form-input" required onclick="this.showPicker()"></div>
+                    <div>
+                        <label>Motivo da Pendência</label>
+                        <select id="oco_motivo" class="form-input" required style="background: rgba(44, 48, 61, 0.6); color: #fff; cursor: pointer;">
+                            <option value="Falta de volume">Falta de volume / Processos insuficientes</option>
+                            <option value="Pendência de Pagamento">Pendência de Pagamento / Aguardando liberação</option>
+                            <option value="Sistema fora do ar">Sistema fora do ar / Instabilidade técnica</option>
+                            <option value="Aguardando retorno">Aguardando retorno de outro setor</option>
+                            <option value="Outros">Outros motivos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row-grid">
+                    <div><label>Nº Remessa/Processo (Opcional)</label><input type="text" id="oco_ref" class="form-input" placeholder="Ex: 7190 - c"></div>
+                    <div><label>Tempo de Impacto (Horas)</label><input type="number" id="oco_tempo" class="form-input" placeholder="Ex: 2" step="0.5" min="0"></div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label>Observações / Detalhes</label>
+                    <input type="text" id="oco_obs" class="form-input" placeholder="Descreva brevemente a situação que gerou a pendência...">
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-top: 15px;">
+                    <button class="btn-submit" id="btn_oco_principal" onclick="registrarOcorrencia()" style="background: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Registrar Ocorrência</button>
+                    <button class="btn-submit" id="btn_oco_cancelar" onclick="cancelarEdicaoOcorrencia()" style="background: rgba(255,255,255,0.1); display: none;">Cancelar</button>
+                </div>
+            </div>
+            
+            <div class="glass-card">
+                <div class="table-title">Histórico de Ocorrências</div>
+                <table class="glass-table">
+                    <thead><tr><th>Data</th><th>Motivo</th><th>Remessa</th><th>Horas Paradas</th><th>Observação</th><th style="text-align: right;">Ações</th></tr></thead>
+                    <tbody id="corpo_tabela_ocorrencias"></tbody>
+                </table>
+            </div>
+        </section>
+
         <!-- GESTÃO DE EQUIPE -->
         {% if session.get('is_admin') %}
         <section id="aba_equipe_view" style="display: none; flex-direction: column; width: 100%;">
@@ -250,7 +296,7 @@
                 <div style="margin-bottom: 25px;">
                     <label class="checkbox-label">
                         <input type="checkbox" id="colab_admin" style="width: 18px; height: 18px;">
-                        Tornar este usuário um Administrador (Poderá cadastrar pessoas)
+                        Tornar este usuário um Administrador
                     </label>
                 </div>
                 <button class="btn-submit" onclick="salvarColaborador()" style="background: #10b981;">Cadastrar na Equipe</button>
@@ -270,144 +316,100 @@
 
     <script>
         let historicoRemessas = [];
+        let historicoOcorrencias = [];
         let idSendoEditado = null;
+        let idOcoEditado = null;
 
         window.onload = function() {
-            const d = document.getElementById('data_pagamento'); if(d) d.valueAsDate = new Date();
+            const dp = document.getElementById('data_pagamento'); if(dp) dp.valueAsDate = new Date();
+            const do_ = document.getElementById('oco_data'); if(do_) do_.valueAsDate = new Date();
             setPeriodo('mensal');
         };
 
         function alternarAba(aba) {
-            const menus = ['menu_dashboard', 'menu_remessas', 'menu_equipe'];
-            const views = ['aba_dashboard_view', 'aba_remessas_view', 'aba_equipe_view'];
+            const menus = ['menu_dashboard', 'menu_remessas', 'menu_ocorrencias', 'menu_equipe'];
+            const views = ['aba_dashboard_view', 'aba_remessas_view', 'aba_ocorrencias_view', 'aba_equipe_view'];
             
             menus.forEach(m => { const el = document.getElementById(m); if(el) el.classList.remove('active'); });
             views.forEach(v => { const el = document.getElementById(v); if(el) el.style.display = 'none'; });
             
             const mAtivo = document.getElementById(`menu_${aba}`); if(mAtivo) mAtivo.classList.add('active');
-            const vAtivo = document.getElementById(`aba_${aba}_view`); if(vAtivo) vAtivo.style.display = aba === 'remessas' || aba === 'equipe' ? 'flex' : 'block';
+            const vAtivo = document.getElementById(`aba_${aba}_view`); if(vAtivo) vAtivo.style.display = aba === 'dashboard' ? 'block' : 'flex';
 
             if(aba === 'dashboard') carregarMetricasDashboard();
             if(aba === 'remessas') carregarHistorico();
+            if(aba === 'ocorrencias') carregarOcorrencias();
             if(aba === 'equipe') carregarEquipe();
         }
 
-        // ============================================
-        // LÓGICA DE FILTROS DE DATA
-        // ============================================
+        // --- DASHBOARD ---
         function formataDataISO(data) {
-            const ano = data.getFullYear();
-            const mes = String(data.getMonth() + 1).padStart(2, '0');
-            const dia = String(data.getDate()).padStart(2, '0');
-            return `${ano}-${mes}-${dia}`;
+            return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
         }
 
         function setPeriodo(periodo) {
-            document.getElementById('period_hoje').classList.remove('active');
-            document.getElementById('period_semanal').classList.remove('active');
-            document.getElementById('period_mensal').classList.remove('active');
-            
+            ['hoje', 'semanal', 'mensal'].forEach(p => document.getElementById(`period_${p}`).classList.remove('active'));
             if(periodo) document.getElementById(`period_${periodo}`).classList.add('active');
             
-            const hoje = new Date();
-            let dataInicio = new Date();
-            let dataFim = new Date();
-
-            if (periodo === 'hoje') {
-                // Hoje e hoje
-            } else if (periodo === 'semanal') {
-                const diaDaSemana = hoje.getDay();
-                dataInicio.setDate(hoje.getDate() - diaDaSemana);
-            } else if (periodo === 'mensal') {
-                dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-            }
+            const hoje = new Date(); let dataInicio = new Date(); let dataFim = new Date();
+            if (periodo === 'semanal') dataInicio.setDate(hoje.getDate() - hoje.getDay());
+            else if (periodo === 'mensal') dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
 
             document.getElementById('date_from').value = formataDataISO(dataInicio);
             document.getElementById('date_to').value = formataDataISO(dataFim);
-
             carregarMetricasDashboard();
         }
 
         function atualizarPorDataManual() {
-            document.getElementById('period_hoje').classList.remove('active');
-            document.getElementById('period_semanal').classList.remove('active');
-            document.getElementById('period_mensal').classList.remove('active');
+            ['hoje', 'semanal', 'mensal'].forEach(p => document.getElementById(`period_${p}`).classList.remove('active'));
             carregarMetricasDashboard();
         }
 
         async function carregarMetricasDashboard() {
-            const dataInicio = document.getElementById('date_from').value;
-            const dataFim = document.getElementById('date_to').value;
-            
-            let url = '/api/metricas-dashboard';
-            if (dataInicio && dataFim) {
-                url += `?inicio=${dataInicio}&fim=${dataFim}`;
-            }
-
+            const i = document.getElementById('date_from').value; const f = document.getElementById('date_to').value;
+            let url = '/api/metricas-dashboard'; if (i && f) url += `?inicio=${i}&fim=${f}`;
             try {
-                const r = await fetch(url);
-                const m = await r.json();
+                const r = await fetch(url); const m = await r.json();
                 document.getElementById('dash_pontos').innerText = m.pontos_totais || 0;
                 document.getElementById('dash_processos').innerText = m.processos_totais || 0;
                 document.getElementById('dash_remessas').innerText = m.total_remessas || 0;
-                
-                const now = new Date();
-                document.getElementById('status_timestamp').innerText = `ESTADO: ATUALIZADO ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-            } catch (e) { console.error("Erro ao carregar métricas:", e); }
+                const now = new Date(); document.getElementById('status_timestamp').innerText = `ESTADO: ATUALIZADO ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            } catch (e) { console.error(e); }
         }
 
-        // ============================================
-        // HISTÓRICO E EDIÇÃO COM NOVOS CAMPOS
-        // ============================================
+        // --- REMESSAS ---
         async function carregarHistorico() {
-            const r = await fetch('/api/listar-remessas');
-            historicoRemessas = await r.json();
+            const r = await fetch('/api/listar-remessas'); historicoRemessas = await r.json();
             const b = document.getElementById('corpo_tabela_historico'); b.innerHTML = "";
             if (historicoRemessas.length === 0) { b.innerHTML = `<tr><td colspan="6" style="text-align: center;">Nenhum registro.</td></tr>`; return; }
             historicoRemessas.forEach(rem => {
                 const dt = rem.data_pagamento.split('-').reverse().join('/');
-                b.innerHTML += `<tr>
-                    <td>${dt}</td>
-                    <td style="font-weight: 600;">${rem.nome_remessa}</td>
-                    <td>${rem.qtd_fornecedores}</td>
-                    <td>${rem.qtd_processos}</td>
-                    <td><span class="badge-pontos">${rem.pontuacao_total} pts</span></td>
-                    <td style="text-align: right;">
-                        <button class="btn-action" title="Editar" onclick="prepararEdicao(${rem.id})" style="color: #a089e6;"><i class="fa-solid fa-pen-to-square"></i></button>
-                        <button class="btn-action btn-delete" title="Excluir" onclick="excluirRemessa(${rem.id})"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>`;
+                b.innerHTML += `<tr><td>${dt}</td><td style="font-weight: 600;">${rem.nome_remessa}</td><td>${rem.qtd_fornecedores}</td><td>${rem.qtd_processos}</td><td><span class="badge-pontos">${rem.pontuacao_total} pts</span></td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicao(${rem.id})" style="color: #a089e6;"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirRemessa(${rem.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
             });
         }
 
         function prepararEdicao(id) {
-            const remessa = historicoRemessas.find(r => r.id === id);
-            if (!remessa) return;
+            const rem = historicoRemessas.find(r => r.id === id); if (!rem) return;
             idSendoEditado = id;
-            
-            document.getElementById('data_pagamento').value = remessa.data_pagamento;
-            document.getElementById('nome_remessa').value = remessa.nome_remessa;
-            document.getElementById('qtd_fornecedores').value = remessa.qtd_fornecedores;
-            document.getElementById('qtd_processos').value = remessa.qtd_processos;
-            document.getElementById('qtd_contratos').value = remessa.qtd_contratos;
-            document.getElementById('certidoes_renovadas').value = remessa.certidoes_renovadas;
-            document.getElementById('pagamentos_parciais').value = remessa.pagamentos_parciais;
-            document.getElementById('glosas_lancadas').value = remessa.glosas_lancadas || 0;
-            document.getElementById('apostilamentos_bancarios').value = remessa.apostilamentos_bancarios || 0;
-
+            document.getElementById('data_pagamento').value = rem.data_pagamento;
+            document.getElementById('nome_remessa').value = rem.nome_remessa;
+            document.getElementById('qtd_fornecedores').value = rem.qtd_fornecedores;
+            document.getElementById('qtd_processos').value = rem.qtd_processos;
+            document.getElementById('qtd_contratos').value = rem.qtd_contratos;
+            document.getElementById('certidoes_renovadas').value = rem.certidoes_renovadas;
+            document.getElementById('pagamentos_parciais').value = rem.pagamentos_parciais;
+            document.getElementById('glosas_lancadas').value = rem.glosas_lancadas || 0;
+            document.getElementById('apostilamentos_bancarios').value = rem.apostilamentos_bancarios || 0;
             document.getElementById('btn_principal').innerText = "Atualizar Registro";
             document.getElementById('btn_principal').style.background = "#10b981"; 
             document.getElementById('btn_cancelar').style.display = "block";
-
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function cancelarEdicao() {
-            idSendoEditado = null;
-            document.getElementById('data_pagamento').valueAsDate = new Date();
+            idSendoEditado = null; document.getElementById('data_pagamento').valueAsDate = new Date();
             document.getElementById('nome_remessa').value = "";
-            document.querySelectorAll('.form-input[type="number"]').forEach(input => input.value = "0");
-            
+            document.querySelectorAll('#aba_remessas_view .form-input[type="number"]').forEach(i => i.value = "0");
             document.getElementById('btn_principal').innerText = "Registrar Produção";
             document.getElementById('btn_principal').style.background = "#1e40af";
             document.getElementById('btn_cancelar').style.display = "none";
@@ -426,24 +428,10 @@
                 apostilamentos_bancarios: document.getElementById('apostilamentos_bancarios').value
             };
             if(!dados.nome_remessa) { alert("Introduza a remessa."); return; }
-
             const url = idSendoEditado ? `/api/atualizar-lote/${idSendoEditado}` : '/api/salvar-lote';
-            const metodo = idSendoEditado ? 'PUT' : 'POST';
-
-            try {
-                const r = await fetch(url, {
-                    method: metodo,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dados)
-                });
-                
-                if (r.ok) {
-                    alert("Sucesso!");
-                    cancelarEdicao();
-                    carregarHistorico();
-                    carregarMetricasDashboard();
-                }
-            } catch (e) { alert("Erro ao salvar."); }
+            const m = idSendoEditado ? 'PUT' : 'POST';
+            await fetch(url, { method: m, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+            alert("Sucesso!"); cancelarEdicao(); carregarHistorico(); carregarMetricasDashboard();
         }
 
         async function excluirRemessa(id) {
@@ -452,12 +440,67 @@
             carregarHistorico(); carregarMetricasDashboard();
         }
 
-        // ============================================
-        // GESTÃO DE EQUIPE
-        // ============================================
+        // --- OCORRÊNCIAS E PENDÊNCIAS ---
+        async function carregarOcorrencias() {
+            const r = await fetch('/api/listar-ocorrencias'); historicoOcorrencias = await r.json();
+            const b = document.getElementById('corpo_tabela_ocorrencias'); b.innerHTML = "";
+            if (historicoOcorrencias.length === 0) { b.innerHTML = `<tr><td colspan="6" style="text-align: center;">Nenhum registro.</td></tr>`; return; }
+            historicoOcorrencias.forEach(oco => {
+                const dt = oco.data_registro.split('-').reverse().join('/');
+                const ref = oco.referencia ? oco.referencia : '-';
+                b.innerHTML += `<tr><td>${dt}</td><td><span class="badge-motivo">${oco.motivo}</span></td><td style="font-weight: 600;">${ref}</td><td>${oco.tempo_impacto}h</td><td>${oco.observacoes}</td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicaoOcorrencia(${oco.id})" style="color: #a089e6;"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirOcorrencia(${oco.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+            });
+        }
+
+        function prepararEdicaoOcorrencia(id) {
+            const oco = historicoOcorrencias.find(o => o.id === id); if (!oco) return;
+            idOcoEditado = id;
+            document.getElementById('oco_data').value = oco.data_registro;
+            document.getElementById('oco_motivo').value = oco.motivo;
+            document.getElementById('oco_ref').value = oco.referencia;
+            document.getElementById('oco_tempo').value = oco.tempo_impacto;
+            document.getElementById('oco_obs').value = oco.observacoes;
+
+            document.getElementById('btn_oco_principal').innerText = "Atualizar Ocorrência";
+            document.getElementById('btn_oco_principal').style.background = "#10b981"; 
+            document.getElementById('btn_oco_cancelar').style.display = "block";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelarEdicaoOcorrencia() {
+            idOcoEditado = null; document.getElementById('oco_data').valueAsDate = new Date();
+            document.getElementById('oco_motivo').value = "Falta de volume";
+            document.getElementById('oco_ref').value = "";
+            document.getElementById('oco_tempo').value = "";
+            document.getElementById('oco_obs').value = "";
+            document.getElementById('btn_oco_principal').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Registrar Ocorrência';
+            document.getElementById('btn_oco_principal').style.background = "#ef4444";
+            document.getElementById('btn_oco_cancelar').style.display = "none";
+        }
+
+        async function registrarOcorrencia() {
+            const dados = {
+                data_registro: document.getElementById('oco_data').value,
+                motivo: document.getElementById('oco_motivo').value,
+                referencia: document.getElementById('oco_ref').value,
+                tempo_impacto: document.getElementById('oco_tempo').value,
+                observacoes: document.getElementById('oco_obs').value
+            };
+            const url = idOcoEditado ? `/api/atualizar-ocorrencia/${idOcoEditado}` : '/api/salvar-ocorrencia';
+            const m = idOcoEditado ? 'PUT' : 'POST';
+            await fetch(url, { method: m, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+            alert("Ocorrência Registrada!"); cancelarEdicaoOcorrencia(); carregarOcorrencias();
+        }
+
+        async function excluirOcorrencia(id) {
+            if(!confirm("Excluir esta ocorrência?")) return;
+            await fetch(`/api/deletar-ocorrencia/${id}`, { method: 'DELETE' });
+            carregarOcorrencias();
+        }
+
+        // --- EQUIPE ---
         async function carregarEquipe() {
-            const r = await fetch('/api/colaboradores');
-            const colabs = await r.json();
+            const r = await fetch('/api/colaboradores'); const colabs = await r.json();
             const b = document.getElementById('corpo_tabela_equipe'); b.innerHTML = "";
             colabs.forEach(c => {
                 const badge = c.is_admin ? '<span style="color:#10b981; font-weight:700;">Sim</span>' : '<span style="color:#94a3b8;">Não</span>';
@@ -466,32 +509,16 @@
         }
 
         async function salvarColaborador() {
-            const dados = {
-                matricula: document.getElementById('colab_matricula').value,
-                nome: document.getElementById('colab_nome').value,
-                cargo: document.getElementById('colab_cargo').value,
-                data_nascimento: document.getElementById('colab_data').value,
-                is_admin: document.getElementById('colab_admin').checked
-            };
+            const dados = { matricula: document.getElementById('colab_matricula').value, nome: document.getElementById('colab_nome').value, cargo: document.getElementById('colab_cargo').value, data_nascimento: document.getElementById('colab_data').value, is_admin: document.getElementById('colab_admin').checked };
             if(!dados.matricula || !dados.nome) { alert("Preencha matrícula e nome."); return; }
-            
             const r = await fetch('/api/colaboradores', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-            const data = await r.json();
-            
-            if(r.ok) {
-                alert("Colaborador cadastrado!");
-                ['colab_matricula', 'colab_nome', 'colab_cargo', 'colab_data'].forEach(id => document.getElementById(id).value = "");
-                document.getElementById('colab_admin').checked = false;
-                carregarEquipe();
-            } else {
-                alert("Erro: " + data.mensagem);
-            }
+            if(r.ok) { alert("Cadastrado!"); ['colab_matricula', 'colab_nome', 'colab_cargo', 'colab_data'].forEach(id => document.getElementById(id).value = ""); document.getElementById('colab_admin').checked = false; carregarEquipe(); } 
+            else { const d = await r.json(); alert("Erro: " + d.mensagem); }
         }
 
         async function excluirColab(id) {
             if(!confirm("Remover o acesso deste colaborador?")) return;
-            await fetch(`/api/colaboradores/${id}`, { method: 'DELETE' });
-            carregarEquipe();
+            await fetch(`/api/colaboradores/${id}`, { method: 'DELETE' }); carregarEquipe();
         }
     </script>
 </body>
