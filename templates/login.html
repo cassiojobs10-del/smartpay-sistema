@@ -7,37 +7,41 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* ==========================================
-           SISTEMA DE TEMAS (CLARO E ESCURO)
-           ========================================== */
         :root {
             --bg-body: #f3f4f6;
-            --bg-card: rgba(255, 255, 255, 0.85);
+            --bg-card: #ffffff;
             --bg-input: #f9fafb;
             --text-main: #111827;
             --text-muted: #6b7280;
-            --border: rgba(229, 231, 235, 0.8);
+            --border: #e5e7eb;
             --btn-primary: #111827;
             --btn-primary-text: #ffffff;
-            --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
             --shadow-btn: 0 4px 12px rgba(17, 24, 39, 0.2);
             --danger-bg: rgba(239, 68, 68, 0.1);
             --danger-text: #ef4444;
+            
+            /* Cor do líquido que sobe (Transição) */
+            --liquid-color: #111827;
+            --liquid-text: #ffffff;
         }
 
         [data-theme="dark"] {
             --bg-body: #09090b;
-            --bg-card: rgba(24, 24, 27, 0.85);
+            --bg-card: #18181b;
             --bg-input: #27272a;
             --text-main: #f4f4f5;
             --text-muted: #a1a1aa;
-            --border: rgba(39, 39, 42, 0.8);
+            --border: #27272a;
             --btn-primary: #ffffff;
             --btn-primary-text: #000000;
-            --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             --shadow-btn: 0 4px 12px rgba(255, 255, 255, 0.1);
             --danger-bg: rgba(239, 68, 68, 0.15);
             --danger-text: #f87171;
+            
+            --liquid-color: #000000;
+            --liquid-text: #ffffff;
         }
 
         * {
@@ -45,7 +49,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
 
         body {
@@ -58,17 +62,6 @@
             padding: 20px;
             overflow: hidden;
             position: relative;
-        }
-
-        /* FUNDO COM AS ONDAS FLUIDAS (LIQUID WAVE) */
-        #waveCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
         }
 
         /* BOTÃO DE TEMA */
@@ -89,14 +82,9 @@
             box-shadow: var(--shadow-card);
             font-size: 16px;
             z-index: 10;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-        .theme-toggle:hover {
-            border-color: var(--text-muted);
         }
 
-        /* CARD DE LOGIN COM EFEITO VIDRO (BACKDROP-FILTER) */
+        /* CARD DE LOGIN */
         .login-card {
             background-color: var(--bg-card);
             border: 1px solid var(--border);
@@ -107,20 +95,12 @@
             box-shadow: var(--shadow-card);
             animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             position: relative;
-            z-index: 10;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            z-index: 5;
         }
 
         @keyframes fadeSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .login-header {
@@ -157,7 +137,6 @@
             flex-direction: column;
             gap: 8px;
             margin-bottom: 20px;
-            text-align: left;
         }
         .form-group label {
             color: var(--text-muted);
@@ -225,7 +204,7 @@
             font-size: 13px;
             font-weight: 600;
             margin-bottom: 20px;
-            display: flex;
+            display: none;
             align-items: center;
             gap: 10px;
             animation: fadeIn 0.3s ease;
@@ -236,19 +215,97 @@
             to { opacity: 1; transform: scale(1); }
         }
 
-        .login-footer {
-            margin-top: 24px;
+        /* ==========================================================
+           TRANSIÇÃO LÍQUIDA AO ACESSAR (WAVE TRANSITION)
+           ========================================================== */
+        .liquid-transition-overlay {
+            position: fixed;
+            left: 0;
+            top: 100%;
+            width: 100%;
+            height: 100vh;
+            background-color: var(--liquid-color);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: top 1.2s cubic-bezier(0.7, 0, 0.3, 1);
+        }
+
+        .liquid-transition-overlay.active {
+            top: 0%;
+        }
+
+        /* ONDAS SVG NA BORDA SUPERIOR DA TRANSIÇÃO */
+        .liquid-waves {
+            position: absolute;
+            bottom: 99%;
+            left: 0;
+            width: 200%;
+            height: 140px;
+            display: flex;
+            animation: waveMotion 2.5s infinite linear;
+        }
+
+        .liquid-waves svg {
+            width: 50%;
+            height: 100%;
+            fill: var(--liquid-color);
+        }
+
+        @keyframes waveMotion {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* CONTEÚDO QUE APARECE DENTRO DA ONDA QUANDO ELA COBRE A TELA */
+        .liquid-content {
             text-align: center;
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 500;
+            color: var(--liquid-text);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease 0.6s, transform 0.6s ease 0.6s;
+        }
+
+        .liquid-transition-overlay.active .liquid-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .liquid-logo {
+            width: 60px;
+            height: 60px;
+            background-color: var(--liquid-text);
+            color: var(--liquid-color);
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
     </style>
 </head>
 <body>
 
-    <!-- CANVAS DAS ONDAS FLUIDAS (ÁGUA AGITADA) -->
-    <canvas id="waveCanvas"></canvas>
+    <!-- OVERLAY DA TRANSIÇÃO LÍQUIDA (ÁGUA AGITADA AO ACESSAR) -->
+    <div id="liquidOverlay" class="liquid-transition-overlay">
+        <div class="liquid-waves">
+            <!-- Duas ondas unidas para formar o movimento infinito -->
+            <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+                <path d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,149.3C672,149,768,203,864,218.7C960,235,1056,213,1152,186.7C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>
+            <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+                <path d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,149.3C672,149,768,203,864,218.7C960,235,1056,213,1152,186.7C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>
+        </div>
+        <div class="liquid-content">
+            <div class="liquid-logo"><i class="fa-solid fa-layer-group"></i></div>
+            <h2 style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">Gerência Financeira</h2>
+            <p style="font-size: 14px; opacity: 0.8; margin-top: 6px; font-weight: 500;">Preparando ambiente seguro...</p>
+        </div>
+    </div>
 
     <!-- BOTÃO DE TEMA -->
     <button class="theme-toggle" onclick="toggleTheme()" title="Mudar Tema">
@@ -263,14 +320,12 @@
             <p class="login-subtitle">Acesso restrito a colaboradores e gestores</p>
         </div>
 
-        {% if erro %}
-        <div class="alert-error">
+        <div id="alertError" class="alert-error">
             <i class="fa-solid fa-circle-exclamation"></i>
-            <span>{{ erro }}</span>
+            <span id="errorMsg">Matrícula ou data de nascimento incorretos.</span>
         </div>
-        {% endif %}
 
-        <form action="{{ url_for('login') }}" method="POST" id="loginForm" onsubmit="iniciarCarregamento()">
+        <form id="loginForm" onsubmit="realizarLoginComOnda(event)">
             
             <div class="form-group">
                 <label for="usuario">Matrícula de Acesso</label>
@@ -279,7 +334,6 @@
                     <input 
                         type="text" 
                         id="usuario" 
-                        name="usuario" 
                         class="form-input" 
                         placeholder="Ex: 12345" 
                         required 
@@ -296,7 +350,6 @@
                     <input 
                         type="password" 
                         id="senha" 
-                        name="senha" 
                         class="form-input" 
                         placeholder="dd/mm/aa" 
                         required 
@@ -319,78 +372,8 @@
     </div>
 
     <script>
-        // ==========================================
-        // ANIMAÇÃO DE ÁGUA/ONDAS FLUIDAS (LIQUID WAVES)
-        // ==========================================
-        const canvas = document.getElementById('waveCanvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let step = 0;
-
-        function resizeCanvas() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        }
-
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        function drawWaves() {
-            ctx.clearRect(0, 0, width, height);
-            step += 0.012; // Velocidade da ondulação da água
-
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            
-            // Definição de 3 camadas de ondas com tons elegantes
-            const waves = [
-                {
-                    amplitude: 45,
-                    frequency: 0.003,
-                    speed: 1.0,
-                    heightOffset: height * 0.72,
-                    color: isDark ? 'rgba(39, 39, 42, 0.45)' : 'rgba(229, 231, 235, 0.7)'
-                },
-                {
-                    amplitude: 35,
-                    frequency: 0.005,
-                    speed: 1.5,
-                    heightOffset: height * 0.76,
-                    color: isDark ? 'rgba(63, 63, 70, 0.35)' : 'rgba(209, 213, 219, 0.55)'
-                },
-                {
-                    amplitude: 25,
-                    frequency: 0.007,
-                    speed: 2.0,
-                    heightOffset: height * 0.82,
-                    color: isDark ? 'rgba(82, 82, 91, 0.25)' : 'rgba(156, 163, 175, 0.4)'
-                }
-            ];
-
-            waves.forEach(wave => {
-                ctx.beginPath();
-                ctx.moveTo(0, height);
-                ctx.lineTo(0, wave.heightOffset);
-
-                for (let x = 0; x <= width; x += 10) {
-                    const y = Math.sin(x * wave.frequency + step * wave.speed) * wave.amplitude +
-                              Math.cos(x * 0.002 + step * 0.8) * (wave.amplitude * 0.4) +
-                              wave.heightOffset;
-                    ctx.lineTo(x, y);
-                }
-
-                ctx.lineTo(width, height);
-                ctx.closePath();
-                ctx.fillStyle = wave.color;
-                ctx.fill();
-            });
-
-            requestAnimationFrame(drawWaves);
-        }
-
-        drawWaves();
-
         // =====================================
-        // CONTROLE DO TEMA
+        // CONTROLE DO TEMA (CLARO / ESCURO)
         // =====================================
         function toggleTheme() {
             const body = document.documentElement;
@@ -411,11 +394,60 @@
             document.getElementById('theme-icon').className = 'fa-solid fa-sun';
         }
 
-        function iniciarCarregamento() {
+        // =====================================
+        // LOGIN COM TRANSIÇÃO LÍQUIDA (WAVE EFFECT)
+        // =====================================
+        async function realizarLoginComOnda(event) {
+            event.preventDefault(); // Impede o reload padrão da página
+
             const btn = document.getElementById('btnAcessar');
+            const alertBox = document.getElementById('alertError');
+            const usuario = document.getElementById('usuario').value;
+            const senha = document.getElementById('senha').value;
+
+            // Esconde alertas de erro antigos
+            alertBox.style.display = 'none';
+
+            // Efeito de carregamento no botão
+            const textoOriginal = btn.innerHTML;
             btn.style.opacity = '0.7';
             btn.style.pointerEvents = 'none';
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Verificando credenciais...</span>';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Autenticando...</span>';
+
+            try {
+                // Envia credenciais para o servidor sem recarregar a tela
+                const resposta = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario: usuario, senha: senha })
+                });
+
+                const dados = await resposta.json();
+
+                if (resposta.ok && dados.status === 'sucesso') {
+                    // SENHA CORRETA! DISPARA A ONDA LÍQUIDA
+                    const liquid = document.getElementById('liquidOverlay');
+                    liquid.classList.add('active');
+
+                    // Aguarda 1.4 segundos para a água cobrir a tela antes de abrir o painel
+                    setTimeout(() => {
+                        window.location.href = dados.redirect || '/';
+                    }, 1400);
+                } else {
+                    // ERRO DE SENHA OU MATRÍCULA
+                    alertBox.style.display = 'flex';
+                    document.getElementById('errorMsg').innerText = dados.mensagem || "Credenciais incorretas.";
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                    btn.innerHTML = textoOriginal;
+                }
+            } catch (erro) {
+                alertBox.style.display = 'flex';
+                document.getElementById('errorMsg').innerText = "Erro ao conectar com o servidor. Tente novamente.";
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+                btn.innerHTML = textoOriginal;
+            }
         }
     </script>
 </body>
