@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso - Gerência Financeira</title>
-    <!-- Mesma fonte moderna do painel principal -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -13,14 +12,14 @@
            ========================================== */
         :root {
             --bg-body: #f3f4f6;
-            --bg-card: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.85);
             --bg-input: #f9fafb;
             --text-main: #111827;
             --text-muted: #6b7280;
-            --border: #e5e7eb;
+            --border: rgba(229, 231, 235, 0.8);
             --btn-primary: #111827;
             --btn-primary-text: #ffffff;
-            --shadow-card: 0 20px 40px rgba(0, 0, 0, 0.05);
+            --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
             --shadow-btn: 0 4px 12px rgba(17, 24, 39, 0.2);
             --danger-bg: rgba(239, 68, 68, 0.1);
             --danger-text: #ef4444;
@@ -28,14 +27,14 @@
 
         [data-theme="dark"] {
             --bg-body: #09090b;
-            --bg-card: #18181b;
+            --bg-card: rgba(24, 24, 27, 0.85);
             --bg-input: #27272a;
             --text-main: #f4f4f5;
             --text-muted: #a1a1aa;
-            --border: #27272a;
+            --border: rgba(39, 39, 42, 0.8);
             --btn-primary: #ffffff;
             --btn-primary-text: #000000;
-            --shadow-card: 0 25px 50px rgba(0, 0, 0, 0.4);
+            --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
             --shadow-btn: 0 4px 12px rgba(255, 255, 255, 0.1);
             --danger-bg: rgba(239, 68, 68, 0.15);
             --danger-text: #f87171;
@@ -61,7 +60,18 @@
             position: relative;
         }
 
-        /* BOTÃO DE MUDAR TEMA NO CANTO SUPERIOR */
+        /* FUNDO COM AS ONDAS FLUIDAS (LIQUID WAVE) */
+        #waveCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* BOTÃO DE TEMA */
         .theme-toggle {
             position: absolute;
             top: 24px;
@@ -78,12 +88,15 @@
             cursor: pointer;
             box-shadow: var(--shadow-card);
             font-size: 16px;
+            z-index: 10;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
         .theme-toggle:hover {
             border-color: var(--text-muted);
         }
 
-        /* CARD DE LOGIN COM ANIMAÇÃO SUAVE */
+        /* CARD DE LOGIN COM EFEITO VIDRO (BACKDROP-FILTER) */
         .login-card {
             background-color: var(--bg-card);
             border: 1px solid var(--border);
@@ -93,6 +106,10 @@
             max-width: 420px;
             box-shadow: var(--shadow-card);
             animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+            z-index: 10;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
         }
 
         @keyframes fadeSlideUp {
@@ -106,7 +123,6 @@
             }
         }
 
-        /* LOGO E CABEÇALHO */
         .login-header {
             text-align: center;
             margin-bottom: 32px;
@@ -136,7 +152,6 @@
             font-weight: 500;
         }
 
-        /* FORMULÁRIO */
         .form-group {
             display: flex;
             flex-direction: column;
@@ -179,7 +194,6 @@
             background-color: var(--bg-card);
         }
 
-        /* BOTÃO ENTRAR */
         .btn-submit {
             background-color: var(--btn-primary);
             color: var(--btn-primary-text);
@@ -201,11 +215,7 @@
             opacity: 0.9;
             transform: translateY(-1px);
         }
-        .btn-submit:active {
-            transform: translateY(0);
-        }
 
-        /* ALERTA DE ERRO ELEGANTE */
         .alert-error {
             background-color: var(--danger-bg);
             color: var(--danger-text);
@@ -226,7 +236,6 @@
             to { opacity: 1; transform: scale(1); }
         }
 
-        /* RODAPÉ DO CARD */
         .login-footer {
             margin-top: 24px;
             text-align: center;
@@ -237,6 +246,9 @@
     </style>
 </head>
 <body>
+
+    <!-- CANVAS DAS ONDAS FLUIDAS (ÁGUA AGITADA) -->
+    <canvas id="waveCanvas"></canvas>
 
     <!-- BOTÃO DE TEMA -->
     <button class="theme-toggle" onclick="toggleTheme()" title="Mudar Tema">
@@ -251,7 +263,6 @@
             <p class="login-subtitle">Acesso restrito a colaboradores e gestores</p>
         </div>
 
-        <!-- ALERTA DO FLASK EM CASO DE ERRO DE LOGIN -->
         {% if erro %}
         <div class="alert-error">
             <i class="fa-solid fa-circle-exclamation"></i>
@@ -308,8 +319,78 @@
     </div>
 
     <script>
+        // ==========================================
+        // ANIMAÇÃO DE ÁGUA/ONDAS FLUIDAS (LIQUID WAVES)
+        // ==========================================
+        const canvas = document.getElementById('waveCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let step = 0;
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function drawWaves() {
+            ctx.clearRect(0, 0, width, height);
+            step += 0.012; // Velocidade da ondulação da água
+
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            
+            // Definição de 3 camadas de ondas com tons elegantes
+            const waves = [
+                {
+                    amplitude: 45,
+                    frequency: 0.003,
+                    speed: 1.0,
+                    heightOffset: height * 0.72,
+                    color: isDark ? 'rgba(39, 39, 42, 0.45)' : 'rgba(229, 231, 235, 0.7)'
+                },
+                {
+                    amplitude: 35,
+                    frequency: 0.005,
+                    speed: 1.5,
+                    heightOffset: height * 0.76,
+                    color: isDark ? 'rgba(63, 63, 70, 0.35)' : 'rgba(209, 213, 219, 0.55)'
+                },
+                {
+                    amplitude: 25,
+                    frequency: 0.007,
+                    speed: 2.0,
+                    heightOffset: height * 0.82,
+                    color: isDark ? 'rgba(82, 82, 91, 0.25)' : 'rgba(156, 163, 175, 0.4)'
+                }
+            ];
+
+            waves.forEach(wave => {
+                ctx.beginPath();
+                ctx.moveTo(0, height);
+                ctx.lineTo(0, wave.heightOffset);
+
+                for (let x = 0; x <= width; x += 10) {
+                    const y = Math.sin(x * wave.frequency + step * wave.speed) * wave.amplitude +
+                              Math.cos(x * 0.002 + step * 0.8) * (wave.amplitude * 0.4) +
+                              wave.heightOffset;
+                    ctx.lineTo(x, y);
+                }
+
+                ctx.lineTo(width, height);
+                ctx.closePath();
+                ctx.fillStyle = wave.color;
+                ctx.fill();
+            });
+
+            requestAnimationFrame(drawWaves);
+        }
+
+        drawWaves();
+
         // =====================================
-        // CONTROLE DO TEMA (CLARO / ESCURO)
+        // CONTROLE DO TEMA
         // =====================================
         function toggleTheme() {
             const body = document.documentElement;
@@ -325,15 +406,11 @@
             }
         }
 
-        // Aplica automaticamente a preferência já salva pelo utilizador
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
             document.getElementById('theme-icon').className = 'fa-solid fa-sun';
         }
 
-        // =====================================
-        // EFEITO DE CARREGAMENTO NO BOTÃO
-        // =====================================
         function iniciarCarregamento() {
             const btn = document.getElementById('btnAcessar');
             btn.style.opacity = '0.7';
