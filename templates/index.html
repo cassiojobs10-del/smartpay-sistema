@@ -6,7 +6,6 @@
     <title>Dashboard - Gerência Financeira</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Chart.js para os gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -98,7 +97,6 @@
         .btn-action:hover { color: var(--text-main); }
         .btn-delete:hover { color: #ef4444; }
 
-        /* GRÁFICOS E PAINEL LATERAL (DRILL-DOWN) */
         .chart-container { position: relative; height: 260px; width: 100%; margin-top: 10px; }
         
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); opacity: 0; visibility: hidden; transition: 0.3s; z-index: 99; }
@@ -122,9 +120,11 @@
             <li class="menu-item" id="menu_remessas" onclick="alternarAba('remessas')"><i class="fa-solid fa-file-invoice-dollar"></i> Remessas Pagas</li>
             <li class="menu-item" id="menu_ocorrencias" onclick="alternarAba('ocorrencias')"><i class="fa-solid fa-triangle-exclamation"></i> Pendências</li>
             
+            <!-- RELATÓRIOS & BI AGORA LIBERADOS PARA TODOS OS COLABORADORES -->
+            <li class="menu-item" id="menu_relatorios" onclick="alternarAba('relatorios')"><i class="fa-solid fa-globe"></i> Relatórios & BI</li>
+            
             {% if session.get('is_admin') %}
             <div style="margin: 20px 0 10px 16px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Gestão Global</div>
-            <li class="menu-item" id="menu_relatorios" onclick="alternarAba('relatorios')"><i class="fa-solid fa-globe"></i> Relatórios & BI</li>
             <li class="menu-item" id="menu_equipe" onclick="alternarAba('equipe')"><i class="fa-solid fa-users"></i> Equipe</li>
             {% endif %}
         </ul>
@@ -172,7 +172,6 @@
                 <div class="metric-card"><div><label class="metric-label">Remessas Auditadas</label><div class="metric-number" id="dash_remessas">0</div></div><div class="metric-icon"><i class="fa-solid fa-file-invoice"></i></div></div>
             </div>
 
-            <!-- GRÁFICO INDIVIDUAL -->
             <div class="card">
                 <div class="card-header"><h2 class="card-title">Evolução da Sua Produtividade</h2></div>
                 <div class="chart-container"><canvas id="chartIndEvolucao"></canvas></div>
@@ -236,34 +235,37 @@
             </div>
         </section>
 
-        <!-- ABA: RELATÓRIOS & BI (ADMIN COM DRILL-DOWN) -->
-        {% if session.get('is_admin') %}
+        <!-- ABA: RELATÓRIOS & BI (AGORA GERAL, COM FILTRAGEM AUTOMÁTICA DE PERMISSÃO) -->
         <section id="aba_relatorios_view" style="display: none; flex-direction: column; width: 100%;">
             <div class="card" style="margin-bottom: 24px;">
-                <div class="card-header"><h2 class="card-title">Business Intelligence & Relatórios Globais</h2></div>
+                <div class="card-header"><h2 class="card-title">Business Intelligence & Relatórios</h2></div>
                 <div class="row-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr; align-items: end;">
                     <div class="form-group"><label>Base de Dados</label><select id="rel_tipo" class="form-input"><option value="remessas">Produção (Remessas)</option><option value="ocorrencias">Inconsistências (Pendências)</option></select></div>
-                    <div class="form-group"><label>Analista</label><select id="rel_colab" class="form-input"><option value="todos">Toda a Equipe</option></select></div>
+                    <div class="form-group">
+                        <label>Analista</label>
+                        <!-- Se não for admin, o javascript preenche apenas com o nome dele -->
+                        <select id="rel_colab" class="form-input"></select>
+                    </div>
                     <div class="form-group"><label>De</label><input type="date" id="rel_data_ini" class="form-input"></div>
                     <div class="form-group"><label>Até</label><input type="date" id="rel_data_fim" class="form-input"></div>
                 </div>
-                <button class="btn-submit" onclick="gerarRelatorioAdmin()" style="margin-top: 24px; width: 100%;">Executar Análise Global</button>
+                <button class="btn-submit" onclick="gerarRelatorioAdmin()" style="margin-top: 24px; width: 100%;">Executar Análise de Desempenho</button>
             </div>
 
-            <!-- GRÁFICOS GLOBAIS DE BI -->
+            <!-- GRÁFICOS DE BI -->
             <div class="row-grid" style="margin-bottom: 24px;">
                 <div class="card">
-                    <h3 class="card-title" style="margin-bottom: 16px;">Evolução de Pontos da Equipe</h3>
+                    <h3 class="card-title" style="margin-bottom: 16px;">Evolução de Pontos Auditados</h3>
                     <div class="chart-container"><canvas id="chartGlobalEvolucao"></canvas></div>
                 </div>
                 <div class="card">
-                    <h3 class="card-title" style="margin-bottom: 16px;">Impacto dos Gargalos (Horas Perdidas)</h3>
+                    <h3 class="card-title" style="margin-bottom: 16px;">Impacto de Inconsistências (Horas Perdidas)</h3>
                     <div class="chart-container"><canvas id="chartGlobalGargalos"></canvas></div>
                 </div>
             </div>
 
             <div class="card">
-                <div class="card-header"><h2 class="card-title">Analistas da Equipe (Clique em Detalhes)</h2><button class="btn-export" onclick="exportarRelatorioAdminCSV()"><i class="fa-solid fa-download"></i> Baixar Planilha</button></div>
+                <div class="card-header"><h2 class="card-title">Detalhamento de Produção & Pendências</h2><button class="btn-export" onclick="exportarRelatorioAdminCSV()"><i class="fa-solid fa-download"></i> Baixar Planilha</button></div>
                 <div class="table-wrapper">
                     <table>
                         <thead><tr><th>Analista</th><th>Matrícula</th><th>Cargo</th><th style="text-align: right;">Ação</th></tr></thead>
@@ -273,7 +275,8 @@
             </div>
         </section>
 
-        <!-- ABA: GESTÃO DE EQUIPE -->
+        <!-- ABA: GESTÃO DE EQUIPE (APENAS PARA GESTORES) -->
+        {% if session.get('is_admin') %}
         <section id="aba_equipe_view" style="display: none; flex-direction: column; width: 100%;">
             <div class="card" style="margin-bottom: 24px;">
                 <div class="card-header"><h2 class="card-title">Acessos da Equipe</h2></div>
@@ -399,11 +402,8 @@
             const ctx = document.getElementById('chartIndEvolucao').getContext('2d');
             if(chartInd) chartInd.destroy();
             
-            // Agrupa por data
             const porData = {};
-            dados.slice().reverse().forEach(d => {
-                porData[d.data_pagamento] = (porData[d.data_pagamento] || 0) + d.pontuacao_total;
-            });
+            dados.slice().reverse().forEach(d => { porData[d.data_pagamento] = (porData[d.data_pagamento] || 0) + d.pontuacao_total; });
 
             chartInd = new Chart(ctx, {
                 type: 'line',
@@ -415,7 +415,6 @@
             });
         }
 
-        // CRUD Remessas, Ocorrências e Equipe mantidos idênticos...
         async function carregarHistorico() {
             const r = await fetch('/api/listar-remessas'); historicoRemessas = await r.json();
             const b = document.getElementById('corpo_tabela_historico'); b.innerHTML = "";
@@ -491,35 +490,39 @@
         async function excluirColab(id) { if(!confirm("Remover acesso?")) return; await fetch(`/api/colaboradores/${id}`, { method: 'DELETE' }); carregarEquipe(); }
 
         // ==========================================
-        // RELATÓRIOS & BI (COM DRILL-DOWN INTEGRADO)
+        // RELATÓRIOS & BI (FILTRA POR PERMISSÃO)
         // ==========================================
         async function preencherDropdownColaboradores() {
-            const seletor = document.getElementById('rel_colab'); seletor.innerHTML = '<option value="todos">Toda a Equipe</option>';
+            const seletor = document.getElementById('rel_colab'); seletor.innerHTML = '';
             const r = await fetch('/api/colaboradores'); listaColaboradores = await r.json();
+            
+            // Se tiver mais de 1 (Admin), mostra a opção "Toda a Equipe"
+            if (listaColaboradores.length > 1) {
+                seletor.innerHTML = '<option value="todos">Toda a Equipe</option>';
+            }
             listaColaboradores.forEach(c => seletor.innerHTML += `<option value="${c.matricula}">${c.nome}</option>`);
         }
 
         async function gerarRelatorioAdmin() {
             const mat = document.getElementById('rel_colab').value; const ini = document.getElementById('rel_data_ini').value; const fim = document.getElementById('rel_data_fim').value;
             
-            // Busca Produção e Ocorrências para cruzar nos gráficos de BI
             const rRem = await fetch(`/api/admin/relatorios/remessas?matricula=${mat}&inicio=${ini}&fim=${fim}`);
             const resRem = await rRem.json();
             const rOco = await fetch(`/api/admin/relatorios/ocorrencias?matricula=${mat}&inicio=${ini}&fim=${fim}`);
             const resOco = await rOco.json();
 
-            // Gráfico 1: Evolução Global
+            // Gráfico 1: Evolução
             const ctxEv = document.getElementById('chartGlobalEvolucao').getContext('2d');
             if(chartGlobEv) chartGlobEv.destroy();
             const porData = {};
             resRem.dados.forEach(d => { porData[d.data_pagamento] = (porData[d.data_pagamento] || 0) + d.pontuacao_total; });
             chartGlobEv = new Chart(ctxEv, {
                 type: 'line',
-                data: { labels: Object.keys(porData).reverse(), datasets: [{ label: 'Pontos Totais', data: Object.values(porData).reverse(), borderColor: '#111827', backgroundColor: 'rgba(17,24,39,0.03)', borderWidth: 2, fill: true, tension: 0.3 }] },
+                data: { labels: Object.keys(porData).reverse(), datasets: [{ label: 'Pontos Auditados', data: Object.values(porData).reverse(), borderColor: '#111827', backgroundColor: 'rgba(17,24,39,0.03)', borderWidth: 2, fill: true, tension: 0.3 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e5e7eb' } }, x: { grid: { display: false } } } }
             });
 
-            // Gráfico 2: Gargalos Globais
+            // Gráfico 2: Gargalos
             const ctxGar = document.getElementById('chartGlobalGargalos').getContext('2d');
             if(chartGlobGar) chartGlobGar.destroy();
             const motivos = {};
@@ -530,7 +533,7 @@
                 options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: '#e5e7eb' } }, y: { grid: { display: false } } } }
             });
 
-            // Tabela de Analistas com Botão de Drill-down
+            // Tabela com Drill-down
             const tbody = document.getElementById('rel_tabela_equipe_bi'); tbody.innerHTML = "";
             listaColaboradores.forEach(c => {
                 if(mat !== 'todos' && c.matricula !== mat) return;
@@ -543,9 +546,6 @@
             });
         }
 
-        // ==========================================
-        // PAINEL LATERAL (DRILL-DOWN POR COLABORADOR)
-        // ==========================================
         async function abrirPainel(matricula, nome) {
             document.getElementById('panelName').innerText = nome;
             document.getElementById('overlay').classList.add('active');
@@ -554,7 +554,6 @@
 
             const ini = document.getElementById('rel_data_ini').value; const fim = document.getElementById('rel_data_fim').value;
             
-            // Puxa dados específicos do colaborador
             const rRem = await fetch(`/api/admin/relatorios/remessas?matricula=${matricula}&inicio=${ini}&fim=${fim}`);
             const dRem = await rRem.json();
             const rOco = await fetch(`/api/admin/relatorios/ocorrencias?matricula=${matricula}&inicio=${ini}&fim=${fim}`);
@@ -563,18 +562,16 @@
             document.getElementById('panelPts').innerText = dRem.metricas.pontos_totais;
             document.getElementById('panelHrs').innerText = dOco.metricas.total_horas + "h";
 
-            // Tabela de Ocorrências no Painel
             const tb = document.getElementById('panelTabelaOcorrencias'); tb.innerHTML = "";
             if(dOco.dados.length === 0) { tb.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Nenhuma inconsistência.</td></tr>`; }
             dOco.dados.forEach(o => {
                 tb.innerHTML += `<tr><td>${o.data_registro.split('-').reverse().join('/')}</td><td><span class="badge badge-red">${o.motivo}</span></td><td>${o.tempo_impacto}h</td></tr>`;
             });
 
-            // Gráfico de Ocorrências do Painel
-            const ctxP = document.getElementById('panelTabelaOcorrencias').getContext ? document.getElementById('chartPanelGargalos').getContext('2d') : null;
+            const ctxP = document.getElementById('chartPanelGargalos').getContext('2d');
             if(chartPanel) chartPanel.destroy();
             const motMap = {}; dOco.dados.forEach(o => { motMap[o.motivo] = (motMap[o.motivo] || 0) + o.tempo_impacto; });
-            chartPanel = new Chart(document.getElementById('chartPanelGargalos'), {
+            chartPanel = new Chart(ctxP, {
                 type: 'doughnut',
                 data: { labels: Object.keys(motMap), datasets: [{ data: Object.values(motMap), backgroundColor: ['#ef4444', '#f87171', '#fca5a5', '#fee2e2'], borderWidth: 0 }] },
                 options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 11 } } } } }
