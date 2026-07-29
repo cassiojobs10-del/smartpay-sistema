@@ -3,100 +3,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerência Financeira - Login</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Acesso - Gerência Financeira</title>
+    <!-- Mesma fonte moderna do painel principal -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: linear-gradient(135deg, #0a0f24 0%, #04060d 100%); color: #ffffff; font-family: 'Montserrat', sans-serif; display: flex; height: 100vh; align-items: center; justify-content: center; overflow: hidden; }
-        
-        .login-card { background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 45px 40px; width: 100%; max-width: 420px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; align-items: center; }
-        .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 35px; }
-        .logo-text { font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; }
-        .logo-icon { background: rgba(160, 137, 230, 0.1); color: #a089e6; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        /* ==========================================
+           SISTEMA DE TEMAS (CLARO E ESCURO)
+           ========================================== */
+        :root {
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --bg-input: #f9fafb;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --btn-primary: #111827;
+            --btn-primary-text: #ffffff;
+            --shadow-card: 0 20px 40px rgba(0, 0, 0, 0.05);
+            --shadow-btn: 0 4px 12px rgba(17, 24, 39, 0.2);
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            --danger-text: #ef4444;
+        }
 
-        .welcome-text { text-align: center; margin-bottom: 30px; }
-        .welcome-text h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
-        .welcome-text p { font-size: 13px; color: #94a3b8; font-weight: 500; }
+        [data-theme="dark"] {
+            --bg-body: #09090b;
+            --bg-card: #18181b;
+            --bg-input: #27272a;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --border: #27272a;
+            --btn-primary: #ffffff;
+            --btn-primary-text: #000000;
+            --shadow-card: 0 25px 50px rgba(0, 0, 0, 0.4);
+            --shadow-btn: 0 4px 12px rgba(255, 255, 255, 0.1);
+            --danger-bg: rgba(239, 68, 68, 0.15);
+            --danger-text: #f87171;
+        }
 
-        .form-group { width: 100%; margin-bottom: 20px; position: relative; }
-        .form-group label { display: block; color: #94a3b8; font-size: 11px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .input-wrapper { position: relative; display: flex; align-items: center; }
-        .input-wrapper i { position: absolute; left: 15px; color: #a089e6; font-size: 16px; pointer-events: none; }
-        
-        .form-input { background: rgba(44, 48, 61, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; color: #ffffff; padding: 14px 14px 14px 45px; width: 100%; font-family: 'Montserrat', sans-serif; font-size: 14px; outline: none; transition: all 0.2s; }
-        .form-input:focus { border-color: #a089e6; background: rgba(44, 48, 61, 0.8); }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
 
-        .btn-login { background: #271a58; border: none; border-radius: 8px; color: #ffffff; cursor: pointer; font-weight: 700; padding: 16px; width: 100%; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; transition: all 0.2s; }
-        .btn-login:hover { background: #3c2a8a; transform: translateY(-1px); }
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
 
-        .error-message { width: 100%; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; font-size: 13px; font-weight: 600; padding: 12px; border-radius: 6px; margin-bottom: 20px; text-align: center; display: none; }
+        /* BOTÃO DE MUDAR TEMA NO CANTO SUPERIOR */
+        .theme-toggle {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-card);
+            font-size: 16px;
+        }
+        .theme-toggle:hover {
+            border-color: var(--text-muted);
+        }
+
+        /* CARD DE LOGIN COM ANIMAÇÃO SUAVE */
+        .login-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: var(--shadow-card);
+            animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* LOGO E CABEÇALHO */
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background-color: var(--text-main);
+            color: var(--bg-body);
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+        .login-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+        .login-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* FORMULÁRIO */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .form-group label {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            color: var(--text-muted);
+            font-size: 14px;
+            pointer-events: none;
+        }
+        .form-input {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            padding: 14px 16px 14px 44px;
+            font-size: 14px;
+            font-weight: 500;
+            outline: none;
+            width: 100%;
+        }
+        .form-input:focus {
+            border-color: var(--text-main);
+            background-color: var(--bg-card);
+        }
+
+        /* BOTÃO ENTRAR */
+        .btn-submit {
+            background-color: var(--btn-primary);
+            color: var(--btn-primary-text);
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 16px;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: var(--shadow-btn);
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .btn-submit:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* ALERTA DE ERRO ELEGANTE */
+        .alert-error {
+            background-color: var(--danger-bg);
+            color: var(--danger-text);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* RODAPÉ DO CARD */
+        .login-footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
 
+    <!-- BOTÃO DE TEMA -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Mudar Tema">
+        <i id="theme-icon" class="fa-solid fa-moon"></i>
+    </button>
+
     <div class="login-card">
-        <div class="logo-area">
-            <div class="logo-icon"><i class="fa-solid fa-wallet"></i></div>
-            <div class="logo-text">Gerência Financeira</div>
+        
+        <div class="login-header">
+            <div class="logo-icon"><i class="fa-solid fa-layer-group"></i></div>
+            <h1 class="login-title">Gerência Financeira</h1>
+            <p class="login-subtitle">Acesso restrito a colaboradores e gestores</p>
         </div>
 
-        <div class="welcome-text">
-            <h2>Autenticação de Colaborador</h2>
-            <p>Acesse o painel com seus dados corporativos</p>
+        <!-- ALERTA DO FLASK EM CASO DE ERRO DE LOGIN -->
+        {% if erro %}
+        <div class="alert-error">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span>{{ erro }}</span>
         </div>
+        {% endif %}
 
-        <div class="error-message" id="error_alert"></div>
-
-        <form style="width: 100%;" onsubmit="handleLogin(event)">
+        <form action="{{ url_for('login') }}" method="POST" id="loginForm" onsubmit="iniciarCarregamento()">
+            
             <div class="form-group">
-                <label>Matrícula</label>
+                <label for="usuario">Matrícula de Acesso</label>
                 <div class="input-wrapper">
-                    <i class="fa-solid fa-id-card"></i>
-                    <input type="text" id="username" class="form-input" placeholder="Ex: 12345" required>
+                    <i class="fa-solid fa-id-card input-icon"></i>
+                    <input 
+                        type="text" 
+                        id="usuario" 
+                        name="usuario" 
+                        class="form-input" 
+                        placeholder="Ex: 12345" 
+                        required 
+                        autocomplete="username"
+                        autofocus
+                    >
                 </div>
             </div>
 
             <div class="form-group">
-                <label>Data de Nascimento</label>
+                <label for="senha">Senha (Data de Nascimento)</label>
                 <div class="input-wrapper">
-                    <i class="fa-solid fa-cake-candles"></i>
-                    <input type="password" id="password" class="form-input" placeholder="dd/mm/aa" required>
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input 
+                        type="password" 
+                        id="senha" 
+                        name="senha" 
+                        class="form-input" 
+                        placeholder="dd/mm/aa" 
+                        required 
+                        autocomplete="current-password"
+                    >
                 </div>
             </div>
 
-            <button type="submit" class="btn-login">Entrar no Sistema</button>
+            <button type="submit" class="btn-submit" id="btnAcessar">
+                <span>Acessar Sistema</span>
+                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+            </button>
+
         </form>
+
+        <div class="login-footer">
+            <span>&copy; 2026 Smartpay &bull; Gestão Corporativa</span>
+        </div>
+
     </div>
 
     <script>
-        async function handleLogin(e) {
-            e.preventDefault();
-            const errorAlert = document.getElementById('error_alert');
-            errorAlert.style.display = 'none';
-
-            const usuario = document.getElementById('username').value;
-            const senha = document.getElementById('password').value;
-
-            try {
-                const response = await fetch('/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario, senha })
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.redirect) {
-                    window.location.href = data.redirect;
-                } else {
-                    errorAlert.innerText = data.mensagem || "Dados incorretos.";
-                    errorAlert.style.display = 'block';
-                }
-            } catch (err) {
-                errorAlert.innerText = "Erro de conexão.";
-                errorAlert.style.display = 'block';
+        // =====================================
+        // CONTROLE DO TEMA (CLARO / ESCURO)
+        // =====================================
+        function toggleTheme() {
+            const body = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                icon.className = 'fa-solid fa-moon';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                icon.className = 'fa-solid fa-sun';
+                localStorage.setItem('theme', 'dark');
             }
+        }
+
+        // Aplica automaticamente a preferência já salva pelo utilizador
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.getElementById('theme-icon').className = 'fa-solid fa-sun';
+        }
+
+        // =====================================
+        // EFEITO DE CARREGAMENTO NO BOTÃO
+        // =====================================
+        function iniciarCarregamento() {
+            const btn = document.getElementById('btnAcessar');
+            btn.style.opacity = '0.7';
+            btn.style.pointerEvents = 'none';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Verificando credenciais...</span>';
         }
     </script>
 </body>
