@@ -24,6 +24,11 @@
             --shadow-btn: 0 4px 12px rgba(17, 24, 39, 0.2);
             --danger-bg: rgba(239, 68, 68, 0.1);
             --danger-text: #ef4444;
+            
+            /* Cores específicas do Efeito Bloom */
+            --bloom-bg: #111827;
+            --bloom-glow: rgba(17, 24, 39, 0.4);
+            --bloom-text: #ffffff;
         }
 
         [data-theme="dark"] {
@@ -39,6 +44,10 @@
             --shadow-btn: 0 4px 12px rgba(255, 255, 255, 0.1);
             --danger-bg: rgba(239, 68, 68, 0.15);
             --danger-text: #f87171;
+            
+            --bloom-bg: #ffffff;
+            --bloom-glow: rgba(255, 255, 255, 0.35);
+            --bloom-text: #09090b;
         }
 
         * {
@@ -61,7 +70,7 @@
             position: relative;
         }
 
-        /* BOTÃO DE MUDAR TEMA NO CANTO SUPERIOR */
+        /* BOTÃO DE TEMA */
         .theme-toggle {
             position: absolute;
             top: 24px;
@@ -78,12 +87,13 @@
             cursor: pointer;
             box-shadow: var(--shadow-card);
             font-size: 16px;
+            z-index: 10;
         }
         .theme-toggle:hover {
             border-color: var(--text-muted);
         }
 
-        /* CARD DE LOGIN COM ANIMAÇÃO SUAVE */
+        /* CARD DE LOGIN */
         .login-card {
             background-color: var(--bg-card);
             border: 1px solid var(--border);
@@ -93,6 +103,16 @@
             max-width: 420px;
             box-shadow: var(--shadow-card);
             animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+            z-index: 5;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+        }
+
+        /* Animação para esconder o card quando o Bloom iniciar */
+        .login-card.bloom-active {
+            transform: scale(0.92);
+            opacity: 0;
+            pointer-events: none;
         }
 
         @keyframes fadeSlideUp {
@@ -106,7 +126,6 @@
             }
         }
 
-        /* LOGO E CABEÇALHO */
         .login-header {
             text-align: center;
             margin-bottom: 32px;
@@ -136,7 +155,6 @@
             font-weight: 500;
         }
 
-        /* FORMULÁRIO */
         .form-group {
             display: flex;
             flex-direction: column;
@@ -179,7 +197,6 @@
             background-color: var(--bg-card);
         }
 
-        /* BOTÃO ENTRAR */
         .btn-submit {
             background-color: var(--btn-primary);
             color: var(--btn-primary-text);
@@ -201,9 +218,6 @@
             opacity: 0.9;
             transform: translateY(-1px);
         }
-        .btn-submit:active {
-            transform: translateY(0);
-        }
 
         /* ALERTA DE ERRO */
         .alert-error {
@@ -215,7 +229,7 @@
             font-size: 13px;
             font-weight: 600;
             margin-bottom: 20px;
-            display: flex;
+            display: none;
             align-items: center;
             gap: 10px;
             animation: fadeIn 0.3s ease;
@@ -226,7 +240,6 @@
             to { opacity: 1; transform: scale(1); }
         }
 
-        /* RODAPÉ DO CARD */
         .login-footer {
             margin-top: 24px;
             text-align: center;
@@ -234,16 +247,91 @@
             color: var(--text-muted);
             font-weight: 500;
         }
+
+        /* ==========================================================
+           TRANSIÇÃO DE BLOOM (BLOOM TRANSITION EFFECT)
+           ========================================================== */
+        .bloom-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* O círculo luminoso que se expande do meio da tela */
+        .bloom-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: var(--bloom-bg);
+            box-shadow: 0 0 80px 40px var(--bloom-glow), 0 0 160px 80px var(--bloom-bg);
+            transform: scale(0);
+            opacity: 0;
+            transition: transform 0.85s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.4s ease;
+            will-change: transform, opacity;
+        }
+
+        /* Quando ativado, o Bloom expande para preencher e iluminar toda a viewport */
+        .bloom-overlay.active .bloom-circle {
+            transform: scale(180);
+            opacity: 1;
+        }
+
+        /* Conteúdo que surge suavemente no centro do clarão do Bloom */
+        .bloom-content {
+            position: absolute;
+            z-index: 101;
+            text-align: center;
+            color: var(--bloom-text);
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.4s ease 0.35s, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.35s;
+        }
+
+        .bloom-overlay.active .bloom-content {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .bloom-logo {
+            width: 64px;
+            height: 64px;
+            background-color: var(--bloom-text);
+            color: var(--bloom-bg);
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 <body>
+
+    <!-- OVERLAY DA TRANSIÇÃO DE BLOOM -->
+    <div id="bloomOverlay" class="bloom-overlay">
+        <div class="bloom-circle"></div>
+        <div class="bloom-content">
+            <div class="bloom-logo"><i class="fa-solid fa-layer-group"></i></div>
+            <h2 style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">Gerência Financeira</h2>
+            <p style="font-size: 13px; opacity: 0.85; margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Acessando ambiente...</p>
+        </div>
+    </div>
 
     <!-- BOTÃO DE TEMA -->
     <button class="theme-toggle" onclick="toggleTheme()" title="Mudar Tema">
         <i id="theme-icon" class="fa-solid fa-moon"></i>
     </button>
 
-    <div class="login-card">
+    <div class="login-card" id="loginCard">
         
         <div class="login-header">
             <div class="logo-icon"><i class="fa-solid fa-layer-group"></i></div>
@@ -251,15 +339,12 @@
             <p class="login-subtitle">Acesso restrito a colaboradores e gestores</p>
         </div>
 
-        <!-- ALERTA DE ERRO -->
-        {% if erro %}
-        <div class="alert-error">
+        <div id="alertError" class="alert-error">
             <i class="fa-solid fa-circle-exclamation"></i>
-            <span>{{ erro }}</span>
+            <span id="errorMsg">Matrícula ou data de nascimento incorretos.</span>
         </div>
-        {% endif %}
 
-        <form action="{{ url_for('login') }}" method="POST" id="loginForm" onsubmit="iniciarCarregamento()">
+        <form id="loginForm" onsubmit="realizarLoginComBloom(event)">
             
             <div class="form-group">
                 <label for="usuario">Matrícula de Acesso</label>
@@ -268,7 +353,6 @@
                     <input 
                         type="text" 
                         id="usuario" 
-                        name="usuario" 
                         class="form-input" 
                         placeholder="Ex: 12345" 
                         required 
@@ -285,7 +369,6 @@
                     <input 
                         type="password" 
                         id="senha" 
-                        name="senha" 
                         class="form-input" 
                         placeholder="dd/mm/aa" 
                         required 
@@ -331,13 +414,62 @@
         }
 
         // =====================================
-        // EFEITO DE CARREGAMENTO NO BOTÃO
+        // LOGIN COM TRANSIÇÃO DE BLOOM (BLOOM EFFECT)
         // =====================================
-        function iniciarCarregamento() {
+        async function realizarLoginComBloom(event) {
+            event.preventDefault(); // Impede o reload padrão da página
+
             const btn = document.getElementById('btnAcessar');
+            const alertBox = document.getElementById('alertError');
+            const card = document.getElementById('loginCard');
+            const usuario = document.getElementById('usuario').value;
+            const senha = document.getElementById('senha').value;
+
+            // Oculta alertas anteriores
+            alertBox.style.display = 'none';
+
+            // Efeito de carregamento no botão
+            const textoOriginal = btn.innerHTML;
             btn.style.opacity = '0.7';
             btn.style.pointerEvents = 'none';
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Verificando credenciais...</span>';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Verificando...</span>';
+
+            try {
+                const resposta = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario: usuario, senha: senha })
+                });
+
+                const dados = await resposta.json();
+
+                if (resposta.ok && dados.status === 'sucesso') {
+                    // 1. Inicia o efeito Bloom
+                    const bloom = document.getElementById('bloomOverlay');
+                    bloom.classList.add('active');
+                    
+                    // 2. O cartão de login encolhe suavemente no meio do clarão
+                    card.classList.add('bloom-active');
+
+                    // 3. Aguarda cerca de 950ms para a animação completar com elegância antes do redirecionamento
+                    setTimeout(() => {
+                        window.location.href = dados.redirect || '/';
+                    }, 950);
+                } else {
+                    // ERRO DE SENHA OU MATRÍCULA
+                    alertBox.style.display = 'flex';
+                    document.getElementById('errorMsg').innerText = dados.mensagem || "Credenciais incorretas.";
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                    btn.innerHTML = textoOriginal;
+                }
+            } catch (erro) {
+                alertBox.style.display = 'flex';
+                document.getElementById('errorMsg').innerText = "Erro ao conectar com o servidor. Tente novamente.";
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+                btn.innerHTML = textoOriginal;
+            }
         }
     </script>
 </body>
