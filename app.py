@@ -10,32 +10,112 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- INJEÇÃO DE CSS CUSTOMIZADO (DESIGN FINTECH ESCURO) ---
+# ==========================================
+# DESIGN SYSTEM: DARK GLASS & NEON GLOW
+# ==========================================
 st.markdown("""
 <style>
+/* 1. FUNDO GERAL COM BRILHO AMBIENTE (RADIAL NEON GLOW) */
+.stApp {
+    background: radial-gradient(circle at 50% -10%, rgba(46, 104, 255, 0.18) 0%, rgba(10, 11, 15, 1) 65%) !important;
+    background-color: #08090C !important;
+    color: #FFFFFF;
+}
+
+/* 2. CARDS DE VIDRO ESCURO (GLASSMORPHISM) PARA CONTAINERS E BLOCOS */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    background: rgba(18, 20, 28, 0.65) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 22px !important;
+    padding: 8px !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45) !important;
+    backdrop-filter: blur(12px);
+    transition: border-color 0.3s ease;
+}
+div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+    border-color: rgba(75, 123, 255, 0.35) !important;
+}
+
+/* 3. ESTILIZAÇÃO NEON PARA CARDS DE MÉTRICAS (METRICS) */
 div[data-testid="stMetric"] {
-    background-color: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 16px 20px;
-    border-radius: 14px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: all 0.2s ease-in-out;
+    background: linear-gradient(145deg, rgba(25, 28, 40, 0.7), rgba(14, 16, 22, 0.9)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    padding: 18px 22px !important;
+    border-radius: 18px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+    transition: all 0.25s ease-in-out;
 }
 div[data-testid="stMetric"]:hover {
-    border-color: rgba(0, 210, 120, 0.4);
+    border-color: rgba(46, 104, 255, 0.6) !important;
+    box-shadow: 0 8px 28px rgba(46, 104, 255, 0.18) !important;
     transform: translateY(-2px);
-    background-color: rgba(255, 255, 255, 0.05);
 }
-h1, h2, h3 {
+
+/* Tipografia de destaque para métricas */
+div[data-testid="stMetricValue"] > div {
     font-weight: 700 !important;
-    letter-spacing: -0.4px !important;
+    color: #FFFFFF !important;
+    letter-spacing: -0.6px !important;
 }
-hr {
-    border-color: rgba(255, 255, 255, 0.08) !important;
-    margin: 24px 0 !important;
+
+/* 4. BOTÕES ESTILO PÍLULA COM GRADIENTE NEON */
+button[kind="primary"] {
+    background: linear-gradient(135deg, #2E68FF 0%, #6C47FF 100%) !important;
+    border: none !important;
+    border-radius: 24px !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    padding: 10px 24px !important;
+    box-shadow: 0 6px 20px rgba(46, 104, 255, 0.35) !important;
+    transition: all 0.2s ease;
 }
+button[kind="primary"]:hover {
+    box-shadow: 0 8px 26px rgba(46, 104, 255, 0.55) !important;
+    transform: scale(1.02);
+}
+button[kind="secondary"] {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 20px !important;
+    color: #FFFFFF !important;
+    transition: all 0.2s ease;
+}
+button[kind="secondary"]:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* 5. BARRAS DE PROGRESSO NEON (PROGRESS BAR) */
+div[data-testid="stProgress"] > div > div > div > div {
+    background: linear-gradient(90deg, #2E68FF, #00E5FF) !important;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.45);
+}
+
+/* 6. INPUTS E CAMPOS DE TEXTO ARREDONDADOS */
+input, select, textarea {
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background-color: rgba(10, 12, 18, 0.8) !important;
+    color: #FFFFFF !important;
+}
+
+/* 7. ABAS E DIVISÓRIAS EM ESTILO MINIMALISTA */
 button[data-baseweb="tab"] {
     font-weight: 600 !important;
+    color: #8E92A0 !important;
+}
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: #FFFFFF !important;
+}
+hr {
+    border-color: rgba(255, 255, 255, 0.07) !important;
+    margin: 28px 0 !important;
+}
+
+/* BARRA LATERAL (SIDEBAR) EM TOM PROFUNDO */
+section[data-testid="stSidebar"] {
+    background-color: #0B0C10 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -184,9 +264,10 @@ def responder_chat_ia(mensagem_usuario, sal_liq, fixos, var, faturas):
 # ==========================================
 # BARRA LATERAL DE NAVEGAÇÃO (MENU)
 # ==========================================
-st.sidebar.title("📌 Menu Financeiro")
+st.sidebar.title("⚡ Meu Controle & IA")
+st.sidebar.caption("SISTEMA DE GESTÃO INTELIGENTE")
 menu_selecionado = st.sidebar.radio(
-    "Navegue pelas áreas do app:",
+    "Módulos do App:",
     [
         "🏢 1. Trabalhista & CLT",
         "💵 2. Dinheiro Pessoal & Orçamento",
@@ -196,18 +277,18 @@ menu_selecionado = st.sidebar.radio(
 )
 
 st.sidebar.divider()
-st.sidebar.caption("💡 **Dica de UX:** O menu 4 agora permite múltiplas conversas, pesquisa de histórico e exclusão de chats!")
+st.sidebar.caption("💡 **Dica de UX:** O menu 4 integra histórico lateral do chat, pesquisa de conversas e diagnóstico em tempo real!")
 
 # ==========================================
 # MÓDULO 1: ÁREA TRABALHISTA & CLT
 # ==========================================
 if menu_selecionado == "🏢 1. Trabalhista & CLT":
-    st.title("🏢 Área Trabalhista & CLT")
-    st.write("Calcule seus descontos oficiais, benefícios e descubra seu ganho líquido real.")
+    st.title("🏢 Trabalhista & CLT")
+    st.write("Calcule seus descontos oficiais, benefícios e descubra seu salário líquido real.")
     st.divider()
 
     with st.container(border=True):
-        st.subheader("⚙️ Parâmetros do seu Salário")
+        st.subheader("⚙️ Configurações de Renda Base")
         col1, col2 = st.columns(2)
         with col1:
             salario_base = st.number_input("Salário Bruto Base (R$)", min_value=1000.0, value=4500.0, step=100.0)
@@ -264,7 +345,7 @@ if menu_selecionado == "🏢 1. Trabalhista & CLT":
 # ==========================================
 elif menu_selecionado == "💵 2. Dinheiro Pessoal & Orçamento":
     st.title("💵 Dinheiro Pessoal & Orçamento")
-    st.write("Gerencie seus custos de vida e visualize suas margens de sobra.")
+    st.write("Gerencie seus custos de vida e veja suas margens de sobra.")
     st.divider()
 
     sal_liquido = st.session_state["salario_liquido"]
@@ -406,7 +487,7 @@ elif menu_selecionado == "💳 3. Cartões de Crédito":
     st.info(f"📊 **Total Geral em Cartões neste mês:** R$ {st.session_state['total_faturas']:,.2f}")
 
 # ==========================================
-# MÓDULO 4: CONSULTORA IA FINANCEIRA + MULTI-CHATS (ESTILO GEMINI)
+# MÓDULO 4: CONSULTORA IA FINANCEIRA + MULTI-CHATS
 # ==========================================
 elif menu_selecionado == "🤖 4. Consultora IA Financeira":
     st.title("🤖 Consultora IA Financeira")
@@ -421,7 +502,6 @@ elif menu_selecionado == "🤖 4. Consultora IA Financeira":
     total_saidas = round(fixos + variaveis + faturas, 2)
     saldo_livre = round(sal_liq - total_saidas, 2)
 
-    # 1. TERMÔMETRO DE SAÚDE EM CONTAINER
     pct_comprometido = (total_saidas / sal_liq) * 100 if sal_liq > 0 else 100
     
     with st.container(border=True):
@@ -442,15 +522,13 @@ elif menu_selecionado == "🤖 4. Consultora IA Financeira":
 
     st.write("")
 
-    # 2. SISTEMA DE MULTI-CHATS COM HISTÓRICO LATERAL (ESTILO GEMINI)
+    # SISTEMA DE MULTI-CHATS COM HISTÓRICO LATERAL
     with st.container(border=True):
         col_hist, col_chat = st.columns([1.2, 2.8])
 
-        # === COLUNA DA ESQUERDA: HISTÓRICO, PESQUISA E GERENCIAMENTO ===
         with col_hist:
             st.markdown("### 💬 Suas Consultas")
             
-            # Botão para criar nova consulta (Nova Conversa)
             if st.button("➕ Nova Consulta", use_container_width=True, type="primary"):
                 st.session_state["contador_conversas"] += 1
                 novo_id = str(st.session_state["contador_conversas"])
@@ -462,12 +540,10 @@ elif menu_selecionado == "🤖 4. Consultora IA Financeira":
                 st.rerun()
 
             st.write("")
-            # Campo de Pesquisa no Histórico
             termo_pesquisa = st.text_input("🔍 Pesquisar consulta...", placeholder="Digite para filtrar...").lower()
 
             st.markdown("#### Histórico Salvo")
             
-            # Filtrando conversas com base na pesquisa
             conversas_filtradas = {
                 id_conv: dados for id_conv, dados in st.session_state["conversas"].items()
                 if termo_pesquisa in dados["titulo"].lower() or any(
@@ -490,10 +566,8 @@ elif menu_selecionado == "🤖 4. Consultora IA Financeira":
                             st.rerun()
                     
                     with col_btn_del:
-                        # Opção de apagar a consulta selecionada
                         if st.button("🗑️", key=f"del_{id_conv}", help="Apagar consulta"):
                             del st.session_state["conversas"][id_conv]
-                            # Se apagou a ativa, redireciona para a primeira disponível ou cria uma nova
                             if id_conv == st.session_state["conversa_ativa"]:
                                 if st.session_state["conversas"]:
                                     st.session_state["conversa_ativa"] = list(st.session_state["conversas"].keys())[0]
@@ -502,7 +576,6 @@ elif menu_selecionado == "🤖 4. Consultora IA Financeira":
                                     st.session_state["conversa_ativa"] = "1"
                             st.rerun()
 
-        # === COLUNA DA DIREITA: CHAT ATIVO SELECIONADO ===
         with col_chat:
             id_ativo = st.session_state["conversa_ativa"]
             dados_ativos = st.session_state["conversas"][id_ativo]
@@ -511,7 +584,6 @@ elif menu_selecionado == "🤖 4. Consultora IA Financeira":
             st.caption("Converse com sua IA sobre saldos, conciliação e estratégias financeiras:")
             st.divider()
 
-            # Se o histórico da consulta ativa estiver vazio, apresenta mensagem inicial de boas-vindas
             if not dados_ativos["mensagens"]:
                 sobra_sem_c = round(sal_liq - (fixos + variaveis), 2)
                 msg_boas_vindas = (
@@ -524,29 +596,23 @@ elif menu_selecionado == "🤖 4. Consultora IA Financeira":
                 )
                 dados_ativos["mensagens"].append({"role": "assistant", "content": msg_boas_vindas})
 
-            # Renderiza histórico de mensagens da consulta selecionada
             for mensagem in dados_ativos["mensagens"]:
                 with st.chat_message(mensagem["role"], avatar="🤖" if mensagem["role"] == "assistant" else "👤"):
                     st.markdown(mensagem["content"])
 
-            # Entrada de nova pergunta no chat ativo
             if prompt := st.chat_input("Digite sua pergunta aqui..."):
-                # 1. Renomeia o título da consulta automaticamente na 1ª pergunta do usuário (Estilo Gemini)
                 if len(dados_ativos["mensagens"]) <= 1 and dados_ativos["titulo"].startswith("Consulta #"):
                     titulo_curto = (prompt[:22] + "...") if len(prompt) > 22 else prompt
                     dados_ativos["titulo"] = titulo_curto
 
-                # 2. Exibe mensagem do usuário
                 dados_ativos["mensagens"].append({"role": "user", "content": prompt})
                 with st.chat_message("user", avatar="👤"):
                     st.markdown(prompt)
 
-                # 3. Gera e exibe resposta analítica instantânea
                 with st.chat_message("assistant", avatar="🤖"):
                     with st.spinner("Analisando suas finanças..."):
                         resposta_gerada = responder_chat_ia(prompt, sal_liq, fixos, variaveis, faturas)
                         st.markdown(resposta_gerada)
                 
-                # 4. Salva resposta na memória da consulta ativa
                 dados_ativos["mensagens"].append({"role": "assistant", "content": resposta_gerada})
                 st.rerun()
