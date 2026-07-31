@@ -10,13 +10,19 @@ st.set_page_config(
     layout="centered"
 )
 
-# Inicializando variáveis na memória para integrar as telas
+# Inicializando variáveis na memória global para integrar todas as telas
 if "salario_liquido" not in st.session_state:
     st.session_state["salario_liquido"] = 3802.43
 if "hora_liquida" not in st.session_state:
     st.session_state["hora_liquida"] = 17.28
 if "salario_bruto_total" not in st.session_state:
     st.session_state["salario_bruto_total"] = 4500.00
+if "total_fixo" not in st.session_state:
+    st.session_state["total_fixo"] = 2050.00
+if "total_var" not in st.session_state:
+    st.session_state["total_var"] = 950.00
+if "total_faturas" not in st.session_state:
+    st.session_state["total_faturas"] = 589.90
 
 # ==========================================
 # TABELAS DE IMPOSTOS & LÓGICA CLT
@@ -67,7 +73,7 @@ def calcular_clt(salario_base, jornada, dependentes, aplicar_irrf=True, horas_50
                     break
         irrf = round(irrf, 2)
 
-    # FGTS (8% pago pelo empregador - não desconta do líquido)
+    # FGTS (8% pago pelo empregador)
     fgts = round(salario_bruto_total * 0.08, 2)
 
     salario_liquido = round(salario_bruto_total - inss - irrf, 2)
@@ -90,11 +96,16 @@ def calcular_clt(salario_base, jornada, dependentes, aplicar_irrf=True, horas_50
 st.sidebar.title("📌 Menu Financeiro")
 menu_selecionado = st.sidebar.radio(
     "Navegue pelas áreas do app:",
-    ["🏢 1. Trabalhista & CLT", "💵 2. Dinheiro Pessoal & Orçamento", "💳 3. Cartões de Crédito"]
+    [
+        "🏢 1. Trabalhista & CLT",
+        "💵 2. Dinheiro Pessoal & Orçamento",
+        "💳 3. Cartões de Crédito",
+        "🤖 4. Consultora IA Financeira"
+    ]
 )
 
 st.sidebar.divider()
-st.sidebar.caption("💡 **Dica:** Os cálculos trabalhistas atualizam automaticamente o seu orçamento e cartões nas outras abas!")
+st.sidebar.caption("💡 **Dica:** A IA no menu 4 analisa automaticamente todos os dados que você configurar nos menus anteriores!")
 
 # ==========================================
 # MÓDULO 1: ÁREA TRABALHISTA & CLT
@@ -125,10 +136,8 @@ if menu_selecionado == "🏢 1. Trabalhista & CLT":
         with col_he2:
             horas_100 = st.number_input("Horas Extras 100% (Qtd)", min_value=0.0, value=0.0, step=1.0)
 
-    # Executando cálculo
     folha = calcular_clt(salario_base, jornada, dependentes, aplicar_irrf, horas_50, horas_100)
     
-    # Atualizando a memória global da sessão
     st.session_state["salario_liquido"] = folha["salario_liquido"]
     st.session_state["hora_liquida"] = folha["hora_liquida"]
     st.session_state["salario_bruto_total"] = folha["salario_bruto_total"]
@@ -151,7 +160,6 @@ if menu_selecionado == "🏢 1. Trabalhista & CLT":
             st.metric("Desconto IRRF", "R$ 0,00", delta="Isento", delta_color="off")
 
     st.write("")
-    # Destaque para o FGTS (Patrimônio do Trabalhador)
     st.info(
         f"🏛️ **FGTS Acumulado no Mês (8%): R$ {folha['fgts']:,.2f}**\n\n"
         f"*Nota: O FGTS é um benefício pago integralmente pela empresa na sua conta da Caixa, não sendo descontado do seu salário líquido.*"
@@ -165,7 +173,6 @@ elif menu_selecionado == "💵 2. Dinheiro Pessoal & Orçamento":
     st.write("Gerencie seus custos de vida e veja quanto sobra limpo na sua conta.")
     st.divider()
 
-    # Puxando dados da Área Trabalhista da sessão
     sal_liquido = st.session_state["salario_liquido"]
     hora_liq = st.session_state["hora_liquida"]
 
@@ -187,12 +194,16 @@ elif menu_selecionado == "💵 2. Dinheiro Pessoal & Orçamento":
 
     total_fixo = round(moradia + contas + transporte + outros_fixos, 2)
     total_var = round(alimentacao + lazer + compras, 2)
+    
+    # Salvando no session_state para a IA ler
+    st.session_state["total_fixo"] = total_fixo
+    st.session_state["total_var"] = total_var
+
     total_gastos = round(total_fixo + total_var, 2)
     dinheiro_livre = round(sal_liquido - total_gastos, 2)
 
     st.divider()
     
-    # Cards de Balanço
     b_card1, b_card2, b_card3 = st.columns(3)
     with b_card1:
         st.metric("Custos Fixos", f"R$ {total_fixo:,.2f}")
@@ -205,7 +216,6 @@ elif menu_selecionado == "💵 2. Dinheiro Pessoal & Orçamento":
             st.metric("🚨 Dinheiro Livre (Sobra)", f"R$ {dinheiro_livre:,.2f}", delta="Orçamento Estourado", delta_color="inverse")
 
     st.divider()
-    # Termômetro em Horas de Vida integrado aqui
     st.subheader("⏱️ Termômetro de Gastos: Custo em Horas de Vida")
     col_gasto1, col_gasto2 = st.columns([1, 2])
     with col_gasto1:
@@ -225,10 +235,8 @@ elif menu_selecionado == "💳 3. Cartões de Crédito":
     st.write("Gerencie cartões separadamente com limites, datas e faturas individuais.")
     st.divider()
 
-    # Criando abas interativas para até 2 cartões (expansível facilmente)
     aba1, aba2 = st.tabs(["💳 Cartão 1 (Principal)", "💳 Cartão 2 (Secundário)"])
 
-    # --- ABA: CARTÃO 1 ---
     with aba1:
         st.subheader("Cartão Principal")
         nome_c1 = st.text_input("Nome do Cartão", value="Nubank", key="nome_c1")
@@ -263,7 +271,6 @@ elif menu_selecionado == "💳 3. Cartões de Crédito":
         with res3:
             st.metric("Melhor Dia Compra", f"Dia {melhor_dia_c1}", delta="Até 40 dias sem juros")
 
-    # --- ABA: CARTÃO 2 ---
     with aba2:
         st.subheader("Cartão Secundário")
         nome_c2 = st.text_input("Nome do Cartão", value="XP / Itaú", key="nome_c2")
@@ -295,5 +302,112 @@ elif menu_selecionado == "💳 3. Cartões de Crédito":
         with res_b3:
             st.metric("Melhor Dia Compra", f"Dia {melhor_dia_c2}", delta="Até 40 dias sem juros")
 
+    # Salvando soma de cartões no session_state para a IA
+    st.session_state["total_faturas"] = round(fatura_total_c1 + fatura_total_c2, 2)
+
     st.divider()
-    st.info(f"📊 **Total Geral em Cartões neste mês:** R$ {(fatura_total_c1 + fatura_total_c2):,.2f}")
+    st.info(f"📊 **Total Geral em Cartões neste mês:** R$ {st.session_state['total_faturas']:,.2f}")
+
+# ==========================================
+# MÓDULO 4: CONSULTORA IA FINANCEIRA
+# ==========================================
+elif menu_selecionado == "🤖 4. Consultora IA Financeira":
+    st.title("🤖 Consultora IA Financeira")
+    st.write("Sua assistente inteligente analisa seus números e gera um diagnóstico em tempo real.")
+    st.divider()
+
+    # Puxando todos os dados da memória
+    sal_liq = st.session_state["salario_liquido"]
+    fixos = st.session_state["total_fixo"]
+    variaveis = st.session_state["total_var"]
+    faturas = st.session_state["total_faturas"]
+    
+    total_saidas = round(fixos + variaveis + faturas, 2)
+    saldo_livre = round(sal_liq - total_saidas, 2)
+
+    # 1. INDICADOR DE SAÚDE FINANCEIRA
+    pct_comprometido = (total_saidas / sal_liq) * 100 if sal_liq > 0 else 100
+    
+    st.subheader("📊 1. Termômetro de Saúde Financeira")
+    col_saude1, col_saude2 = st.columns([1, 2])
+    
+    with col_saude1:
+        if pct_comprometido <= 80:
+            st.success("🟢 **Status: EXCELENTE**")
+        elif pct_comprometido <= 95:
+            st.warning("🟡 **Status: ATENÇÃO**")
+        else:
+            st.error("🔴 **Status: RISCO CRÍTICO**")
+            
+    with col_saude2:
+        st.write(f"Você comprometeu **{pct_comprometido:.1f}%** do seu salário líquido deste mês.")
+        st.progress(min(1.0, max(0.0, total_saidas / sal_liq if sal_liq > 0 else 1.0)))
+
+    st.divider()
+
+    # 2. ANÁLISE PELA REGRA DE OURO (50 / 30 / 20)
+    st.subheader("⚖️ 2. Regra de Ouro (50% Necessidades - 30% Lazer - 20% Liberdade)")
+    st.write("Veja como seus gastos reais se comparam à proporção ideal de saúde financeira:")
+
+    pct_fixo_real = (fixos / sal_liq) * 100 if sal_liq > 0 else 0
+    pct_var_real = ((variaveis + faturas) / sal_liq) * 100 if sal_liq > 0 else 0
+    pct_livre_real = (saldo_livre / sal_liq) * 100 if sal_liq > 0 else 0
+
+    col_r1, col_r2, col_r3 = st.columns(3)
+    with col_r1:
+        st.metric(
+            label="🔒 Custos Fixos (Ideal: 50%)",
+            value=f"{pct_fixo_real:.1f}%",
+            delta=f"{pct_fixo_real - 50:.1f}% do ideal",
+            delta_color="inverse"
+        )
+    with col_r2:
+        st.metric(
+            label="🛍️ Variáveis + Cartão (Ideal: 30%)",
+            value=f"{pct_var_real:.1f}%",
+            delta=f"{pct_var_real - 30:.1f}% do ideal",
+            delta_color="inverse"
+        )
+    with col_r3:
+        st.metric(
+            label="💵 Dinheiro Livre (Ideal: 20%)",
+            value=f"{pct_livre_real:.1f}%",
+            delta=f"{pct_livre_real - 20:.1f}% do ideal",
+            delta_color="normal" if pct_livre_real >= 20 else "inverse"
+        )
+
+    st.divider()
+
+    # 3. PÍLULAS DE SABEDORIA DA IA (DIAGNÓSTICO AUTOMÁTICO)
+    st.subheader("💡 3. Recomendações Automáticas da IA")
+
+    # Diagnóstico 1: Custos Fixos
+    if pct_fixo_real > 50:
+        st.warning(
+            f"🚨 **Alerta de Rigidez Orçamentária:** Seus gastos fixos consomem **{pct_fixo_real:.1f}%** do seu salário (o teto ideal é 50%). "
+            "Isso significa que você tem pouca flexibilidade para imprevistos. Tente renegociar contas fixas básicas, planos de internet ou moradia no longo prazo."
+        )
+    else:
+        st.success(
+            f"✅ **Estrutura Segura:** Seus gastos fixos representam **{pct_fixo_real:.1f}%** da sua renda, dentro da margem de segurança de 50%!"
+        )
+
+    # Diagnóstico 2: Cartão de Crédito
+    if (faturas / sal_liq if sal_liq > 0 else 0) > 0.35:
+        st.error(
+            f"💳 **Alerta de Perigo no Cartão:** A soma das suas faturas (R$ {faturas:,.2f}) compromete mais de **35%** do seu salário líquido! "
+            "Evite parcelar novas compras este mês e utilize a estratégia de comprar apenas após o dia de fechamento."
+        )
+
+    # Diagnóstico 3: Dinheiro Livre & Reserva
+    if saldo_livre > 0:
+        tempo_reserva_meses = round((fixos * 6) / saldo_livre, 1) if saldo_livre > 0 else 0
+        st.info(
+            f"🌱 **Potencial de Poupança & Investimento:** Parabéns, você tem **R$ {saldo_livre:,.2f}** livres! "
+            f"Se você guardar esse valor todos os meses, montará sua **Reserva de Emergência completa de 6 meses (R$ {(fixos * 6):,.2f})** em aproximadamente **{tempo_reserva_meses} meses**."
+        )
+    else:
+        st.error(
+            "🛑 **Orçamento no Vermelho:** Suas despesas ultrapassam sua renda. O foco imediato da IA para você é: "
+            "1) Cortar assinaturas de lazer temporariamente; 2) Zero compras no cartão de crédito; 3) Focar apenas em despesas essenciais."
+        )
