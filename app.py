@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 # ==========================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -175,35 +176,61 @@ total_var = round(alimentacao + lazer + compras, 2)
 
 st.divider()
 
-# --- SEÇÃO 5: CARTÃO DE CRÉDITO & ESTRATÉGIA DE FLUXO ---
-st.subheader("5. 💳 Cartão de Crédito: Estratégia de Vencimento")
-st.write("Use as datas do seu cartão para não ficar zerado antes do próximo salário:")
+# --- SEÇÃO 5: CARTÃO DE CRÉDITO & REGISTRO DE COMPRAS ---
+st.subheader("5. 💳 Cartão de Crédito & Registro de Compras")
+st.write("Registre seus gastos no cartão sem precisar abrir o aplicativo do banco:")
 
 col_cartao1, col_cartao2 = st.columns(2)
 
 with col_cartao1:
     limite_cartao = st.number_input("Limite Total do Cartão (R$)", min_value=0.0, value=5000.0, step=100.0)
-    fatura_atual = st.number_input("Fatura a Pagar Este Mês (R$)", min_value=0.0, value=800.0, step=50.0)
+    fatura_base = st.number_input("Fatura Base / Parcelas Anteriores (R$)", min_value=0.0, value=300.0, step=50.0, help="Valor de compras antigas parceladas que já constam na fatura deste mês.")
 
 with col_cartao2:
     dia_fechamento = st.number_input("Dia de Fechamento da Fatura", min_value=1, max_value=31, value=25)
     dia_vencimento = st.number_input("Dia de Vencimento da Fatura", min_value=1, max_value=31, value=5)
     dia_salario = st.number_input("Dia em que Você Recebe o Salário", min_value=1, max_value=31, value=5)
 
-# Cálculos do Cartão
+# --- TABELA INTERATIVA DE COMPRAS DO MÊS ---
+st.markdown("#### 🛒 Suas Compras do Mês no Cartão")
+st.write("Adicione ou edite suas compras abaixo. A fatura e o limite serão atualizados automaticamente:")
+
+# Criando dados de exemplo padrão para a tabela
+dados_iniciais = [
+    {"Descrição": "Supermercado", "Valor (R$)": 250.00},
+    {"Descrição": "Uber / Transporte", "Valor (R$)": 45.90},
+    {"Descrição": "Assinatura Streaming", "Valor (R$)": 39.90}
+]
+df_inicial = pd.DataFrame(dados_iniciais)
+
+# st.data_editor permite ao usuário adicionar (+), excluir ou alterar linhas
+df_compras = st.data_editor(
+    df_inicial,
+    num_rows="dynamic",
+    use_container_width=True,
+    column_config={
+        "Descrição": st.column_config.TextColumn("Descrição da Compra", required=True),
+        "Valor (R$)": st.column_config.NumberColumn("Valor (R$)", format="R$ %.2f", min_value=0.0, step=1.0)
+    },
+    key="tabela_cartao"
+)
+
+# Cálculo da soma das compras da tabela
+total_compras_tabela = df_compras["Valor (R$)"].sum()
+fatura_atual = round(fatura_base + total_compras_tabela, 2)
 limite_disponivel = max(0.0, limite_cartao - fatura_atual)
 melhor_dia_compra = (dia_fechamento % 31) + 1
 
-# Totalização com Fatura
+# Totalização de todos os custos com a nova Fatura Calculada
 total_gastos = round(total_fixo + total_var + fatura_atual, 2)
 dinheiro_livre = round(folha["salario_liquido"] - total_gastos, 2)
 
-# Cards do Cartão
+# Cards de Resumo do Cartão
 c_card1, c_card2, c_card3 = st.columns(3)
 with c_card1:
-    st.metric("Limite Disponível", f"R$ {limite_disponivel:,.2f}")
+    st.metric("Fatura Total Calculada", f"R$ {fatura_atual:,.2f}", delta=f"{len(df_compras)} compra(s) registradas", delta_color="off")
 with c_card2:
-    st.metric("Melhor Dia de Compra", f"Dia {melhor_dia_compra}", delta="Até 40 dias para pagar")
+    st.metric("Limite Disponível", f"R$ {limite_disponivel:,.2f}")
 with c_card3:
     if dinheiro_livre >= 0:
         st.metric("💵 Dinheiro Livre (Sobra)", f"R$ {dinheiro_livre:,.2f}", delta="Saldo Positivo")
