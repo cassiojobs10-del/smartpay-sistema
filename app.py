@@ -13,7 +13,6 @@ st.set_page_config(
 # --- INJEÇÃO DE CSS CUSTOMIZADO (DESIGN FINTECH ESCURO) ---
 st.markdown("""
 <style>
-/* Estilização moderna para os cards de Métricas */
 div[data-testid="stMetric"] {
     background-color: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -27,27 +26,21 @@ div[data-testid="stMetric"]:hover {
     transform: translateY(-2px);
     background-color: rgba(255, 255, 255, 0.05);
 }
-
-/* Tipografia e cabeçalhos com toque de dashboard */
 h1, h2, h3 {
     font-weight: 700 !important;
     letter-spacing: -0.4px !important;
 }
-
-/* Estilo suave nas divisórias */
 hr {
     border-color: rgba(255, 255, 255, 0.08) !important;
     margin: 24px 0 !important;
 }
-
-/* Abas mais limpas */
 button[data-baseweb="tab"] {
     font-weight: 600 !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# Inicializando variáveis na memória global para integrar todas as telas
+# Inicializando variáveis financeiras globais na memória
 if "salario_liquido" not in st.session_state:
     st.session_state["salario_liquido"] = 3802.43
 if "hora_liquida" not in st.session_state:
@@ -60,8 +53,19 @@ if "total_var" not in st.session_state:
     st.session_state["total_var"] = 950.00
 if "total_faturas" not in st.session_state:
     st.session_state["total_faturas"] = 589.90
-if "mensagens_chat" not in st.session_state:
-    st.session_state["mensagens_chat"] = []
+
+# --- ESTRUTURA MULTI-CHATS (TIPO GEMINI) ---
+if "conversas" not in st.session_state:
+    st.session_state["conversas"] = {
+        "1": {
+            "titulo": "💡 Diagnóstico Inicial",
+            "mensagens": []
+        }
+    }
+if "conversa_ativa" not in st.session_state:
+    st.session_state["conversa_ativa"] = "1"
+if "contador_conversas" not in st.session_state:
+    st.session_state["contador_conversas"] = 1
 
 # ==========================================
 # TABELAS DE IMPOSTOS & LÓGICA CLT
@@ -91,7 +95,6 @@ def calcular_clt(salario_base, jornada, dependentes, aplicar_irrf=True, horas_50
     
     salario_bruto_total = round(salario_base + total_horas_extras, 2)
 
-    # INSS
     inss = 0.0
     for f in TABELA_INSS:
         if salario_bruto_total > f["piso"]:
@@ -101,7 +104,6 @@ def calcular_clt(salario_base, jornada, dependentes, aplicar_irrf=True, horas_50
             break
     inss = round(inss, 2)
 
-    # IRRF
     irrf = 0.0
     if aplicar_irrf:
         base_irrf = salario_bruto_total - inss - (dependentes * DEDUCAO_POR_DEPENDENTE)
@@ -112,9 +114,7 @@ def calcular_clt(salario_base, jornada, dependentes, aplicar_irrf=True, horas_50
                     break
         irrf = round(irrf, 2)
 
-    # FGTS (8% pago pelo empregador)
     fgts = round(salario_bruto_total * 0.08, 2)
-
     salario_liquido = round(salario_bruto_total - inss - irrf, 2)
     jornada_total_real = jornada + horas_50 + horas_100
     hora_liquida = round(salario_liquido / jornada_total_real, 2) if jornada_total_real > 0 else 0.0
@@ -135,13 +135,11 @@ def calcular_clt(salario_base, jornada, dependentes, aplicar_irrf=True, horas_50
 def responder_chat_ia(mensagem_usuario, sal_liq, fixos, var, faturas):
     msg = mensagem_usuario.lower()
     
-    # Padronização matemática exata (Sem contradições)
     custos_sem_cartao = round(fixos + var, 2)
     sobra_sem_cartao = round(sal_liq - custos_sem_cartao, 2)
     total_saidas = round(custos_sem_cartao + faturas, 2)
     saldo_real_limpo = round(sal_liq - total_saidas, 2)
 
-    # 1. Dúvidas sobre saldos, valores diferentes ou "Dinheiro Livre"
     if any(p in msg for p in ["livre", "sobra", "802", "212", "diferen", "quanto tenho", "pq", "por que"]):
         return (
             f"🔍 **Auditoria Exata do seu Dinheiro Livre:**\n\n"
@@ -152,7 +150,6 @@ def responder_chat_ia(mensagem_usuario, sal_liq, fixos, var, faturas):
             f"Quando subtraímos os **R$ {faturas:,.2f}** que você deve no crédito, sobram limpos exatamente **R$ {saldo_real_limpo:,.2f}** na sua conta bancária!"
         )
 
-    # 2. Dúvidas sobre conciliação de salário e cartão de crédito
     elif any(p in msg for p in ["conciliar", "fim de mês", "fim de mes", "recebo", "salário com o cartão", "nubank", "cartão", "cartao"]):
         return (
             f"📅 **Estratégia de Conciliação (Salário no Fim do Mês vs. Cartão):**\n\n"
@@ -162,7 +159,6 @@ def responder_chat_ia(mensagem_usuario, sal_liq, fixos, var, faturas):
             f"3. **Teto do Crédito:** Nunca deixe sua fatura ultrapassar o seu saldo sem cartão (**R$ {sobra_sem_cartao:,.2f}**), senão seu Dinheiro Livre do mês ficará negativo."
         )
 
-    # 3. Dúvidas sobre investimentos e reserva
     elif any(p in msg for p in ["invest", "guardar", "poupar", "reserva", "caixinha"]):
         if saldo_real_limpo > 0:
             meses_reserva = round((fixos * 6) / saldo_real_limpo, 1)
@@ -175,7 +171,6 @@ def responder_chat_ia(mensagem_usuario, sal_liq, fixos, var, faturas):
         else:
             return "🚨 **Atenção:** Seu saldo livre real após o cartão está zerado ou negativo. A prioridade matemática antes de investir é cortar gastos variáveis para fazer sobrar caixa."
 
-    # 4. Resposta Analítica Completa (Fallback inteligente)
     else:
         pct_gasto = round((total_saidas / sal_liq) * 100, 1) if sal_liq > 0 else 100
         return (
@@ -201,7 +196,7 @@ menu_selecionado = st.sidebar.radio(
 )
 
 st.sidebar.divider()
-st.sidebar.caption("💡 **Dica de UX:** Os cálculos trabalhistas e suas faturas são sincronizados automaticamente entre os módulos!")
+st.sidebar.caption("💡 **Dica de UX:** O menu 4 agora permite múltiplas conversas, pesquisa de histórico e exclusão de chats!")
 
 # ==========================================
 # MÓDULO 1: ÁREA TRABALHISTA & CLT
@@ -411,11 +406,11 @@ elif menu_selecionado == "💳 3. Cartões de Crédito":
     st.info(f"📊 **Total Geral em Cartões neste mês:** R$ {st.session_state['total_faturas']:,.2f}")
 
 # ==========================================
-# MÓDULO 4: CONSULTORA IA FINANCEIRA + CHAT
+# MÓDULO 4: CONSULTORA IA FINANCEIRA + MULTI-CHATS (ESTILO GEMINI)
 # ==========================================
 elif menu_selecionado == "🤖 4. Consultora IA Financeira":
     st.title("🤖 Consultora IA Financeira")
-    st.write("Sua assistente inteligente analisa seus números e responde às suas dúvidas no chat abaixo.")
+    st.write("Sua assistente inteligente analisa seus números com histórico de múltiplas consultas.")
     st.divider()
 
     sal_liq = st.session_state["salario_liquido"]
@@ -426,7 +421,7 @@ elif menu_selecionado == "🤖 4. Consultora IA Financeira":
     total_saidas = round(fixos + variaveis + faturas, 2)
     saldo_livre = round(sal_liq - total_saidas, 2)
 
-    # 1. INDICADOR DE SAÚDE FINANCEIRA EM CARD FINTECH
+    # 1. TERMÔMETRO DE SAÚDE EM CONTAINER
     pct_comprometido = (total_saidas / sal_liq) * 100 if sal_liq > 0 else 100
     
     with st.container(border=True):
@@ -447,48 +442,111 @@ elif menu_selecionado == "🤖 4. Consultora IA Financeira":
 
     st.write("")
 
-    # 2. CHAT INTERATIVO EM CONTAINER
+    # 2. SISTEMA DE MULTI-CHATS COM HISTÓRICO LATERAL (ESTILO GEMINI)
     with st.container(border=True):
-        st.subheader("💬 2. Chat Interativo: Converse com sua Consultora IA")
-        st.caption("Faça perguntas sobre como organizar seu salário, investimentos, corte de gastos ou cartões:")
+        col_hist, col_chat = st.columns([1.2, 2.8])
 
-        # Botão para limpar histórico do chat
-        col_btn_limpar, _ = st.columns([1, 3])
-        with col_btn_limpar:
-            if st.button("🗑️ Limpar Conversa"):
-                st.session_state["mensagens_chat"] = []
+        # === COLUNA DA ESQUERDA: HISTÓRICO, PESQUISA E GERENCIAMENTO ===
+        with col_hist:
+            st.markdown("### 💬 Suas Consultas")
+            
+            # Botão para criar nova consulta (Nova Conversa)
+            if st.button("➕ Nova Consulta", use_container_width=True, type="primary"):
+                st.session_state["contador_conversas"] += 1
+                novo_id = str(st.session_state["contador_conversas"])
+                st.session_state["conversas"][novo_id] = {
+                    "titulo": f"Consulta #{novo_id}",
+                    "mensagens": []
+                }
+                st.session_state["conversa_ativa"] = novo_id
                 st.rerun()
 
-        # Se o histórico estiver vazio, adiciona uma mensagem inicial explicativa
-        if not st.session_state["mensagens_chat"]:
-            sobra_sem_c = round(sal_liq - (fixos + variaveis), 2)
-            msg_boas_vindas = (
-                f"Olá! Sou sua **Consultora Financeira IA**. Já analisei seus números em detalhes:\n\n"
-                f"• **Salário Líquido CLT:** R$ {sal_liq:,.2f}\n"
-                f"• **Despesas Fixas + Variáveis:** R$ {(fixos + variaveis):,.2f} *(Saldo de R$ {sobra_sem_c:,.2f} na Tela 2)*\n"
-                f"• **Fatura Total dos Cartões:** R$ {faturas:,.2f}\n"
-                f"• **💵 Dinheiro Livre Real (Após o Cartão): R$ {saldo_livre:,.2f}**\n\n"
-                "Em que posso te aconselhar hoje? Pergunte sobre as diferenças de saldo, estratégias de cartão ou como montar sua reserva!"
-            )
-            st.session_state["mensagens_chat"].append({"role": "assistant", "content": msg_boas_vindas})
+            st.write("")
+            # Campo de Pesquisa no Histórico
+            termo_pesquisa = st.text_input("🔍 Pesquisar consulta...", placeholder="Digite para filtrar...").lower()
 
-        # Exibir todas as mensagens do histórico na tela
-        for mensagem in st.session_state["mensagens_chat"]:
-            with st.chat_message(mensagem["role"], avatar="🤖" if mensagem["role"] == "assistant" else "👤"):
-                st.markdown(mensagem["content"])
-
-        # Captura a pergunta digitada pelo usuário na barra inferior
-        if prompt := st.chat_input("Digite sua dúvida financeira (ex: Por que meu saldo livre deu esse valor?)..."):
-            # 1. Mostra a mensagem do usuário imediatamente
-            st.session_state["mensagens_chat"].append({"role": "user", "content": prompt})
-            with st.chat_message("user", avatar="👤"):
-                st.markdown(prompt)
-
-            # 2. Gera a resposta da IA baseada no motor analítico corrigido
-            with st.chat_message("assistant", avatar="🤖"):
-                with st.spinner("Analisando suas finanças..."):
-                    resposta_gerada = responder_chat_ia(prompt, sal_liq, fixos, variaveis, faturas)
-                    st.markdown(resposta_gerada)
+            st.markdown("#### Histórico Salvo")
             
-            # 3. Salva a resposta no histórico da sessão
-            st.session_state["mensagens_chat"].append({"role": "assistant", "content": resposta_gerada})
+            # Filtrando conversas com base na pesquisa
+            conversas_filtradas = {
+                id_conv: dados for id_conv, dados in st.session_state["conversas"].items()
+                if termo_pesquisa in dados["titulo"].lower() or any(
+                    termo_pesquisa in m["content"].lower() for m in dados["mensagens"]
+                )
+            }
+
+            if not conversas_filtradas:
+                st.caption("Nenhuma consulta encontrada.")
+            else:
+                for id_conv, dados in reversed(list(conversas_filtradas.items())):
+                    col_btn_select, col_btn_del = st.columns([3.5, 1])
+                    
+                    with col_btn_select:
+                        eh_ativa = (id_conv == st.session_state["conversa_ativa"])
+                        estilo_titulo = f"**{dados['titulo']}**" if eh_ativa else dados["titulo"]
+                        
+                        if st.button(f"💬 {estilo_titulo}", key=f"sel_{id_conv}", use_container_width=True):
+                            st.session_state["conversa_ativa"] = id_conv
+                            st.rerun()
+                    
+                    with col_btn_del:
+                        # Opção de apagar a consulta selecionada
+                        if st.button("🗑️", key=f"del_{id_conv}", help="Apagar consulta"):
+                            del st.session_state["conversas"][id_conv]
+                            # Se apagou a ativa, redireciona para a primeira disponível ou cria uma nova
+                            if id_conv == st.session_state["conversa_ativa"]:
+                                if st.session_state["conversas"]:
+                                    st.session_state["conversa_ativa"] = list(st.session_state["conversas"].keys())[0]
+                                else:
+                                    st.session_state["conversas"] = {"1": {"titulo": "💡 Diagnóstico Inicial", "mensagens": []}}
+                                    st.session_state["conversa_ativa"] = "1"
+                            st.rerun()
+
+        # === COLUNA DA DIREITA: CHAT ATIVO SELECIONADO ===
+        with col_chat:
+            id_ativo = st.session_state["conversa_ativa"]
+            dados_ativos = st.session_state["conversas"][id_ativo]
+
+            st.subheader(f"🏷️ {dados_ativos['titulo']}")
+            st.caption("Converse com sua IA sobre saldos, conciliação e estratégias financeiras:")
+            st.divider()
+
+            # Se o histórico da consulta ativa estiver vazio, apresenta mensagem inicial de boas-vindas
+            if not dados_ativos["mensagens"]:
+                sobra_sem_c = round(sal_liq - (fixos + variaveis), 2)
+                msg_boas_vindas = (
+                    f"Olá! Estou pronta para esta nova consulta. Seus números atuais são:\n\n"
+                    f"• **Salário Líquido CLT:** R$ {sal_liq:,.2f}\n"
+                    f"• **Despesas Fixas + Variáveis:** R$ {(fixos + variaveis):,.2f} *(Saldo na Tela 2: R$ {sobra_sem_c:,.2f})*\n"
+                    f"• **Fatura Total dos Cartões:** R$ {faturas:,.2f}\n"
+                    f"• **💵 Dinheiro Livre Real (Após o Cartão): R$ {saldo_livre:,.2f}**\n\n"
+                    "Faça sua pergunta no campo abaixo!"
+                )
+                dados_ativos["mensagens"].append({"role": "assistant", "content": msg_boas_vindas})
+
+            # Renderiza histórico de mensagens da consulta selecionada
+            for mensagem in dados_ativos["mensagens"]:
+                with st.chat_message(mensagem["role"], avatar="🤖" if mensagem["role"] == "assistant" else "👤"):
+                    st.markdown(mensagem["content"])
+
+            # Entrada de nova pergunta no chat ativo
+            if prompt := st.chat_input("Digite sua pergunta aqui..."):
+                # 1. Renomeia o título da consulta automaticamente na 1ª pergunta do usuário (Estilo Gemini)
+                if len(dados_ativos["mensagens"]) <= 1 and dados_ativos["titulo"].startswith("Consulta #"):
+                    titulo_curto = (prompt[:22] + "...") if len(prompt) > 22 else prompt
+                    dados_ativos["titulo"] = titulo_curto
+
+                # 2. Exibe mensagem do usuário
+                dados_ativos["mensagens"].append({"role": "user", "content": prompt})
+                with st.chat_message("user", avatar="👤"):
+                    st.markdown(prompt)
+
+                # 3. Gera e exibe resposta analítica instantânea
+                with st.chat_message("assistant", avatar="🤖"):
+                    with st.spinner("Analisando suas finanças..."):
+                        resposta_gerada = responder_chat_ia(prompt, sal_liq, fixos, variaveis, faturas)
+                        st.markdown(resposta_gerada)
+                
+                # 4. Salva resposta na memória da consulta ativa
+                dados_ativos["mensagens"].append({"role": "assistant", "content": resposta_gerada})
+                st.rerun()
