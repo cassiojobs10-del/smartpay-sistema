@@ -23,6 +23,8 @@ if "total_var" not in st.session_state:
     st.session_state["total_var"] = 950.00
 if "total_faturas" not in st.session_state:
     st.session_state["total_faturas"] = 589.90
+if "mensagens_chat" not in st.session_state:
+    st.session_state["mensagens_chat"] = []
 
 # ==========================================
 # TABELAS DE IMPOSTOS & LÓGICA CLT
@@ -91,6 +93,41 @@ def calcular_clt(salario_base, jornada, dependentes, aplicar_irrf=True, horas_50
     }
 
 # ==========================================
+# MOTOR INTELIGENTE DE RESPOSTAS (CHAT IA)
+# ==========================================
+def responder_chat_ia(mensagem_usuario, sal_liq, fixos, var, faturas, saldo_livre):
+    msg = mensagem_usuario.lower()
+    total_gastos = fixos + var + faturas
+
+    # Resposta inteligente contextualizada com os números reais da pessoa
+    if "cartão" in msg or "cartao" in msg or "fatura" in msg:
+        if faturas > (sal_liq * 0.3):
+            return (f"💳 **Análise do seu Cartão:** Atualmente, suas faturas somam **R$ {faturas:,.2f}**, o que compromete uma parte pesada do seu salário líquido (R$ {sal_liq:,.2f}).\n\n"
+                    f"**Minha recomendação:** Evite parcelar compras não essenciais agora. Se possível, use a estratégia do 'melhor dia de compra' (após o fechamento) para ganhar fôlego no fluxo de caixa sem pagar juros!")
+        else:
+            return (f"💳 **Análise do seu Cartão:** Sua fatura atual está sob controle (**R$ {faturas:,.2f}**). Continue acompanhando o limite e separando o valor do pagamento logo no dia do salário para preservar seu saldo livre.")
+
+    elif "invest" in msg or "guardar" in msg or "poupar" in msg or "reserva" in msg or "sobra" in msg:
+        if saldo_livre > 0:
+            meses_10k = round(10000 / saldo_livre, 1)
+            return (f"📈 **Estratégia para Investir:** Você tem um **Dinheiro Livre de R$ {saldo_livre:,.2f}** todo mês!\n\n"
+                    f"• Se você investir esse saldo mensalmente em um investimento seguro de liquidez diária (como Tesouro Selic ou CDB 100% do CDI), você consegue juntar **R$ 10.000,00 em cerca de {meses_10k} meses**.\n"
+                    f"• O primeiro passo ideal é formar sua **Reserva de Emergência** equivalente a 6 meses dos seus custos fixos (Meta: **R$ {(fixos * 6):,.2f}**).")
+        else:
+            return ("🚨 **Atenção aos Investimentos:** No momento, seu orçamento está no limite ou negativo. Antes de investir, precisamos equilibrar o fluxo de caixa reduzindo gastos variáveis ou renegociando despesas fixas.")
+
+    elif "vermelho" in msg or "dívida" in msg or "divida" in msg or "cortar" in msg or "gasto" in msg:
+        return (f"🔍 **Plano de Corte de Custos:** Vamos analisar para onde vai o seu dinheiro:\n"
+                f"1. **Custos Fixos:** R$ {fixos:,.2f}\n"
+                f"2. **Gastos Variáveis:** R$ {var:,.2f}\n"
+                f"3. **Faturas de Cartão:** R$ {faturas:,.2f}\n\n"
+                f"**Por onde começar:** Os **Gastos Variáveis (R$ {var:,.2f})** são sempre os mais rápidos de ajustar. Reveja pedidos de delivery, assinaturas de streaming que não usa e compras por impulso. Pequenos cortes de 20% nessa área já liberam **R$ {(var * 0.2):,.2f}** no seu mês!")
+    
+    else:
+        return (f"🤖 **Análise Financeira:** Olhando para a sua renda disponível de **R$ {sal_liq:,.2f}** e seus gastos totais de **R$ {total_gastos:,.2f}**, seu saldo livre atual é de **R$ {saldo_livre:,.2f}**.\n\n"
+                "Como posso ajudar você a otimizar esse cenário hoje? Você pode me perguntar sobre **estratégias de cartão**, **como montar uma reserva de emergência**, ou **dicas para cortar custos**!")
+
+# ==========================================
 # BARRA LATERAL DE NAVEGAÇÃO (MENU)
 # ==========================================
 st.sidebar.title("📌 Menu Financeiro")
@@ -105,7 +142,7 @@ menu_selecionado = st.sidebar.radio(
 )
 
 st.sidebar.divider()
-st.sidebar.caption("💡 **Dica:** A IA no menu 4 analisa automaticamente todos os dados que você configurar nos menus anteriores!")
+st.sidebar.caption("💡 **Dica:** O chat no menu 4 sabe exatamente os seus salários, gastos e faturas configurados nos menus anteriores!")
 
 # ==========================================
 # MÓDULO 1: ÁREA TRABALHISTA & CLT
@@ -195,7 +232,6 @@ elif menu_selecionado == "💵 2. Dinheiro Pessoal & Orçamento":
     total_fixo = round(moradia + contas + transporte + outros_fixos, 2)
     total_var = round(alimentacao + lazer + compras, 2)
     
-    # Salvando no session_state para a IA ler
     st.session_state["total_fixo"] = total_fixo
     st.session_state["total_var"] = total_var
 
@@ -302,21 +338,19 @@ elif menu_selecionado == "💳 3. Cartões de Crédito":
         with res_b3:
             st.metric("Melhor Dia Compra", f"Dia {melhor_dia_c2}", delta="Até 40 dias sem juros")
 
-    # Salvando soma de cartões no session_state para a IA
     st.session_state["total_faturas"] = round(fatura_total_c1 + fatura_total_c2, 2)
 
     st.divider()
     st.info(f"📊 **Total Geral em Cartões neste mês:** R$ {st.session_state['total_faturas']:,.2f}")
 
 # ==========================================
-# MÓDULO 4: CONSULTORA IA FINANCEIRA
+# MÓDULO 4: CONSULTORA IA FINANCEIRA + CHAT
 # ==========================================
 elif menu_selecionado == "🤖 4. Consultora IA Financeira":
     st.title("🤖 Consultora IA Financeira")
-    st.write("Sua assistente inteligente analisa seus números e gera um diagnóstico em tempo real.")
+    st.write("Sua assistente inteligente analisa seus números e responde às suas dúvidas no chat abaixo.")
     st.divider()
 
-    # Puxando todos os dados da memória
     sal_liq = st.session_state["salario_liquido"]
     fixos = st.session_state["total_fixo"]
     variaveis = st.session_state["total_var"]
@@ -345,69 +379,46 @@ elif menu_selecionado == "🤖 4. Consultora IA Financeira":
 
     st.divider()
 
-    # 2. ANÁLISE PELA REGRA DE OURO (50 / 30 / 20)
-    st.subheader("⚖️ 2. Regra de Ouro (50% Necessidades - 30% Lazer - 20% Liberdade)")
-    st.write("Veja como seus gastos reais se comparam à proporção ideal de saúde financeira:")
+    # 2. CHAT INTERATIVO COM A CONSULTORA IA (ESTILO GEMINI)
+    st.subheader("💬 2. Chat Interativo: Converse com sua Consultora IA")
+    st.caption("Faça perguntas sobre como organizar seu salário, investimentos, corte de gastos ou cartões:")
 
-    pct_fixo_real = (fixos / sal_liq) * 100 if sal_liq > 0 else 0
-    pct_var_real = ((variaveis + faturas) / sal_liq) * 100 if sal_liq > 0 else 0
-    pct_livre_real = (saldo_livre / sal_liq) * 100 if sal_liq > 0 else 0
+    # Botão para limpar histórico do chat, se desejar
+    col_btn_limpar, _ = st.columns([1, 3])
+    with col_btn_limpar:
+        if st.button("🗑️ Limpar Conversa"):
+            st.session_state["mensagens_chat"] = []
+            st.rerun()
 
-    col_r1, col_r2, col_r3 = st.columns(3)
-    with col_r1:
-        st.metric(
-            label="🔒 Custos Fixos (Ideal: 50%)",
-            value=f"{pct_fixo_real:.1f}%",
-            delta=f"{pct_fixo_real - 50:.1f}% do ideal",
-            delta_color="inverse"
+    # Se o histórico estiver vazio, adiciona uma mensagem inicial de boas-vindas
+    if not st.session_state["mensagens_chat"]:
+        msg_boas_vindas = (
+            f"Olá! Sou sua **Consultora Financeira IA**. Já analisei todos os seus dados do app:\n\n"
+            f"• **Salário Líquido CLT:** R$ {sal_liq:,.2f}\n"
+            f"• **Despesas Fixas e Variáveis:** R$ {(fixos + variaveis):,.2f}\n"
+            f"• **Faturas de Cartão:** R$ {faturas:,.2f}\n"
+            f"• **Dinheiro Livre no Mês:** R$ {saldo_livre:,.2f}\n\n"
+            "Em que posso te aconselhar hoje? Pode me perguntar sobre investimentos, cartão ou estratégias de economia!"
         )
-    with col_r2:
-        st.metric(
-            label="🛍️ Variáveis + Cartão (Ideal: 30%)",
-            value=f"{pct_var_real:.1f}%",
-            delta=f"{pct_var_real - 30:.1f}% do ideal",
-            delta_color="inverse"
-        )
-    with col_r3:
-        st.metric(
-            label="💵 Dinheiro Livre (Ideal: 20%)",
-            value=f"{pct_livre_real:.1f}%",
-            delta=f"{pct_livre_real - 20:.1f}% do ideal",
-            delta_color="normal" if pct_livre_real >= 20 else "inverse"
-        )
+        st.session_state["mensagens_chat"].append({"role": "assistant", "content": msg_boas_vindas})
 
-    st.divider()
+    # Exibir todas as mensagens do histórico na tela
+    for mensagem in st.session_state["mensagens_chat"]:
+        with st.chat_message(mensagem["role"], avatar="🤖" if mensagem["role"] == "assistant" else "👤"):
+            st.markdown(mensagem["content"])
 
-    # 3. PÍLULAS DE SABEDORIA DA IA (DIAGNÓSTICO AUTOMÁTICO)
-    st.subheader("💡 3. Recomendações Automáticas da IA")
+    # Captura a pergunta digitada pelo usuário na barra inferior
+    if prompt := st.chat_input("Digite sua dúvida financeira (ex: Como posso investir meu dinheiro livre?)..."):
+        # 1. Mostra a mensagem do usuário imediatamente
+        st.session_state["mensagens_chat"].append({"role": "user", "content": prompt})
+        with st.chat_message("user", avatar="👤"):
+            st.markdown(prompt)
 
-    # Diagnóstico 1: Custos Fixos
-    if pct_fixo_real > 50:
-        st.warning(
-            f"🚨 **Alerta de Rigidez Orçamentária:** Seus gastos fixos consomem **{pct_fixo_real:.1f}%** do seu salário (o teto ideal é 50%). "
-            "Isso significa que você tem pouca flexibilidade para imprevistos. Tente renegociar contas fixas básicas, planos de internet ou moradia no longo prazo."
-        )
-    else:
-        st.success(
-            f"✅ **Estrutura Segura:** Seus gastos fixos representam **{pct_fixo_real:.1f}%** da sua renda, dentro da margem de segurança de 50%!"
-        )
-
-    # Diagnóstico 2: Cartão de Crédito
-    if (faturas / sal_liq if sal_liq > 0 else 0) > 0.35:
-        st.error(
-            f"💳 **Alerta de Perigo no Cartão:** A soma das suas faturas (R$ {faturas:,.2f}) compromete mais de **35%** do seu salário líquido! "
-            "Evite parcelar novas compras este mês e utilize a estratégia de comprar apenas após o dia de fechamento."
-        )
-
-    # Diagnóstico 3: Dinheiro Livre & Reserva
-    if saldo_livre > 0:
-        tempo_reserva_meses = round((fixos * 6) / saldo_livre, 1) if saldo_livre > 0 else 0
-        st.info(
-            f"🌱 **Potencial de Poupança & Investimento:** Parabéns, você tem **R$ {saldo_livre:,.2f}** livres! "
-            f"Se você guardar esse valor todos os meses, montará sua **Reserva de Emergência completa de 6 meses (R$ {(fixos * 6):,.2f})** em aproximadamente **{tempo_reserva_meses} meses**."
-        )
-    else:
-        st.error(
-            "🛑 **Orçamento no Vermelho:** Suas despesas ultrapassam sua renda. O foco imediato da IA para você é: "
-            "1) Cortar assinaturas de lazer temporariamente; 2) Zero compras no cartão de crédito; 3) Focar apenas em despesas essenciais."
-        )
+        # 2. Gera a resposta da IA baseada no contexto financeiro real
+        with st.chat_message("assistant", avatar="🤖"):
+            with st.spinner("Analisando suas finanças..."):
+                resposta_gerada = responder_chat_ia(prompt, sal_liq, fixos, variaveis, faturas, saldo_livre)
+                st.markdown(resposta_gerada)
+        
+        # 3. Salva a resposta no histórico da sessão
+        st.session_state["mensagens_chat"].append({"role": "assistant", "content": resposta_gerada})
