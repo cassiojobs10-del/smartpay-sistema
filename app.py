@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from backend import calcular_clt, responder_chat_ia
+from backend import calcular_clt
 
 # ==========================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -63,6 +63,10 @@ if "hora_liquida" not in st.session_state:
     st.session_state["hora_liquida"] = 17.28
 if "salario_bruto_total" not in st.session_state:
     st.session_state["salario_bruto_total"] = 4500.00
+if "salario_base" not in st.session_state:
+    st.session_state["salario_base"] = 3000.00
+if "beneficios" not in st.session_state:
+    st.session_state["beneficios"] = 0.00
 if "total_fixo" not in st.session_state:
     st.session_state["total_fixo"] = 2050.00
 if "total_var" not in st.session_state:
@@ -111,12 +115,12 @@ if menu_selecionado == "Trabalhista & CLT":
         
         col1, col2 = st.columns(2)
         with col1:
-            salario_base = st.number_input("Salário Bruto Base (R$)", min_value=1000.0, value=3000.0, step=100.0)
+            salario_base = st.number_input("Salário Bruto Base (R$)", min_value=1000.0, value=st.session_state["salario_base"], step=100.0)
         with col2:
             beneficios = st.number_input(
                 "Benefícios Isentos (R$)", 
                 min_value=0.0, 
-                value=0.0, 
+                value=st.session_state["beneficios"], 
                 step=50.0,
                 help="Soma de Auxílio Alimentação, Refeição, Creche, etc. Valores que não sofrem desconto de INSS/IRRF."
             )
@@ -125,13 +129,7 @@ if menu_selecionado == "Trabalhista & CLT":
         with col3:
             jornada = st.selectbox("Jornada Mensal (Horas)", options=[220, 200, 180, 150], index=0)
         with col4:
-            dependentes = st.number_input(
-                "Dependentes", 
-                min_value=0, 
-                value=0, 
-                step=1,
-                help="Quantidade de dependentes legais para abatimento no Imposto de Renda."
-            )
+            dependentes = st.number_input("Dependentes", min_value=0, value=0, step=1)
         with col5:
             st.write("")
             aplicar_irrf = st.toggle("Descontar IRRF", value=True)
@@ -151,6 +149,9 @@ if menu_selecionado == "Trabalhista & CLT":
     salario_liquido_real = folha["salario_liquido"] + beneficios
     salario_bruto_real = folha["salario_bruto_total"] + beneficios
     
+    # Salvando os dados na sessão para a IA enxergar
+    st.session_state["salario_base"] = salario_base
+    st.session_state["beneficios"] = beneficios
     st.session_state["salario_liquido"] = salario_liquido_real
     st.session_state["hora_liquida"] = folha["hora_liquida"]
     st.session_state["salario_bruto_total"] = salario_bruto_real
@@ -369,13 +370,18 @@ elif menu_selecionado == "Consultoria IA":
     st.write("Converse de forma natural sobre o seu cenário financeiro.")
     st.divider()
 
-    sal_liq = st.session_state["salario_liquido"]
-    fixos = st.session_state["total_fixo"]
-    variaveis = st.session_state["total_var"]
-    faturas = st.session_state["total_faturas"]
+    # Resgatando o contexto completo da sessão
+    contexto = {
+        "sal_liq": st.session_state["salario_liquido"],
+        "salario_base": st.session_state["salario_base"],
+        "beneficios": st.session_state["beneficios"],
+        "fixos": st.session_state["total_fixo"],
+        "variaveis": st.session_state["total_var"],
+        "faturas": st.session_state["total_faturas"]
+    }
     
-    total_saidas = round(fixos + variaveis + faturas, 2)
-    saldo_livre = round(sal_liq - total_saidas, 2)
+    total_saidas = round(contexto["fixos"] + contexto["variaveis"] + contexto["faturas"], 2)
+    contexto["saldo_livre"] = round(contexto["sal_liq"] - total_saidas, 2)
 
     col_titulo, col_btn = st.columns([4, 1])
     with col_titulo:
@@ -385,16 +391,46 @@ elif menu_selecionado == "Consultoria IA":
             st.session_state["conversas"]["1"]["mensagens"] = []
             st.rerun()
 
+    # --- NOVO MOTOR DE IA SIMULADO (Direto no app.py) ---
+    # Este motor cruza as palavras da sua pergunta com os dados reais do aplicativo.
+    def motor_ia_interno(pergunta, dados):
+        p = pergunta.lower()
+        
+        if "benefício" in p or "beneficio" in p or "auxílio" in p or "auxilio" in p:
+            if dados['beneficios'] == 0:
+                return "Analisando seus dados, notei que **você não possui nenhum benefício ou auxílio isento cadastrado** no momento (o valor está R$ 0,00). Você pode ajustar isso na aba 'Trabalhista & CLT'."
+            else:
+                return f"Você tem cadastrado o valor de **R$ {dados['beneficios']:,.2f}** em benefícios isentos mensais na sua folha."
+                
+        elif "salário" in p or "salario" in p or "ganho" in p:
+            return f"Seu salário bruto base está configurado em R$ {dados['salario_base']:,.2f}. Após a aplicação dos descontos oficiais e somando os seus benefícios, a sua remuneração líquida real disponível é de **R$ {dados['sal_liq']:,.2f}**."
+            
+        elif "despesa" in p or "gasto" in p or "fixo" in p or "variável" in p or "variavel" in p:
+            total_despesas = dados['fixos'] + dados['variaveis']
+            return f"No seu orçamento pessoal, as despesas somam **R$ {total_despesas:,.2f}**, sendo divididas em R$ {dados['fixos']:,.2f} para custos fixos e R$ {dados['variaveis']:,.2f} para variáveis."
+            
+        elif "fatura" in p or "cartão" in p or "cartao" in p or "crédito" in p:
+            return f"De acordo com a aba de Cartões de Crédito, a projeção atual das suas faturas totaliza **R$ {dados['faturas']:,.2f}** neste mês."
+            
+        elif "livre" in p or "sobra" in p or "investir" in p or "saldo" in p or "resumo" in p:
+            if dados['saldo_livre'] <= 0:
+                return f"Atenção: A projeção do seu saldo livre está negativa em **R$ {dados['saldo_livre']:,.2f}**. É recomendável entrar nas abas de Orçamento e Cartões para revisar os gastos variáveis e evitar o uso de limite."
+            else:
+                return f"Boas notícias! Seu dinheiro livre projetado após pagar todas as obrigações é de **R$ {dados['saldo_livre']:,.2f}**. Esse montante está livre para direcionamento em investimentos ou lazer."
+                
+        else:
+            return "Com base nos dados que você inseriu, estou monitorando seu fluxo de caixa. Como o nosso papo é focado em finanças, por favor me faça perguntas mais diretas sobre seus números, como:\n- *'Quanto eu recebo de benefício?'*\n- *'Qual meu saldo livre?'*\n- *'Como estão as minhas despesas?'*"
+
+
     with st.container(border=True):
         dados_ativos = st.session_state["conversas"]["1"]
 
         if not dados_ativos["mensagens"]:
             msg_boas_vindas = (
-                f"Olá! Analisei os dados que você preencheu nas outras abas. "
-                f"Vi que sua renda líquida é de **R$ {sal_liq:,.2f}** e, após todas as suas despesas e faturas, "
-                f"seu saldo livre atual projetado é de **R$ {saldo_livre:,.2f}**.\n\n"
-                "Como posso te ajudar a organizar suas finanças hoje? Você pode me pedir dicas de onde cortar gastos, "
-                "como investir esse saldo livre ou simular cenários!"
+                f"Olá! Eu sou o assistente do seu Sistema Financeiro.\n\n"
+                f"Analisei os dados das outras abas e vi que sua renda líquida é de **R$ {contexto['sal_liq']:,.2f}** e, após todas as obrigações, "
+                f"seu saldo livre atual projetado é de **R$ {contexto['saldo_livre']:,.2f}**.\n\n"
+                "Você pode me perguntar detalhes do seu orçamento. Tente algo como: *'Quanto eu recebo de benefício?'*"
             )
             dados_ativos["mensagens"].append({"role": "assistant", "content": msg_boas_vindas})
 
@@ -402,15 +438,16 @@ elif menu_selecionado == "Consultoria IA":
             with st.chat_message(mensagem["role"]):
                 st.markdown(mensagem["content"])
 
-        if prompt := st.chat_input("Pergunte sobre seus gastos, peça dicas de planejamento..."):
+        if prompt := st.chat_input("Pergunte sobre seus benefícios, salário, faturas..."):
             
             dados_ativos["mensagens"].append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
 
             with st.chat_message("assistant"):
-                with st.spinner("Pensando..."):
-                    resposta_gerada = responder_chat_ia(prompt, sal_liq, fixos, variaveis, faturas)
+                with st.spinner("Processando seus dados..."):
+                    # Agora usamos a função local e inteligente no lugar do import antigo
+                    resposta_gerada = motor_ia_interno(prompt, contexto)
                     st.markdown(resposta_gerada)
             
             dados_ativos["mensagens"].append({"role": "assistant", "content": resposta_gerada})
