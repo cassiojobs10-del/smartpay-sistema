@@ -133,6 +133,7 @@ if menu_selecionado == "Trabalhista & CLT":
             with col_he2:
                 horas_100 = st.number_input("Horas Extras 100% (Qtd)", min_value=0.0, value=0.0, step=1.0)
 
+    # Cálculo da Folha Mensal
     folha = calcular_clt(salario_base, jornada, dependentes, aplicar_irrf, horas_50, horas_100)
     
     st.session_state["salario_liquido"] = folha["salario_liquido"]
@@ -141,7 +142,7 @@ if menu_selecionado == "Trabalhista & CLT":
 
     st.write("")
     with st.container(border=True):
-        st.subheader("Composição da Remuneração")
+        st.subheader("Composição da Remuneração Mensal")
 
         if folha["total_horas_extras"] > 0:
             st.write(f"**Salário Bruto Total:** R$ {folha['salario_bruto_total']:,.2f}")
@@ -160,18 +161,67 @@ if menu_selecionado == "Trabalhista & CLT":
         st.write("")
         st.caption(f"FGTS Acumulado no Mês (8%): R$ {folha['fgts']:,.2f} — Valor recolhido integralmente pelo empregador.")
 
+    st.write("")
+    # NOVA ADIÇÃO: Simulação de Férias
+    with st.expander("Simular Recebimento de Férias"):
+        st.write("Demonstrativo do cálculo de Férias Integrais (30 dias) com terço constitucional.")
+        
+        # O cálculo de férias bruto é o Salário Base + 1/3 do Salário Base
+        ferias_bruto = salario_base + (salario_base / 3)
+        
+        # Como férias têm desconto de INSS e IRRF diferentes de um mês normal, 
+        # fazemos uma aproximação usando a função de cálculo da folha (usando o valor das férias como base)
+        desc_ferias = calcular_clt(ferias_bruto, 220, dependentes, aplicar_irrf, 0, 0)
+        
+        col_f1, col_f2, col_f3 = st.columns(3)
+        with col_f1:
+            st.metric("Férias Brutas", f"R$ {ferias_bruto:,.2f}")
+        with col_f2:
+            st.metric("Adicional 1/3", f"R$ {(salario_base / 3):,.2f}")
+        with col_f3:
+            st.metric("Líquido a Receber", f"R$ {desc_ferias['salario_liquido']:,.2f}", delta="Com descontos aplicados", delta_color="normal")
+
+
 # ==========================================
 # 2. ORÇAMENTO PESSOAL
 # ==========================================
 elif menu_selecionado == "Orçamento Pessoal":
     st.title("Orçamento Pessoal")
-    st.write("Gestão de despesas essenciais e saldo líquido disponível.")
+    st.write("Gestão de despesas essenciais, distribuição de renda e dinheiro livre.")
     st.divider()
 
     sal_liquido = st.session_state["salario_liquido"]
     hora_liq = st.session_state["hora_liquida"]
+    faturas_cartao = st.session_state["total_faturas"]
 
-    st.write(f"**Renda Disponível (Salário Líquido):** R$ {sal_liquido:,.2f}")
+    # NOVA ADIÇÃO: Painel de "Dinheiro Livre" no Topo
+    with st.container(border=True):
+        st.subheader("Caixa Disponível do Mês")
+        
+        despesas_atuais = st.session_state["total_fixo"] + st.session_state["total_var"] + faturas_cartao
+        dinheiro_livre = max(0.0, sal_liquido - despesas_atuais)
+        
+        # Cor de destaque se estiver no negativo ou muito baixo
+        delta_cor = "normal" if dinheiro_livre > (sal_liquido * 0.1) else "off"
+        if dinheiro_livre <= 0: delta_cor = "inverse"
+        
+        col_d1, col_d2 = st.columns([1, 1.5])
+        with col_d1:
+            st.metric("Free Money (Livre)", f"R$ {dinheiro_livre:,.2f}", delta=f"Renda Base: R$ {sal_liquido:,.2f}", delta_color=delta_cor)
+        with col_d2:
+            st.write("Distribuição Orçamentária:")
+            if sal_liquido > 0:
+                pct_fixo = (st.session_state['total_fixo'] / sal_liquido) * 100
+                pct_var = (st.session_state['total_var'] / sal_liquido) * 100
+                pct_cartao = (faturas_cartao / sal_liquido) * 100
+                pct_livre = (dinheiro_livre / sal_liquido) * 100
+                st.caption(f"Fixas: {pct_fixo:.1f}% | Variáveis: {pct_var:.1f}% | Cartões: {pct_cartao:.1f}% | **Livre: {pct_livre:.1f}%**")
+                # Barra de progresso visual do comprometimento de renda
+                st.progress(min(1.0, (despesas_atuais/sal_liquido)))
+            else:
+                st.caption("Aguardando entrada de receita.")
+
+    st.write("")
 
     with st.container(border=True):
         col_fixo, col_var = st.columns(2)
@@ -220,6 +270,7 @@ elif menu_selecionado == "Orçamento Pessoal":
                 horas = total_minutos // 60
                 minutos = total_minutos % 60
                 st.write(f"Para adquirir um item de **R$ {valor_compra:,.2f}**, o tempo de trabalho líquido correspondente é de **{horas} horas e {minutos} minutos**.")
+
 
 # ==========================================
 # 3. CARTÕES DE CRÉDITO
@@ -302,6 +353,7 @@ elif menu_selecionado == "Cartões de Crédito":
 
     st.write("")
     st.write(f"**Total Agregado de Faturas:** R$ {st.session_state['total_faturas']:,.2f}")
+
 
 # ==========================================
 # 4. CONSULTORIA IA
