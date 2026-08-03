@@ -112,18 +112,33 @@ if menu_selecionado == "Trabalhista & CLT":
 
     with st.container(border=True):
         st.subheader("Parâmetros do Salário")
+        
         col1, col2 = st.columns(2)
         with col1:
-            salario_base = st.number_input("Salário Bruto Base (R$)", min_value=1000.0, value=4500.0, step=100.0)
+            salario_base = st.number_input("Salário Bruto Base (R$)", min_value=1000.0, value=3000.0, step=100.0)
         with col2:
-            jornada = st.selectbox("Jornada Mensal (Horas)", options=[220, 180, 160], index=0)
+            beneficios = st.number_input(
+                "Benefícios Isentos (R$)", 
+                min_value=0.0, 
+                value=0.0, 
+                step=50.0,
+                help="Soma de Auxílio Alimentação, Refeição, Creche, etc. Valores que não sofrem desconto de INSS/IRRF."
+            )
 
-        col3, col4 = st.columns(2)
+        col3, col4, col5 = st.columns(3)
         with col3:
-            dependentes = st.number_input("Dependentes", min_value=0, value=0, step=1)
+            jornada = st.selectbox("Jornada Mensal (Horas)", options=[220, 200, 180, 150], index=0)
         with col4:
+            dependentes = st.number_input(
+                "Dependentes", 
+                min_value=0, 
+                value=0, 
+                step=1,
+                help="Quantidade de dependentes legais para abatimento no Imposto de Renda."
+            )
+        with col5:
             st.write("")
-            aplicar_irrf = st.toggle("Descontar IRRF na fonte", value=True)
+            aplicar_irrf = st.toggle("Descontar IRRF", value=True)
 
         horas_50, horas_100 = 0.0, 0.0
         with st.expander("Adicionar Horas Extras no Mês"):
@@ -133,44 +148,42 @@ if menu_selecionado == "Trabalhista & CLT":
             with col_he2:
                 horas_100 = st.number_input("Horas Extras 100% (Qtd)", min_value=0.0, value=0.0, step=1.0)
 
-    # Cálculo da Folha Mensal
+    # O motor de cálculo atende qualquer cidadão com base nos inputs
     folha = calcular_clt(salario_base, jornada, dependentes, aplicar_irrf, horas_50, horas_100)
     
-    st.session_state["salario_liquido"] = folha["salario_liquido"]
+    # O valor líquido real do usuário
+    salario_liquido_real = folha["salario_liquido"] + beneficios
+    salario_bruto_real = folha["salario_bruto_total"] + beneficios
+    
+    st.session_state["salario_liquido"] = salario_liquido_real
     st.session_state["hora_liquida"] = folha["hora_liquida"]
-    st.session_state["salario_bruto_total"] = folha["salario_bruto_total"]
+    st.session_state["salario_bruto_total"] = salario_bruto_real
 
     st.write("")
     with st.container(border=True):
         st.subheader("Composição da Remuneração Mensal")
 
-        if folha["total_horas_extras"] > 0:
-            st.write(f"**Salário Bruto Total:** R$ {folha['salario_bruto_total']:,.2f}")
+        if folha["total_horas_extras"] > 0 or beneficios > 0:
+            st.write(f"**Salário Bruto Total:** R$ {salario_bruto_real:,.2f}")
 
         card1, card2, card3 = st.columns(3)
         with card1:
-            st.metric("Salário Líquido", f"R$ {folha['salario_liquido']:,.2f}", delta=f"Hora real: R$ {folha['hora_liquida']:,.2f}")
+            st.metric("Salário Líquido", f"R$ {salario_liquido_real:,.2f}", delta=f"Hora real: R$ {folha['hora_liquida']:,.2f}")
         with card2:
             st.metric("Desconto INSS", f"R$ {folha['inss']:,.2f}")
         with card3:
-            if aplicar_irrf:
+            if aplicar_irrf and folha['irrf'] > 0:
                 st.metric("Desconto IRRF", f"R$ {folha['irrf']:,.2f}")
             else:
                 st.metric("Desconto IRRF", "R$ 0,00", delta="Isento", delta_color="off")
-
+                
         st.write("")
         st.caption(f"FGTS Acumulado no Mês (8%): R$ {folha['fgts']:,.2f} — Valor recolhido integralmente pelo empregador.")
 
     st.write("")
-    # NOVA ADIÇÃO: Simulação de Férias
     with st.expander("Simular Recebimento de Férias"):
         st.write("Demonstrativo do cálculo de Férias Integrais (30 dias) com terço constitucional.")
-        
-        # O cálculo de férias bruto é o Salário Base + 1/3 do Salário Base
         ferias_bruto = salario_base + (salario_base / 3)
-        
-        # Como férias têm desconto de INSS e IRRF diferentes de um mês normal, 
-        # fazemos uma aproximação usando a função de cálculo da folha (usando o valor das férias como base)
         desc_ferias = calcular_clt(ferias_bruto, 220, dependentes, aplicar_irrf, 0, 0)
         
         col_f1, col_f2, col_f3 = st.columns(3)
@@ -179,6 +192,7 @@ if menu_selecionado == "Trabalhista & CLT":
         with col_f2:
             st.metric("Adicional 1/3", f"R$ {(salario_base / 3):,.2f}")
         with col_f3:
+            # Note que não somamos os benefícios aqui, pois VA/VR costumam ser cortados nas férias
             st.metric("Líquido a Receber", f"R$ {desc_ferias['salario_liquido']:,.2f}", delta="Com descontos aplicados", delta_color="normal")
 
 
@@ -194,14 +208,12 @@ elif menu_selecionado == "Orçamento Pessoal":
     hora_liq = st.session_state["hora_liquida"]
     faturas_cartao = st.session_state["total_faturas"]
 
-    # NOVA ADIÇÃO: Painel de "Dinheiro Livre" no Topo
     with st.container(border=True):
         st.subheader("Caixa Disponível do Mês")
         
         despesas_atuais = st.session_state["total_fixo"] + st.session_state["total_var"] + faturas_cartao
         dinheiro_livre = max(0.0, sal_liquido - despesas_atuais)
         
-        # Cor de destaque se estiver no negativo ou muito baixo
         delta_cor = "normal" if dinheiro_livre > (sal_liquido * 0.1) else "off"
         if dinheiro_livre <= 0: delta_cor = "inverse"
         
@@ -216,7 +228,6 @@ elif menu_selecionado == "Orçamento Pessoal":
                 pct_cartao = (faturas_cartao / sal_liquido) * 100
                 pct_livre = (dinheiro_livre / sal_liquido) * 100
                 st.caption(f"Fixas: {pct_fixo:.1f}% | Variáveis: {pct_var:.1f}% | Cartões: {pct_cartao:.1f}% | **Livre: {pct_livre:.1f}%**")
-                # Barra de progresso visual do comprometimento de renda
                 st.progress(min(1.0, (despesas_atuais/sal_liquido)))
             else:
                 st.caption("Aguardando entrada de receita.")
