@@ -56,31 +56,37 @@ hr {
 </style>
 """, unsafe_allow_html=True)
 
-# Inicializando estado financeiro global
-if "salario_liquido" not in st.session_state:
-    st.session_state["salario_liquido"] = 3802.43
-if "hora_liquida" not in st.session_state:
-    st.session_state["hora_liquida"] = 17.28
-if "salario_bruto_total" not in st.session_state:
-    st.session_state["salario_bruto_total"] = 4500.00
-if "salario_base" not in st.session_state:
-    st.session_state["salario_base"] = 3000.00
-if "beneficios" not in st.session_state:
-    st.session_state["beneficios"] = 0.00
-if "total_fixo" not in st.session_state:
-    st.session_state["total_fixo"] = 2050.00
-if "total_var" not in st.session_state:
-    st.session_state["total_var"] = 950.00
-if "total_faturas" not in st.session_state:
-    st.session_state["total_faturas"] = 589.90
+# ==========================================
+# INICIALIZAÇÃO DA MEMÓRIA GLOBAL (SESSION STATE)
+# ==========================================
+valores_padrao = {
+    # CLT
+    "salario_base": 3000.00, "beneficios": 0.00, "jornada": 220, 
+    "dependentes": 0, "aplicar_irrf": True, "horas_50": 0.0, "horas_100": 0.0,
+    # Orçamento Pessoal
+    "moradia": 1200.0, "contas": 300.0, "transporte": 350.0, "outros_fixos": 200.0,
+    "alimentacao": 400.0, "lazer": 250.0, "compras": 300.0, "valor_simulacao": 150.0,
+    # Cartões de Crédito
+    "nome_c1": "Nubank", "limite_c1": 5000.0, "base_c1": 300.0, "fech_c1": 25, "venc_c1": 5,
+    "nome_c2": "XP / Itaú", "limite_c2": 3000.0, "base_c2": 0.0, "fech_c2": 10, "venc_c2": 20,
+    # Consolidados do Motor
+    "salario_liquido": 0.0, "hora_liquida": 0.0, "salario_bruto_total": 0.0,
+    "total_fixo": 0.0, "total_var": 0.0, "total_faturas": 0.0
+}
 
-# Estrutura de conversas simplificada para o novo Chat
+# Salva os valores padrões na memória se for a primeira vez
+for chave, valor in valores_padrao.items():
+    if chave not in st.session_state:
+        st.session_state[chave] = valor
+
+# Tabelas e Chat requerem estruturas específicas na memória
+if "df_c1_data" not in st.session_state:
+    st.session_state["df_c1_data"] = pd.DataFrame([{"Descrição": "Supermercado", "Valor (R$)": 250.00}, {"Descrição": "Assinatura de Softwares", "Valor (R$)": 39.90}])
+if "df_c2_data" not in st.session_state:
+    st.session_state["df_c2_data"] = pd.DataFrame([{"Descrição": "Combustível", "Valor (R$)": 150.00}])
 if "conversas" not in st.session_state:
-    st.session_state["conversas"] = {
-        "1": {
-            "mensagens": []
-        }
-    }
+    st.session_state["conversas"] = {"1": {"mensagens": []}}
+
 
 # ==========================================
 # BARRA LATERAL (MENU)
@@ -90,12 +96,7 @@ st.sidebar.caption("Gestão Patrimonial e CLT")
 
 menu_selecionado = st.sidebar.radio(
     "Navegação:",
-    [
-        "Trabalhista & CLT",
-        "Orçamento Pessoal",
-        "Cartões de Crédito",
-        "Consultoria IA"
-    ]
+    ["Trabalhista & CLT", "Orçamento Pessoal", "Cartões de Crédito", "Consultoria IA"]
 )
 
 st.sidebar.divider()
@@ -115,43 +116,39 @@ if menu_selecionado == "Trabalhista & CLT":
         
         col1, col2 = st.columns(2)
         with col1:
-            salario_base = st.number_input("Salário Bruto Base (R$)", min_value=1000.0, value=st.session_state["salario_base"], step=100.0)
+            salario_base = st.number_input("Salário Bruto Base (R$)", min_value=1000.0, value=float(st.session_state["salario_base"]), step=100.0)
+            st.session_state["salario_base"] = salario_base
         with col2:
-            beneficios = st.number_input(
-                "Benefícios Isentos (R$)", 
-                min_value=0.0, 
-                value=st.session_state["beneficios"], 
-                step=50.0,
-                help="Soma de Auxílio Alimentação, Refeição, Creche, etc. Valores que não sofrem desconto de INSS/IRRF."
-            )
+            beneficios = st.number_input("Benefícios Isentos (R$)", min_value=0.0, value=float(st.session_state["beneficios"]), step=50.0, help="Soma de Auxílio Alimentação, Refeição, Creche, etc.")
+            st.session_state["beneficios"] = beneficios
 
         col3, col4, col5 = st.columns(3)
         with col3:
-            jornada = st.selectbox("Jornada Mensal (Horas)", options=[220, 200, 180, 150], index=0)
+            opcoes_jornada = [220, 200, 180, 150]
+            jornada = st.selectbox("Jornada Mensal (Horas)", options=opcoes_jornada, index=opcoes_jornada.index(st.session_state["jornada"]))
+            st.session_state["jornada"] = jornada
         with col4:
-            dependentes = st.number_input("Dependentes", min_value=0, value=0, step=1)
+            dependentes = st.number_input("Dependentes", min_value=0, value=int(st.session_state["dependentes"]), step=1)
+            st.session_state["dependentes"] = dependentes
         with col5:
             st.write("")
-            aplicar_irrf = st.toggle("Descontar IRRF", value=True)
+            aplicar_irrf = st.toggle("Descontar IRRF", value=bool(st.session_state["aplicar_irrf"]))
+            st.session_state["aplicar_irrf"] = aplicar_irrf
 
-        horas_50, horas_100 = 0.0, 0.0
         with st.expander("Adicionar Horas Extras no Mês"):
             col_he1, col_he2 = st.columns(2)
             with col_he1:
-                horas_50 = st.number_input("Horas Extras 50% (Qtd)", min_value=0.0, value=0.0, step=1.0)
+                horas_50 = st.number_input("Horas Extras 50% (Qtd)", min_value=0.0, value=float(st.session_state["horas_50"]), step=1.0)
+                st.session_state["horas_50"] = horas_50
             with col_he2:
-                horas_100 = st.number_input("Horas Extras 100% (Qtd)", min_value=0.0, value=0.0, step=1.0)
+                horas_100 = st.number_input("Horas Extras 100% (Qtd)", min_value=0.0, value=float(st.session_state["horas_100"]), step=1.0)
+                st.session_state["horas_100"] = horas_100
 
-    # O motor de cálculo atende qualquer cidadão com base nos inputs
     folha = calcular_clt(salario_base, jornada, dependentes, aplicar_irrf, horas_50, horas_100)
     
-    # O valor líquido real do usuário
     salario_liquido_real = folha["salario_liquido"] + beneficios
     salario_bruto_real = folha["salario_bruto_total"] + beneficios
     
-    # Salvando os dados na sessão para a IA enxergar
-    st.session_state["salario_base"] = salario_base
-    st.session_state["beneficios"] = beneficios
     st.session_state["salario_liquido"] = salario_liquido_real
     st.session_state["hora_liquida"] = folha["hora_liquida"]
     st.session_state["salario_bruto_total"] = salario_bruto_real
@@ -234,16 +231,20 @@ elif menu_selecionado == "Orçamento Pessoal":
         col_fixo, col_var = st.columns(2)
         with col_fixo:
             st.markdown("#### Despesas Fixas")
-            moradia = st.number_input("Aluguel / Condomínio", min_value=0.0, value=1200.0, step=50.0)
-            contas = st.number_input("Contas Básicas (Luz, Água, Internet)", min_value=0.0, value=300.0, step=20.0)
-            transporte = st.number_input("Transporte / Combustível", min_value=0.0, value=350.0, step=20.0)
-            outros_fixos = st.number_input("Outras Despesas Fixas", min_value=0.0, value=200.0, step=20.0)
+            moradia = st.number_input("Aluguel / Condomínio", min_value=0.0, value=float(st.session_state["moradia"]), step=50.0)
+            contas = st.number_input("Contas Básicas", min_value=0.0, value=float(st.session_state["contas"]), step=20.0)
+            transporte = st.number_input("Transporte", min_value=0.0, value=float(st.session_state["transporte"]), step=20.0)
+            outros_fixos = st.number_input("Outras Fixas", min_value=0.0, value=float(st.session_state["outros_fixos"]), step=20.0)
+            
+            st.session_state.update({"moradia": moradia, "contas": contas, "transporte": transporte, "outros_fixos": outros_fixos})
 
         with col_var:
             st.markdown("#### Despesas Variáveis")
-            alimentacao = st.number_input("Alimentação / Delivery", min_value=0.0, value=400.0, step=20.0)
-            lazer = st.number_input("Lazer e Assinaturas", min_value=0.0, value=250.0, step=20.0)
-            compras = st.number_input("Imprevistos e Outros", min_value=0.0, value=300.0, step=20.0)
+            alimentacao = st.number_input("Alimentação / Delivery", min_value=0.0, value=float(st.session_state["alimentacao"]), step=20.0)
+            lazer = st.number_input("Lazer", min_value=0.0, value=float(st.session_state["lazer"]), step=20.0)
+            compras = st.number_input("Imprevistos", min_value=0.0, value=float(st.session_state["compras"]), step=20.0)
+            
+            st.session_state.update({"alimentacao": alimentacao, "lazer": lazer, "compras": compras})
 
     total_fixo = round(moradia + contas + transporte + outros_fixos, 2)
     total_var = round(alimentacao + lazer + compras, 2)
@@ -270,7 +271,8 @@ elif menu_selecionado == "Orçamento Pessoal":
         st.subheader("Custo em Horas de Trabalho")
         col_gasto1, col_gasto2 = st.columns([1, 2])
         with col_gasto1:
-            valor_compra = st.number_input("Valor para simular (R$)", min_value=1.0, value=150.0, step=10.0)
+            valor_compra = st.number_input("Valor para simular (R$)", min_value=1.0, value=float(st.session_state["valor_simulacao"]), step=10.0)
+            st.session_state["valor_simulacao"] = valor_compra
         with col_gasto2:
             if hora_liq > 0:
                 total_minutos = round((valor_compra / hora_liq) * 60)
@@ -292,25 +294,21 @@ elif menu_selecionado == "Cartões de Crédito":
     with aba1:
         with st.container(border=True):
             st.subheader("Cartão Principal")
-            nome_c1 = st.text_input("Identificação", value="Nubank", key="nome_c1")
+            nome_c1 = st.text_input("Identificação", value=st.session_state["nome_c1"], key="in_nome_c1")
+            
             col_c1_a, col_c1_b = st.columns(2)
             with col_c1_a:
-                limite_c1 = st.number_input("Limite Total (R$)", min_value=0.0, value=5000.0, step=100.0, key="lim_c1")
-                fatura_base_c1 = st.number_input("Parcelas em Andamento (R$)", min_value=0.0, value=300.0, step=50.0, key="base_c1")
+                limite_c1 = st.number_input("Limite Total (R$)", min_value=0.0, value=float(st.session_state["limite_c1"]), step=100.0)
+                fatura_base_c1 = st.number_input("Parcelas em Andamento (R$)", min_value=0.0, value=float(st.session_state["base_c1"]), step=50.0)
             with col_c1_b:
-                fechamento_c1 = st.number_input("Dia do Fechamento", min_value=1, max_value=31, value=25, key="fech_c1")
-                vencimento_c1 = st.number_input("Dia do Vencimento", min_value=1, max_value=31, value=5, key="venc_c1")
+                fechamento_c1 = st.number_input("Dia do Fechamento", min_value=1, max_value=31, value=int(st.session_state["fech_c1"]))
+                vencimento_c1 = st.number_input("Dia do Vencimento", min_value=1, max_value=31, value=int(st.session_state["venc_c1"]))
+
+            st.session_state.update({"nome_c1": nome_c1, "limite_c1": limite_c1, "base_c1": fatura_base_c1, "fech_c1": fechamento_c1, "venc_c1": vencimento_c1})
 
             st.markdown(f"**Registros do Mês — {nome_c1}**")
-            df_c1 = st.data_editor(
-                pd.DataFrame([
-                    {"Descrição": "Supermercado", "Valor (R$)": 250.00},
-                    {"Descrição": "Assinatura de Softwares", "Valor (R$)": 39.90}
-                ]),
-                num_rows="dynamic",
-                use_container_width=True,
-                key="tabela_c1"
-            )
+            df_c1 = st.data_editor(st.session_state["df_c1_data"], num_rows="dynamic", use_container_width=True)
+            st.session_state["df_c1_data"] = df_c1
             
             fatura_total_c1 = round(fatura_base_c1 + df_c1["Valor (R$)"].sum(), 2)
             limite_disp_c1 = max(0.0, limite_c1 - fatura_total_c1)
@@ -327,22 +325,21 @@ elif menu_selecionado == "Cartões de Crédito":
     with aba2:
         with st.container(border=True):
             st.subheader("Cartão Secundário")
-            nome_c2 = st.text_input("Identificação", value="XP / Itaú", key="nome_c2")
+            nome_c2 = st.text_input("Identificação", value=st.session_state["nome_c2"], key="in_nome_c2")
+            
             col_c2_a, col_c2_b = st.columns(2)
             with col_c2_a:
-                limite_c2 = st.number_input("Limite Total (R$)", min_value=0.0, value=3000.0, step=100.0, key="lim_c2")
-                fatura_base_c2 = st.number_input("Parcelas em Andamento (R$)", min_value=0.0, value=0.0, step=50.0, key="base_c2")
+                limite_c2 = st.number_input("Limite Total (R$)", min_value=0.0, value=float(st.session_state["limite_c2"]), step=100.0, key="in_lim_c2")
+                fatura_base_c2 = st.number_input("Parcelas em Andamento (R$)", min_value=0.0, value=float(st.session_state["base_c2"]), step=50.0, key="in_base_c2")
             with col_c2_b:
-                fechamento_c2 = st.number_input("Dia do Fechamento", min_value=1, max_value=31, value=10, key="fech_c2")
-                vencimento_c2 = st.number_input("Dia do Vencimento", min_value=1, max_value=31, value=20, key="venc_c2")
+                fechamento_c2 = st.number_input("Dia do Fechamento", min_value=1, max_value=31, value=int(st.session_state["fech_c2"]), key="in_fech_c2")
+                vencimento_c2 = st.number_input("Dia do Vencimento", min_value=1, max_value=31, value=int(st.session_state["venc_c2"]), key="in_venc_c2")
+
+            st.session_state.update({"nome_c2": nome_c2, "limite_c2": limite_c2, "base_c2": fatura_base_c2, "fech_c2": fechamento_c2, "venc_c2": vencimento_c2})
 
             st.markdown(f"**Registros do Mês — {nome_c2}**")
-            df_c2 = st.data_editor(
-                pd.DataFrame([{"Descrição": "Combustível", "Valor (R$)": 150.00}]),
-                num_rows="dynamic",
-                use_container_width=True,
-                key="tabela_c2"
-            )
+            df_c2 = st.data_editor(st.session_state["df_c2_data"], num_rows="dynamic", use_container_width=True)
+            st.session_state["df_c2_data"] = df_c2
             
             fatura_total_c2 = round(fatura_base_c2 + df_c2["Valor (R$)"].sum(), 2)
             limite_disp_c2 = max(0.0, limite_c2 - fatura_total_c2)
@@ -370,7 +367,6 @@ elif menu_selecionado == "Consultoria IA":
     st.write("Converse de forma natural sobre o seu cenário financeiro.")
     st.divider()
 
-    # Resgatando o contexto completo da sessão
     contexto = {
         "sal_liq": st.session_state["salario_liquido"],
         "salario_base": st.session_state["salario_base"],
@@ -391,36 +387,27 @@ elif menu_selecionado == "Consultoria IA":
             st.session_state["conversas"]["1"]["mensagens"] = []
             st.rerun()
 
-    # --- NOVO MOTOR DE IA SIMULADO (Direto no app.py) ---
-    # Este motor cruza as palavras da sua pergunta com os dados reais do aplicativo.
     def motor_ia_interno(pergunta, dados):
         p = pergunta.lower()
-        
         if "benefício" in p or "beneficio" in p or "auxílio" in p or "auxilio" in p:
             if dados['beneficios'] == 0:
                 return "Analisando seus dados, notei que **você não possui nenhum benefício ou auxílio isento cadastrado** no momento (o valor está R$ 0,00). Você pode ajustar isso na aba 'Trabalhista & CLT'."
             else:
                 return f"Você tem cadastrado o valor de **R$ {dados['beneficios']:,.2f}** em benefícios isentos mensais na sua folha."
-                
         elif "salário" in p or "salario" in p or "ganho" in p:
             return f"Seu salário bruto base está configurado em R$ {dados['salario_base']:,.2f}. Após a aplicação dos descontos oficiais e somando os seus benefícios, a sua remuneração líquida real disponível é de **R$ {dados['sal_liq']:,.2f}**."
-            
         elif "despesa" in p or "gasto" in p or "fixo" in p or "variável" in p or "variavel" in p:
             total_despesas = dados['fixos'] + dados['variaveis']
             return f"No seu orçamento pessoal, as despesas somam **R$ {total_despesas:,.2f}**, sendo divididas em R$ {dados['fixos']:,.2f} para custos fixos e R$ {dados['variaveis']:,.2f} para variáveis."
-            
         elif "fatura" in p or "cartão" in p or "cartao" in p or "crédito" in p:
             return f"De acordo com a aba de Cartões de Crédito, a projeção atual das suas faturas totaliza **R$ {dados['faturas']:,.2f}** neste mês."
-            
         elif "livre" in p or "sobra" in p or "investir" in p or "saldo" in p or "resumo" in p:
             if dados['saldo_livre'] <= 0:
                 return f"Atenção: A projeção do seu saldo livre está negativa em **R$ {dados['saldo_livre']:,.2f}**. É recomendável entrar nas abas de Orçamento e Cartões para revisar os gastos variáveis e evitar o uso de limite."
             else:
                 return f"Boas notícias! Seu dinheiro livre projetado após pagar todas as obrigações é de **R$ {dados['saldo_livre']:,.2f}**. Esse montante está livre para direcionamento em investimentos ou lazer."
-                
         else:
             return "Com base nos dados que você inseriu, estou monitorando seu fluxo de caixa. Como o nosso papo é focado em finanças, por favor me faça perguntas mais diretas sobre seus números, como:\n- *'Quanto eu recebo de benefício?'*\n- *'Qual meu saldo livre?'*\n- *'Como estão as minhas despesas?'*"
-
 
     with st.container(border=True):
         dados_ativos = st.session_state["conversas"]["1"]
@@ -439,14 +426,12 @@ elif menu_selecionado == "Consultoria IA":
                 st.markdown(mensagem["content"])
 
         if prompt := st.chat_input("Pergunte sobre seus benefícios, salário, faturas..."):
-            
             dados_ativos["mensagens"].append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
 
             with st.chat_message("assistant"):
                 with st.spinner("Processando seus dados..."):
-                    # Agora usamos a função local e inteligente no lugar do import antigo
                     resposta_gerada = motor_ia_interno(prompt, contexto)
                     st.markdown(resposta_gerada)
             
