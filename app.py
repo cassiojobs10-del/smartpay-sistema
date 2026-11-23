@@ -11,6 +11,7 @@ from flask import (
     session,
     url_for,
 )
+from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "sgp-smartpay-chave-secreta-2026")
@@ -44,6 +45,21 @@ def calcular_esforco(
     )
 
 
+def verificar_credencial_usuario(user_row, senha_informada):
+    senha_digitada = str(senha_informada or "").strip()
+    if not senha_digitada:
+        return False
+
+    senha_hash = (
+        user_row["senha_hash"] if "senha_hash" in user_row.keys() else None
+    )
+    if senha_hash:
+        return check_password_hash(senha_hash, senha_digitada)
+
+    data_nasc = str(user_row["data_nascimento"] or "").strip()
+    return data_nasc != "" and data_nasc == senha_digitada
+
+
 def init_db():
     with get_db_connection() as conn:
         conn.execute(
@@ -54,10 +70,19 @@ def init_db():
                 nome TEXT NOT NULL,
                 cargo TEXT NOT NULL DEFAULT 'Analista',
                 data_nascimento TEXT NOT NULL,
+                senha_hash TEXT,
                 is_admin INTEGER NOT NULL DEFAULT 0
             )
             """
         )
+
+        # Migração segura caso a tabela já exista sem a coluna senha_hash
+        colunas_colab = [
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(colaboradores)").fetchall()
+        ]
+        if "senha_hash" not in colunas_colab:
+            conn.execute("ALTER TABLE colaboradores ADD COLUMN senha_hash TEXT")
 
         conn.execute(
             """
@@ -96,15 +121,15 @@ def init_db():
 
         # Garante sempre a existência e integridade do Administrador Supremo
         admin_existente = conn.execute(
-            "SELECT id FROM colaboradores WHERE matricula = ?",
+            "SELECT id, senha_hash FROM colaboradores WHERE matricula = ?",
             (ADMIN_MATRICULA_SUPREMA,),
         ).fetchone()
 
         if not admin_existente:
             conn.execute(
                 """
-                INSERT INTO colaboradores (matricula, nome, cargo, data_nascimento, is_admin)
-                VALUES (?, ?, ?, ?, 1)
+                INSERT INTO colaboradores (matricula, nome, cargo, data_nascimento, senha_hash, is_admin)
+                VALUES (?, ?, ?, ?, NULL, 1)
                 """,
                 (
                     ADMIN_MATRICULA_SUPREMA,
@@ -180,19 +205,19 @@ def login():
     with get_db_connection() as conn:
         user = conn.execute(
             """
-            SELECT matricula, nome, cargo, data_nascimento, is_admin
+            SELECT matricula, nome, cargo, data_nascimento, senha_hash, is_admin
             FROM colaboradores
             WHERE matricula = ?
             """,
             (usuario,),
         ).fetchone()
 
-    if not user or user["data_nascimento"].strip() != senha:
+    if not user or not verificar_credencial_usuario(user, senha):
         return (
             jsonify(
                 {
                     "status": "erro",
-                    "mensagem": "Matrícula ou data de nascimento incorretos.",
+                    "mensagem": "Matrícula ou senha incorretos.",
                 }
             ),
             401,
@@ -204,6 +229,7 @@ def login():
     session["nome"] = ADMIN_NOME_SUPREMO if is_supremo else user["nome"]
     session["cargo"] = user["cargo"]
     session["is_admin"] = 1 if (is_supremo or int(user["is_admin"]) == 1) else 0
+    session["tem_senha_personalizada"] = bool(user["senha_hash"])
 
     return jsonify({"status": "sucesso", "redirect": url_for("index")})
 
@@ -223,6 +249,7 @@ def index():
         usuario_nome=session.get("nome"),
         usuario_cargo=session.get("cargo"),
         is_admin=bool(session.get("is_admin")),
+        tem_senha_personalizada=bool(session.get("tem_senha_personalizada")),
     )
 
 
@@ -235,6 +262,72 @@ def api_sessao():
             "nome": session.get("nome"),
             "cargo": session.get("cargo"),
             "is_admin": bool(session.get("is_admin")),
+            "tem_senha_personalizada": bool(
+                session.get("tem_senha_personalizada")
+            ),
+        }
+    )
+
+
+@app.route("/api/minha-senha", methods=["POST"])
+@login_required
+def api_minha_senha():
+    matricula_atual = session.get("matricula")
+    data = request.get_json(silent=True) or {}
+    senha_atual = str(data.get("senha_atual", "")).strip()
+    nova_senha = str(data.get("nova_senha", "")).strip()
+
+    if not senha_atual or not nova_senha:
+        return (
+            jsonify(
+                {
+                    "erro": "Informe a senha atual e a nova senha personalizada."
+                }
+            ),
+            400,
+        )
+
+    if len(nova_senha) < 4:
+        return (
+            jsonify(
+                {
+                    "erro": "A nova senha deve ter pelo menos 4 caracteres."
+                }
+            ),
+            400,
+        )
+
+    with get_db_connection() as conn:
+        user = conn.execute(
+            """
+            SELECT id, matricula, data_nascimento, senha_hash
+            FROM colaboradores
+            WHERE matricula = ?
+            """,
+            (matricula_atual,),
+        ).fetchone()
+
+        if not user:
+            return jsonify({"erro": "Usuário não encontrado."}), 404
+
+        if not verificar_credencial_usuario(user, senha_atual):
+            return (
+                jsonify({"erro": "A senha atual informada está incorreta."}),
+                401,
+            )
+
+        novo_hash = generate_password_hash(nova_senha)
+        conn.execute(
+            "UPDATE colaboradores SET senha_hash = ? WHERE matricula = ?",
+            (novo_hash, matricula_atual),
+        )
+        conn.commit()
+
+    session["tem_senha_personalizada"] = True
+    return jsonify(
+        {
+            "status": "sucesso",
+            "mensagem": "Senha personalizada atualizada com sucesso.",
         }
     )
 
@@ -643,7 +736,7 @@ def api_ocorrencia_item(ocorrencia_id):
 
 
 # ==========================================================
-# GESTÃO DE COLABORADORES (APENAS ADMIN + BLINDAGEM DO 12345)
+# GESTÃO DE COLABORADORES (APENAS ADMIN + SENHA PERSONALIZADA)
 # ==========================================================
 @app.route("/api/colaboradores", methods=["GET", "POST"])
 @login_required
@@ -653,18 +746,24 @@ def api_colaboradores():
         if request.method == "GET":
             rows = conn.execute(
                 """
-                SELECT id, matricula, nome, cargo, data_nascimento, is_admin
+                SELECT id, matricula, nome, cargo, data_nascimento, senha_hash, is_admin
                 FROM colaboradores
                 ORDER BY is_admin DESC, nome ASC
                 """
             ).fetchall()
-            return jsonify([dict(row) for row in rows])
+            resultado = []
+            for row in rows:
+                item = dict(row)
+                item["tem_senha_personalizada"] = bool(item.pop("senha_hash", None))
+                resultado.append(item)
+            return jsonify(resultado)
 
         data = request.get_json(silent=True) or {}
         matricula = str(data.get("matricula", "")).strip()
         nome = str(data.get("nome", "")).strip()
         cargo = str(data.get("cargo", "Analista")).strip() or "Analista"
         data_nascimento = str(data.get("data_nascimento", "")).strip()
+        nova_senha = str(data.get("nova_senha", "")).strip()
         is_admin_novo = 1 if int(data.get("is_admin", 0) or 0) == 1 else 0
 
         if not matricula or not nome or not data_nascimento:
@@ -677,16 +776,28 @@ def api_colaboradores():
                 400,
             )
 
+        if nova_senha and len(nova_senha) < 4:
+            return (
+                jsonify(
+                    {
+                        "erro": "A senha personalizada deve ter pelo menos 4 caracteres."
+                    }
+                ),
+                400,
+            )
+
         if matricula == ADMIN_MATRICULA_SUPREMA:
             is_admin_novo = 1
+
+        senha_hash = generate_password_hash(nova_senha) if nova_senha else None
 
         try:
             cursor = conn.execute(
                 """
-                INSERT INTO colaboradores (matricula, nome, cargo, data_nascimento, is_admin)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO colaboradores (matricula, nome, cargo, data_nascimento, senha_hash, is_admin)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (matricula, nome, cargo, data_nascimento, is_admin_novo),
+                (matricula, nome, cargo, data_nascimento, senha_hash, is_admin_novo),
             )
             conn.commit()
         except sqlite3.IntegrityError:
@@ -697,13 +808,17 @@ def api_colaboradores():
 
         novo = conn.execute(
             """
-            SELECT id, matricula, nome, cargo, data_nascimento, is_admin
+            SELECT id, matricula, nome, cargo, data_nascimento, senha_hash, is_admin
             FROM colaboradores
             WHERE id = ?
             """,
             (cursor.lastrowid,),
         ).fetchone()
-        return jsonify(dict(novo)), 201
+        novo_dict = dict(novo)
+        novo_dict["tem_senha_personalizada"] = bool(
+            novo_dict.pop("senha_hash", None)
+        )
+        return jsonify(novo_dict), 201
 
 
 @app.route("/api/colaboradores/<int:colab_id>", methods=["PUT", "DELETE"])
@@ -718,8 +833,8 @@ def api_colaborador_item(colab_id):
         if not colab:
             return jsonify({"erro": "Colaborador não encontrado."}), 404
 
-        if colab["matricula"] == ADMIN_MATRICULA_SUPREMA:
-            if request.method == "DELETE":
+        if request.method == "DELETE":
+            if colab["matricula"] == ADMIN_MATRICULA_SUPREMA:
                 return (
                     jsonify(
                         {
@@ -728,35 +843,6 @@ def api_colaborador_item(colab_id):
                     ),
                     403,
                 )
-
-            data = request.get_json(silent=True) or {}
-            nome = str(data.get("nome", colab["nome"])).strip() or colab["nome"]
-            cargo = str(data.get("cargo", colab["cargo"])).strip() or colab["cargo"]
-            data_nascimento = (
-                str(data.get("data_nascimento", colab["data_nascimento"])).strip()
-                or colab["data_nascimento"]
-            )
-
-            conn.execute(
-                """
-                UPDATE colaboradores
-                SET nome = ?, cargo = ?, data_nascimento = ?, is_admin = 1
-                WHERE id = ?
-                """,
-                (nome, cargo, data_nascimento, colab_id),
-            )
-            conn.commit()
-            atualizado = conn.execute(
-                """
-                SELECT id, matricula, nome, cargo, data_nascimento, is_admin
-                FROM colaboradores
-                WHERE id = ?
-                """,
-                (colab_id,),
-            ).fetchone()
-            return jsonify(dict(atualizado))
-
-        if request.method == "DELETE":
             conn.execute("DELETE FROM colaboradores WHERE id = ?", (colab_id,))
             conn.commit()
             return jsonify({"status": "excluido", "id": colab_id})
@@ -768,29 +854,74 @@ def api_colaborador_item(colab_id):
             str(data.get("data_nascimento", colab["data_nascimento"])).strip()
             or colab["data_nascimento"]
         )
-        is_admin_atualizado = (
-            1 if int(data.get("is_admin", colab["is_admin"]) or 0) == 1 else 0
+
+        if colab["matricula"] == ADMIN_MATRICULA_SUPREMA:
+            is_admin_atualizado = 1
+        else:
+            is_admin_atualizado = (
+                1 if int(data.get("is_admin", colab["is_admin"]) or 0) == 1 else 0
+            )
+
+        # Tratamento de senha personalizada definida/redefinida pelo Admin:
+        # - Se "nova_senha" vier preenchida: define/atualiza o hash da senha personalizada.
+        # - Se "resetar_senha" for True: remove senha_hash e volta a usar data_nascimento.
+        # - Caso contrário: mantém o senha_hash atual.
+        senha_hash_atual = (
+            colab["senha_hash"] if "senha_hash" in colab.keys() else None
         )
+        if "nova_senha" in data and str(data.get("nova_senha") or "").strip() != "":
+            nova_senha = str(data.get("nova_senha")).strip()
+            if len(nova_senha) < 4:
+                return (
+                    jsonify(
+                        {
+                            "erro": "A nova senha deve ter pelo menos 4 caracteres."
+                        }
+                    ),
+                    400,
+                )
+            senha_hash_final = generate_password_hash(nova_senha)
+        elif bool(data.get("resetar_senha", False)):
+            senha_hash_final = None
+        else:
+            senha_hash_final = senha_hash_atual
 
         conn.execute(
             """
             UPDATE colaboradores
-            SET nome = ?, cargo = ?, data_nascimento = ?, is_admin = ?
+            SET nome = ?, cargo = ?, data_nascimento = ?, senha_hash = ?, is_admin = ?
             WHERE id = ?
             """,
-            (nome, cargo, data_nascimento, is_admin_atualizado, colab_id),
+            (
+                nome,
+                cargo,
+                data_nascimento,
+                senha_hash_final,
+                is_admin_atualizado,
+                colab_id,
+            ),
         )
         conn.commit()
 
+        if colab["matricula"] == session.get("matricula"):
+            session["nome"] = nome
+            session["cargo"] = cargo
+            session["is_admin"] = is_admin_atualizado
+            session["tem_senha_personalizada"] = bool(senha_hash_final)
+
         atualizado = conn.execute(
             """
-            SELECT id, matricula, nome, cargo, data_nascimento, is_admin
+            SELECT id, matricula, nome, cargo, data_nascimento, senha_hash, is_admin
             FROM colaboradores
             WHERE id = ?
             """,
             (colab_id,),
         ).fetchone()
-        return jsonify(dict(atualizado))
+        atualizado_dict = dict(atualizado)
+        atualizado_dict["tem_senha_personalizada"] = bool(
+            atualizado_dict.pop("senha_hash", None)
+        )
+        return jsonify(atualizado_dict)
 
 
 # ==========================================================
@@ -888,7 +1019,6 @@ def api_bi():
             sum(float(o["tempo_impacto"] or 0) for o in ocorrencias_list), 2
         )
 
-        # Agrupamento por colaborador (drill-down)
         mapa_colab = {}
         for r in remessas_list:
             mat = r["matricula_usuario"]
@@ -927,7 +1057,6 @@ def api_bi():
                 2,
             )
 
-        # Agrupamento por motivo de ocorrência
         mapa_motivos = {}
         for o in ocorrencias_list:
             mot = o["motivo"] or "Outros"
