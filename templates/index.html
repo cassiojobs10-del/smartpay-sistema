@@ -3,47 +3,65 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Painel</title>
+  <title>Painel de Controle</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #f4f6fa;
+      --sidebar-bg: #111215;
+      --sidebar-surface: #1b1d22;
+      --sidebar-text: #f8fafc;
+      --sidebar-muted: #9ca3af;
+      --sidebar-border: rgba(255, 255, 255, 0.08);
+
+      --bg: #f1f3f6;
       --surface: #ffffff;
-      --surface-2: #f8fafc;
-      --text: #0f172a;
-      --muted: #64748b;
-      --border: #e2e8f0;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --primary-soft: rgba(37, 99, 235, 0.1);
+      --surface-alt: #f8f9fb;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --accent-text: #111827;
+      --accent-soft: rgba(245, 158, 11, 0.14);
+
       --success: #059669;
       --success-soft: rgba(5, 150, 105, 0.12);
       --danger: #dc2626;
       --danger-soft: rgba(220, 38, 38, 0.12);
-      --warning: #d97706;
-      --warning-soft: rgba(217, 119, 6, 0.12);
-      --shadow: 0 8px 28px rgba(15, 23, 42, 0.05);
+
+      --shadow-sm: 0 2px 10px rgba(17, 24, 39, 0.04);
+      --shadow-md: 0 12px 32px rgba(17, 24, 39, 0.07);
     }
 
     [data-theme="dark"] {
-      --bg: #0b0f17;
-      --surface: #111827;
-      --surface-2: #172033;
-      --text: #f1f5f9;
+      --sidebar-bg: #090b10;
+      --sidebar-surface: #121722;
+      --sidebar-text: #f1f5f9;
+      --sidebar-muted: #94a3b8;
+      --sidebar-border: rgba(148, 163, 184, 0.14);
+
+      --bg: #0f141f;
+      --surface: #161e2e;
+      --surface-alt: #1d273b;
+      --text: #f8fafc;
       --muted: #94a3b8;
-      --border: #233046;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --primary-soft: rgba(59, 130, 246, 0.16);
+      --border: #26334d;
+
+      --accent: #f59e0b;
+      --accent-hover: #fbbf24;
+      --accent-text: #0f172a;
+      --accent-soft: rgba(245, 158, 11, 0.16);
+
       --success: #10b981;
       --success-soft: rgba(16, 185, 129, 0.16);
       --danger: #f87171;
       --danger-soft: rgba(248, 113, 113, 0.16);
-      --warning: #fbbf24;
-      --warning-soft: rgba(251, 191, 36, 0.16);
-      --shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+
+      --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.25);
+      --shadow-md: 0 16px 36px rgba(0, 0, 0, 0.4);
     }
 
     * {
@@ -60,138 +78,179 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 24px;
+    .app-shell {
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr) 310px;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR ESCURA (INSPIRADA NA REFERÊNCIA) */
+    .sidebar {
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      padding: 28px 18px;
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
+      flex-direction: column;
       justify-content: space-between;
-      gap: 14px;
+      border-right: 1px solid var(--sidebar-border);
     }
 
-    .user-info {
+    .profile-box {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
+      text-align: center;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--sidebar-border);
+      margin-bottom: 20px;
     }
 
-    .user-badge {
-      background: var(--primary-soft);
-      color: var(--primary);
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .user-meta {
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .user-meta strong {
-      color: var(--text);
-    }
-
-    .topbar-actions {
+    .avatar-circle {
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #ea580c);
+      color: #111827;
+      font-size: 26px;
+      font-weight: 800;
       display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      border: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 8px 13px;
-      border-radius: 10px;
-      cursor: pointer;
-      display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      text-decoration: none;
-      transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.12s ease;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 24px rgba(245, 158, 11, 0.28);
     }
 
-    .btn:hover {
-      border-color: var(--primary);
+    .welcome-label {
+      font-size: 11.5px;
+      color: var(--sidebar-muted);
+      margin-bottom: 3px;
     }
 
-    .btn:active {
-      transform: scale(0.99);
+    .profile-name {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
     }
 
-    .btn-primary {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #ffffff;
+    .profile-meta {
+      font-size: 11.5px;
+      color: var(--sidebar-muted);
+      margin-bottom: 8px;
     }
 
-    .btn-primary:hover {
-      background: var(--primary-hover);
-      border-color: var(--primary-hover);
+    .role-chip {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
     }
 
-    .btn-danger {
-      background: var(--danger-soft);
-      border-color: transparent;
-      color: var(--danger);
-    }
-
-    .btn-sm {
-      padding: 6px 10px;
-      font-size: 12px;
-      border-radius: 8px;
-    }
-
-    .container {
-      max-width: 1240px;
-      margin: 0 auto;
-      padding: 24px;
-    }
-
-    .tabs {
+    .nav-list {
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 22px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 12px;
+      flex-direction: column;
+      gap: 6px;
     }
 
-    .tab-btn {
-      border: 1px solid transparent;
+    .nav-item {
+      width: 100%;
+      border: none;
       background: transparent;
-      color: var(--muted);
+      color: var(--sidebar-muted);
       font-family: inherit;
       font-size: 13.5px;
       font-weight: 600;
-      padding: 9px 15px;
+      padding: 11px 14px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.18s ease;
+    }
+
+    .nav-item:hover {
+      color: var(--sidebar-text);
+      background: var(--sidebar-surface);
+    }
+
+    .nav-item.active {
+      color: var(--sidebar-text);
+      background: var(--sidebar-surface);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .sidebar-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 16px;
+      border-top: 1px solid var(--sidebar-border);
+    }
+
+    .side-action-btn {
+      width: 100%;
+      border: 1px solid var(--sidebar-border);
+      background: var(--sidebar-surface);
+      color: var(--sidebar-text);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 9px 12px;
       border-radius: 10px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      text-decoration: none;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
     }
 
-    .tab-btn:hover {
-      color: var(--text);
-      background: var(--surface-2);
+    .side-action-btn:hover {
+      border-color: var(--accent);
     }
 
-    .tab-btn.active {
-      color: var(--primary);
-      background: var(--primary-soft);
-      border-color: rgba(59, 130, 246, 0.25);
+    .side-logout {
+      color: #fca5a5;
+    }
+
+    /* ÁREA PRINCIPAL CENTRAL */
+    .main-area {
+      padding: 24px 26px;
+      overflow-y: auto;
+    }
+
+    .top-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .page-heading {
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .page-sub {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .strip-badges {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
     .tab-panel {
@@ -202,77 +261,71 @@
       display: block;
     }
 
-    .kpi-grid {
+    .kpi-strip {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
-      gap: 14px;
-      margin-bottom: 22px;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
     }
 
-    .kpi-card {
+    .kpi-box {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
-      box-shadow: var(--shadow);
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow-sm);
     }
 
-    .kpi-label {
-      font-size: 12.5px;
+    .kpi-box .label {
+      font-size: 11.5px;
+      font-weight: 600;
       color: var(--muted);
       margin-bottom: 6px;
     }
 
-    .kpi-value {
-      font-size: 24px;
-      font-weight: 700;
+    .kpi-box .val {
+      font-size: 21px;
+      font-weight: 800;
       letter-spacing: -0.02em;
     }
 
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 18px;
-      margin-bottom: 22px;
-    }
-
-    .card {
+    .panel-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: var(--shadow);
-      margin-bottom: 20px;
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 18px;
     }
 
-    .card-header {
+    .panel-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
-    .card-title {
-      font-size: 16px;
+    .panel-title {
+      font-size: 15px;
       font-weight: 700;
     }
 
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 12px;
     }
 
     .field {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
     .field label {
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--muted);
     }
@@ -282,12 +335,12 @@
     .textarea {
       width: 100%;
       border: 1px solid var(--border);
-      background: var(--surface-2);
+      background: var(--surface-alt);
       color: var(--text);
       font-family: inherit;
-      font-size: 13.5px;
-      border-radius: 10px;
-      padding: 9px 12px;
+      font-size: 13px;
+      border-radius: 9px;
+      padding: 9px 11px;
       outline: none;
       transition: border-color 0.2s ease, background-color 0.2s ease;
     }
@@ -295,13 +348,65 @@
     .input:focus,
     .select:focus,
     .textarea:focus {
-      border-color: var(--primary);
+      border-color: var(--accent);
       background: var(--surface);
     }
 
     .textarea {
-      min-height: 76px;
+      min-height: 70px;
       resize: vertical;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.16s ease;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+
+    .btn-accent:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .btn-danger {
+      background: var(--danger-soft);
+      border-color: transparent;
+      color: var(--danger);
+    }
+
+    .btn-sm {
+      padding: 5px 9px;
+      font-size: 11.5px;
+      border-radius: 7px;
+    }
+
+    .actions-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
     }
 
     .table-wrap {
@@ -311,31 +416,40 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
+      font-size: 12.5px;
     }
 
     th,
     td {
       text-align: left;
-      padding: 11px 12px;
+      padding: 10px 11px;
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
     }
 
     th {
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
       color: var(--muted);
-      background: var(--surface-2);
+      background: var(--surface-alt);
     }
 
     .pill {
       display: inline-block;
       padding: 3px 9px;
       border-radius: 999px;
-      font-size: 11.5px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .pill-accent {
+      background: var(--accent-soft);
+      color: var(--accent-hover);
+    }
+
+    [data-theme="dark"] .pill-accent {
+      color: var(--accent);
     }
 
     .pill-success {
@@ -343,501 +457,582 @@
       color: var(--success);
     }
 
-    .pill-warning {
-      background: var(--warning-soft);
-      color: var(--warning);
-    }
-
-    .pill-primary {
-      background: var(--primary-soft);
-      color: var(--primary);
-    }
-
-    .bar-row {
+    .bar-item {
       margin-bottom: 12px;
     }
 
-    .bar-meta {
+    .bar-head {
       display: flex;
       justify-content: space-between;
-      font-size: 12.5px;
+      font-size: 12px;
+      font-weight: 600;
       margin-bottom: 5px;
     }
 
-    .bar-track {
-      height: 9px;
-      background: var(--surface-2);
+    .bar-bg {
+      height: 8px;
+      background: var(--surface-alt);
       border-radius: 999px;
       overflow: hidden;
     }
 
-    .bar-fill {
+    .bar-fg {
       height: 100%;
-      background: var(--primary);
+      background: var(--accent);
       border-radius: 999px;
       transition: width 0.3s ease;
     }
 
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 100;
+    /* PAINEL LATERAL DIREITO (INSPIRADO NA REFERÊNCIA) */
+    .right-rail {
       background: var(--surface);
+      border-left: 1px solid var(--border);
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .rail-title {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+
+    .rail-sub {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .rail-card {
+      background: var(--surface-alt);
       border: 1px solid var(--border);
-      color: var(--text);
-      padding: 12px 16px;
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      font-size: 13px;
-      font-weight: 600;
-      display: none;
-      max-width: 360px;
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 11px 12px;
+      margin-bottom: 10px;
     }
 
-    .toast.show {
-      display: block;
+    .rail-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 4px;
     }
 
-    .toast.success {
-      border-color: var(--success);
-      color: var(--success);
+    .rail-card-sub {
+      font-size: 11.5px;
+      color: var(--muted);
     }
 
-    .toast.error {
-      border-color: var(--danger);
-      color: var(--danger);
+    .empty-state {
+      font-size: 12.5px;
+      color: var(--muted);
+      padding: 10px 0;
     }
 
-    /* Modal */
-    .modal-backdrop {
+    /* MODAL */
+    .modal-bg {
       position: fixed;
       inset: 0;
-      z-index: 80;
-      background: rgba(0, 0, 0, 0.55);
+      z-index: 90;
+      background: rgba(15, 23, 42, 0.62);
+      backdrop-filter: blur(4px);
       display: none;
       align-items: center;
       justify-content: center;
       padding: 16px;
     }
 
-    .modal-backdrop.open {
+    .modal-bg.open {
       display: flex;
     }
 
-    .modal {
+    .modal-box {
       width: 100%;
-      max-width: 440px;
+      max-width: 430px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 22px;
-      box-shadow: var(--shadow);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow-md);
     }
 
-    .modal-header {
+    .modal-head {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
+      align-items: center;
+      margin-bottom: 14px;
     }
 
-    .modal-title {
-      font-size: 16px;
-      font-weight: 700;
+    .modal-head h3 {
+      font-size: 15.5px;
+      font-weight: 800;
     }
 
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 18px;
-      flex-wrap: wrap;
-    }
-
-    .checkbox-row {
+    .check-line {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
+      font-size: 12.5px;
       margin-top: 8px;
+      cursor: pointer;
     }
 
-    .empty-msg {
-      color: var(--muted);
-      font-size: 13px;
-      padding: 12px 0;
+    .toast {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      z-index: 120;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      padding: 11px 15px;
+      font-size: 12.5px;
+      font-weight: 600;
+      box-shadow: var(--shadow-md);
+      display: none;
+      max-width: 340px;
+    }
+
+    .toast.show {
+      display: block;
+    }
+
+    @media (max-width: 1080px) {
+      .app-shell {
+        grid-template-columns: 220px minmax(0, 1fr);
+      }
+      .right-rail {
+        grid-column: 1 / -1;
+        border-left: none;
+        border-top: 1px solid var(--border);
+      }
+    }
+
+    @media (max-width: 780px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        padding: 18px;
+      }
+      .nav-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      .nav-item {
+        width: auto;
+        flex: 1 1 auto;
+      }
     }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="user-info">
-      <div class="user-meta">
-        Usuário: <strong>{{ usuario_nome }}</strong> (Matrícula: <strong>{{ usuario_matricula }}</strong>)
-      </div>
-      <span class="user-badge">{{ "Administrador" if is_admin else "Colaborador" }}</span>
-      <span class="pill {{ 'pill-success' if tem_senha_personalizada else 'pill-warning' }}" id="badgeSenhaStatus">
-        {{ "Senha personalizada ativa" if tem_senha_personalizada else "Senha padrão (data nasc.)" }}
-      </span>
-    </div>
-
-    <div class="topbar-actions">
-      <button type="button" class="btn" id="btnAbrirMinhaSenha">🔑 Minha senha</button>
-      <button type="button" class="btn" id="themeToggle">🌙 Tema</button>
-      <a href="/logout" class="btn btn-danger">Sair</a>
-    </div>
-  </header>
-
-  <main class="container">
-    <nav class="tabs" id="tabsNav">
-      <button type="button" class="tab-btn active" data-tab="dashboard">Dashboard</button>
-      <button type="button" class="tab-btn" data-tab="remessas">Remessas Pagas</button>
-      <button type="button" class="tab-btn" data-tab="ocorrencias">Ocorrências</button>
-      <button type="button" class="tab-btn" data-tab="bi">Relatórios &amp; BI</button>
-      {% if is_admin %}
-      <button type="button" class="tab-btn" data-tab="equipe">Equipe</button>
-      {% endif %}
-    </nav>
-
-    <!-- ABA: DASHBOARD -->
-    <section class="tab-panel active" id="tab-dashboard">
-      <div class="kpi-grid" id="dashKpis"></div>
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">Pontuação por Colaborador</h2>
+  <div class="app-shell">
+    <!-- BARRA LATERAL ESQUERDA -->
+    <aside class="sidebar">
+      <div>
+        <div class="profile-box">
+          <div class="avatar-circle" id="avatarInitials">
+            {{ (usuario_nome[:2] if usuario_nome else "US") | upper }}
           </div>
-          <div id="dashGraficoPontos"></div>
+          <div class="welcome-label">Bem-vindo</div>
+          <div class="profile-name">{{ usuario_nome }}</div>
+          <div class="profile-meta">Matrícula {{ usuario_matricula }} · {{ usuario_cargo }}</div>
+          <span class="role-chip">{{ "Administrador" if is_admin else "Colaborador" }}</span>
         </div>
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">Horas Paradas por Motivo</h2>
-          </div>
-          <div id="dashGraficoMotivos"></div>
+
+        <nav class="nav-list" id="navMenu">
+          <button type="button" class="nav-item active" data-tab="dashboard">Dashboard</button>
+          <button type="button" class="nav-item" data-tab="remessas">Remessas Pagas</button>
+          <button type="button" class="nav-item" data-tab="ocorrencias">Ocorrências</button>
+          <button type="button" class="nav-item" data-tab="bi">Relatórios &amp; BI</button>
+          {% if is_admin %}
+          <button type="button" class="nav-item" data-tab="equipe">Equipe</button>
+          {% endif %}
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <button type="button" class="side-action-btn" id="btnAbrirMinhaSenha">🔑 Minha senha</button>
+        <button type="button" class="side-action-btn" id="themeToggle">🌙 Modo Escuro</button>
+        <a href="/logout" class="side-action-btn side-logout">Sair</a>
+      </div>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL -->
+    <main class="main-area">
+      <div class="top-strip">
+        <div>
+          <h1 class="page-heading" id="pageTitle">Dashboard</h1>
+          <p class="page-sub" id="pageSub">Visão geral de produtividade, lançamentos e gargalos</p>
+        </div>
+        <div class="strip-badges">
+          <span class="pill {{ 'pill-success' if tem_senha_personalizada else 'pill-accent' }}" id="badgeSenha">
+            {{ "Senha personalizada" if tem_senha_personalizada else "Senha padrão (data nasc.)" }}
+          </span>
         </div>
       </div>
-    </section>
 
-    <!-- ABA: REMESSAS PAGAS -->
-    <section class="tab-panel" id="tab-remessas">
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title" id="tituloFormRemessa">Novo Lançamento de Remessa</h2>
-          <span class="pill pill-primary" id="previewEsforco">Esforço calculado: 0 pts</span>
+      <!-- DASHBOARD -->
+      <section class="tab-panel active" id="tab-dashboard">
+        <div class="kpi-strip" id="dashKpis"></div>
+
+        <div class="panel-card">
+          <div class="panel-head">
+            <h2 class="panel-title">Pontuação por Colaborador</h2>
+          </div>
+          <div id="dashPontosBars"></div>
         </div>
-        <form id="formRemessa">
-          <input type="hidden" id="remessaId" />
+
+        <div class="panel-card">
+          <div class="panel-head">
+            <h2 class="panel-title">Horas Paradas por Motivo</h2>
+          </div>
+          <div id="dashMotivosBars"></div>
+        </div>
+      </section>
+
+      <!-- REMESSAS PAGAS -->
+      <section class="tab-panel" id="tab-remessas">
+        <div class="panel-card">
+          <div class="panel-head">
+            <h2 class="panel-title" id="tituloFormRemessa">Novo Lançamento de Remessa</h2>
+            <span class="pill pill-accent" id="previewEsforco">Esforço: 0 pts</span>
+          </div>
+          <form id="formRemessa">
+            <input type="hidden" id="remessaId" />
+            <div class="form-grid">
+              <div class="field">
+                <label for="dataPagamento">Data de Pagamento *</label>
+                <input type="date" id="dataPagamento" class="input" required />
+              </div>
+              <div class="field">
+                <label for="nomeRemessa">Nome da Remessa *</label>
+                <input type="text" id="nomeRemessa" class="input" placeholder="Ex: Remessa 042" required />
+              </div>
+              <div class="field">
+                <label for="qtdFornecedores">Fornecedores</label>
+                <input type="number" id="qtdFornecedores" class="input calc-esforco" min="0" value="0" />
+              </div>
+              <div class="field">
+                <label for="qtdProcessos">Processos (1 pt)</label>
+                <input type="number" id="qtdProcessos" class="input calc-esforco" min="0" value="0" />
+              </div>
+              <div class="field">
+                <label for="qtdContratos">Contratos (2 pts)</label>
+                <input type="number" id="qtdContratos" class="input calc-esforco" min="0" value="0" />
+              </div>
+              <div class="field">
+                <label for="certidoesRenovadas">Certidões (1 pt)</label>
+                <input type="number" id="certidoesRenovadas" class="input calc-esforco" min="0" value="0" />
+              </div>
+              <div class="field">
+                <label for="pagamentosParciais">Pgto. Parciais (1 pt)</label>
+                <input type="number" id="pagamentosParciais" class="input calc-esforco" min="0" value="0" />
+              </div>
+              <div class="field">
+                <label for="glosasLancadas">Glosas (1 pt)</label>
+                <input type="number" id="glosasLancadas" class="input calc-esforco" min="0" value="0" />
+              </div>
+              <div class="field">
+                <label for="apostilamentosBancarios">Apostilamentos (2 pts)</label>
+                <input type="number" id="apostilamentosBancarios" class="input calc-esforco" min="0" value="0" />
+              </div>
+            </div>
+            <div class="actions-row">
+              <button type="button" class="btn" id="btnCancelarEdicaoRemessa" style="display: none;">Cancelar</button>
+              <button type="submit" class="btn btn-accent" id="btnSalvarRemessa">Salvar Remessa</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-head">
+            <h2 class="panel-title">Remessas Registradas</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data Pgto</th>
+                  <th>Remessa</th>
+                  <th>Colaborador</th>
+                  <th>Processos</th>
+                  <th>Contratos</th>
+                  <th>Apostil.</th>
+                  <th>Pontos</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaRemessas"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- OCORRÊNCIAS -->
+      <section class="tab-panel" id="tab-ocorrencias">
+        <div class="panel-card">
+          <div class="panel-head">
+            <h2 class="panel-title" id="tituloFormOcorrencia">Registrar Ocorrência / Gargalo</h2>
+          </div>
+          <form id="formOcorrencia">
+            <input type="hidden" id="ocorrenciaId" />
+            <div class="form-grid">
+              <div class="field">
+                <label for="dataOcorrencia">Data *</label>
+                <input type="date" id="dataOcorrencia" class="input" required />
+              </div>
+              <div class="field">
+                <label for="motivoOcorrencia">Motivo *</label>
+                <input type="text" id="motivoOcorrencia" class="input" placeholder="Ex: Pendência documental" required />
+              </div>
+              <div class="field">
+                <label for="referenciaOcorrencia">Referência *</label>
+                <input type="text" id="referenciaOcorrencia" class="input" placeholder="Processo / Remessa" required />
+              </div>
+              <div class="field">
+                <label for="tempoImpacto">Tempo de Impacto (h)</label>
+                <input type="number" step="0.1" min="0" id="tempoImpacto" class="input" value="0" />
+              </div>
+            </div>
+            <div class="field" style="margin-top: 12px;">
+              <label for="observacoesOcorrencia">Observações</label>
+              <textarea id="observacoesOcorrencia" class="textarea" placeholder="Detalhes adicionais..."></textarea>
+            </div>
+            <div class="actions-row">
+              <button type="button" class="btn" id="btnCancelarEdicaoOcorrencia" style="display: none;">Cancelar</button>
+              <button type="submit" class="btn btn-accent" id="btnSalvarOcorrencia">Salvar Ocorrência</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-head">
+            <h2 class="panel-title">Ocorrências Registradas</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Colaborador</th>
+                  <th>Motivo</th>
+                  <th>Referência</th>
+                  <th>Impacto</th>
+                  <th>Observações</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaOcorrencias"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- RELATÓRIOS & BI -->
+      <section class="tab-panel" id="tab-bi">
+        <div class="panel-card">
+          <div class="panel-head">
+            <h2 class="panel-title">Filtro de BI</h2>
+          </div>
           <div class="form-grid">
             <div class="field">
-              <label for="dataPagamento">Data de Pagamento *</label>
-              <input type="date" id="dataPagamento" class="input" required />
-            </div>
-            <div class="field">
-              <label for="nomeRemessa">Nome da Remessa *</label>
-              <input type="text" id="nomeRemessa" class="input" placeholder="Ex: Remessa 042" required />
-            </div>
-            <div class="field">
-              <label for="qtdFornecedores">Fornecedores</label>
-              <input type="number" id="qtdFornecedores" class="input calc-esforco" min="0" value="0" />
-            </div>
-            <div class="field">
-              <label for="qtdProcessos">Processos (1 pt)</label>
-              <input type="number" id="qtdProcessos" class="input calc-esforco" min="0" value="0" />
-            </div>
-            <div class="field">
-              <label for="qtdContratos">Contratos (2 pts)</label>
-              <input type="number" id="qtdContratos" class="input calc-esforco" min="0" value="0" />
-            </div>
-            <div class="field">
-              <label for="certidoesRenovadas">Certidões Renovadas (1 pt)</label>
-              <input type="number" id="certidoesRenovadas" class="input calc-esforco" min="0" value="0" />
-            </div>
-            <div class="field">
-              <label for="pagamentosParciais">Pagamentos Parciais (1 pt)</label>
-              <input type="number" id="pagamentosParciais" class="input calc-esforco" min="0" value="0" />
-            </div>
-            <div class="field">
-              <label for="glosasLancadas">Glosas Lançadas (1 pt)</label>
-              <input type="number" id="glosasLancadas" class="input calc-esforco" min="0" value="0" />
-            </div>
-            <div class="field">
-              <label for="apostilamentosBancarios">Apostilamentos Bancários (2 pts)</label>
-              <input type="number" id="apostilamentosBancarios" class="input calc-esforco" min="0" value="0" />
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn" id="btnCancelarEdicaoRemessa" style="display: none;">Cancelar edição</button>
-            <button type="submit" class="btn btn-primary" id="btnSalvarRemessa">Salvar Remessa</button>
-          </div>
-        </form>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">Remessas Registradas</h2>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Data Pgto</th>
-                <th>Remessa</th>
-                <th>Colaborador</th>
-                <th>Processos</th>
-                <th>Contratos</th>
-                <th>Apostil.</th>
-                <th>Pontos</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tabelaRemessas"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ABA: OCORRÊNCIAS -->
-    <section class="tab-panel" id="tab-ocorrencias">
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title" id="tituloFormOcorrencia">Registrar Ocorrência / Gargalo</h2>
-        </div>
-        <form id="formOcorrencia">
-          <input type="hidden" id="ocorrenciaId" />
-          <div class="form-grid">
-            <div class="field">
-              <label for="dataOcorrencia">Data *</label>
-              <input type="date" id="dataOcorrencia" class="input" required />
-            </div>
-            <div class="field">
-              <label for="motivoOcorrencia">Motivo *</label>
-              <input type="text" id="motivoOcorrencia" class="input" placeholder="Ex: Pendência documental" required />
-            </div>
-            <div class="field">
-              <label for="referenciaOcorrencia">Referência *</label>
-              <input type="text" id="referenciaOcorrencia" class="input" placeholder="Processo / Remessa / Contrato" required />
-            </div>
-            <div class="field">
-              <label for="tempoImpacto">Tempo de Impacto (horas)</label>
-              <input type="number" step="0.1" min="0" id="tempoImpacto" class="input" value="0" />
-            </div>
-          </div>
-          <div class="field" style="margin-top: 14px;">
-            <label for="observacoesOcorrencia">Observações</label>
-            <textarea id="observacoesOcorrencia" class="textarea" placeholder="Detalhes adicionais..."></textarea>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn" id="btnCancelarEdicaoOcorrencia" style="display: none;">Cancelar edição</button>
-            <button type="submit" class="btn btn-primary" id="btnSalvarOcorrencia">Salvar Ocorrência</button>
-          </div>
-        </form>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">Ocorrências Registradas</h2>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Colaborador</th>
-                <th>Motivo</th>
-                <th>Referência</th>
-                <th>Impacto (h)</th>
-                <th>Observações</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tabelaOcorrencias"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ABA: RELATÓRIOS & BI -->
-    <section class="tab-panel" id="tab-bi">
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">Filtros de BI</h2>
-        </div>
-        <div class="form-grid">
-          <div class="field">
-            <label for="filtroBiMatricula">Colaborador</label>
-            <select id="filtroBiMatricula" class="select" {% if not is_admin %}disabled{% endif %}>
-              {% if is_admin %}
-              <option value="TODOS">Todos os colaboradores</option>
-              {% endif %}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="kpi-grid" id="biKpis"></div>
-
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">Detalhamento por Colaborador (Drill-down)</h2>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Colaborador</th>
-                <th>Matrícula</th>
-                <th>Pontos</th>
-                <th>Remessas</th>
-                <th>Processos</th>
-                <th>Contratos</th>
-                <th>Ocorrências</th>
-                <th>Horas Paradas</th>
-              </tr>
-            </thead>
-            <tbody id="tabelaBiDrilldown"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ABA: EQUIPE (ADMIN) -->
-    {% if is_admin %}
-    <section class="tab-panel" id="tab-equipe">
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">Cadastrar Colaborador</h2>
-        </div>
-        <form id="formNovoColab">
-          <div class="form-grid">
-            <div class="field">
-              <label for="novoColabMatricula">Matrícula *</label>
-              <input type="text" id="novoColabMatricula" class="input" required />
-            </div>
-            <div class="field">
-              <label for="novoColabNome">Nome *</label>
-              <input type="text" id="novoColabNome" class="input" required />
-            </div>
-            <div class="field">
-              <label for="novoColabCargo">Cargo</label>
-              <input type="text" id="novoColabCargo" class="input" value="Analista" />
-            </div>
-            <div class="field">
-              <label for="novoColabNasc">Data de Nascimento *</label>
-              <input type="text" id="novoColabNasc" class="input" placeholder="DD/MM/AA ou DD/MM/AAAA" required />
-            </div>
-            <div class="field">
-              <label for="novoColabSenha">Senha Personalizada (opcional)</label>
-              <input type="password" id="novoColabSenha" class="input" placeholder="Mín. 4 caracteres" />
-            </div>
-            <div class="field">
-              <label for="novoColabAdmin">Perfil</label>
-              <select id="novoColabAdmin" class="select">
-                <option value="0">Colaborador</option>
-                <option value="1">Administrador</option>
+              <label for="filtroBiMatricula">Colaborador</label>
+              <select id="filtroBiMatricula" class="select" {% if not is_admin %}disabled{% endif %}>
+                {% if is_admin %}
+                <option value="TODOS">Todos os colaboradores</option>
+                {% endif %}
               </select>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Adicionar Colaborador</button>
+        </div>
+
+        <div class="kpi-strip" id="biKpis"></div>
+
+        <div class="panel-card">
+          <div class="panel-head">
+            <h2 class="panel-title">Detalhamento por Colaborador</h2>
           </div>
-        </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Colaborador</th>
+                  <th>Matrícula</th>
+                  <th>Pontos</th>
+                  <th>Remessas</th>
+                  <th>Processos</th>
+                  <th>Contratos</th>
+                  <th>Ocorrências</th>
+                  <th>Horas Paradas</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaBiDrilldown"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- EQUIPE (ADMIN) -->
+      {% if is_admin %}
+      <section class="tab-panel" id="tab-equipe">
+        <div class="panel-card">
+          <div class="panel-head">
+            <h2 class="panel-title">Cadastrar Colaborador</h2>
+          </div>
+          <form id="formNovoColab">
+            <div class="form-grid">
+              <div class="field">
+                <label for="novoColabMatricula">Matrícula *</label>
+                <input type="text" id="novoColabMatricula" class="input" required />
+              </div>
+              <div class="field">
+                <label for="novoColabNome">Nome *</label>
+                <input type="text" id="novoColabNome" class="input" required />
+              </div>
+              <div class="field">
+                <label for="novoColabCargo">Cargo</label>
+                <input type="text" id="novoColabCargo" class="input" value="Analista" />
+              </div>
+              <div class="field">
+                <label for="novoColabNasc">Data de Nascimento *</label>
+                <input type="text" id="novoColabNasc" class="input" placeholder="DD/MM/AA ou DD/MM/AAAA" required />
+              </div>
+              <div class="field">
+                <label for="novoColabSenha">Senha Personalizada (opcional)</label>
+                <input type="password" id="novoColabSenha" class="input" placeholder="Mín. 4 caracteres" />
+              </div>
+              <div class="field">
+                <label for="novoColabAdmin">Perfil</label>
+                <select id="novoColabAdmin" class="select">
+                  <option value="0">Colaborador</option>
+                  <option value="1">Administrador</option>
+                </select>
+              </div>
+            </div>
+            <div class="actions-row">
+              <button type="submit" class="btn btn-accent">Adicionar Colaborador</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-head">
+            <h2 class="panel-title">Colaboradores Cadastrados</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Matrícula</th>
+                  <th>Nome</th>
+                  <th>Cargo</th>
+                  <th>Nascimento</th>
+                  <th>Senha</th>
+                  <th>Perfil</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaEquipe"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      {% endif %}
+    </main>
+
+    <!-- PAINEL LATERAL DIREITO (ATIVIDADES & GARGALOS RECENTES) -->
+    <aside class="right-rail">
+      <div>
+        <div class="rail-title">Últimas Remessas</div>
+        <div class="rail-sub">Lançamentos mais recentes</div>
+        <div id="railRemessas"></div>
       </div>
 
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">Colaboradores Cadastrados</h2>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Matrícula</th>
-                <th>Nome</th>
-                <th>Cargo</th>
-                <th>Nascimento</th>
-                <th>Tipo de Senha</th>
-                <th>Perfil</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tabelaEquipe"></tbody>
-          </table>
-        </div>
+      <div>
+        <div class="rail-title">Últimas Ocorrências</div>
+        <div class="rail-sub">Gargalos e impactos registrados</div>
+        <div id="railOcorrencias"></div>
       </div>
-    </section>
-    {% endif %}
-  </main>
+    </aside>
+  </div>
 
-  <!-- MODAL: MINHA SENHA PERSONALIZADA -->
-  <div class="modal-backdrop" id="modalMinhaSenha" aria-hidden="true">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 class="modal-title">Definir / Alterar Minha Senha</h3>
+  <!-- MODAL: MINHA SENHA -->
+  <div class="modal-bg" id="modalMinhaSenha" aria-hidden="true">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Definir / Alterar Minha Senha</h3>
         <button type="button" class="btn btn-sm" id="fecharModalMinhaSenha">✕</button>
       </div>
       <form id="formMinhaSenha">
-        <div class="field" style="margin-bottom: 12px;">
+        <div class="field" style="margin-bottom: 10px;">
           <label for="senhaAtualInput">Senha Atual *</label>
-          <input type="password" id="senhaAtualInput" class="input" placeholder="Sua senha atual ou data de nascimento" required />
+          <input type="password" id="senhaAtualInput" class="input" required />
         </div>
-        <div class="field" style="margin-bottom: 12px;">
+        <div class="field" style="margin-bottom: 10px;">
           <label for="novaSenhaInput">Nova Senha Personalizada *</label>
           <input type="password" id="novaSenhaInput" class="input" placeholder="Mínimo 4 caracteres" required />
         </div>
         <div class="field">
           <label for="confirmarNovaSenhaInput">Confirmar Nova Senha *</label>
-          <input type="password" id="confirmarNovaSenhaInput" class="input" placeholder="Repita a nova senha" required />
+          <input type="password" id="confirmarNovaSenhaInput" class="input" required />
         </div>
-        <div class="modal-footer">
+        <div class="actions-row">
           <button type="button" class="btn" id="cancelarModalMinhaSenha">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Salvar Senha</button>
+          <button type="submit" class="btn btn-accent">Salvar Senha</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: EDITAR COLABORADOR / SENHA PELO ADMIN -->
+  <!-- MODAL: ADMIN EDITAR COLABORADOR / SENHA -->
   {% if is_admin %}
-  <div class="modal-backdrop" id="modalEditarColab" aria-hidden="true">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 class="modal-title">Editar Colaborador</h3>
+  <div class="modal-bg" id="modalEditarColab" aria-hidden="true">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Editar Colaborador</h3>
         <button type="button" class="btn btn-sm" id="fecharModalEditarColab">✕</button>
       </div>
       <form id="formEditarColab">
         <input type="hidden" id="editColabId" />
-        <input type="hidden" id="editColabMatricula" />
-        <div class="field" style="margin-bottom: 12px;">
+        <div class="field" style="margin-bottom: 10px;">
           <label for="editColabNome">Nome *</label>
           <input type="text" id="editColabNome" class="input" required />
         </div>
-        <div class="field" style="margin-bottom: 12px;">
+        <div class="field" style="margin-bottom: 10px;">
           <label for="editColabCargo">Cargo</label>
           <input type="text" id="editColabCargo" class="input" />
         </div>
-        <div class="field" style="margin-bottom: 12px;">
+        <div class="field" style="margin-bottom: 10px;">
           <label for="editColabNasc">Data de Nascimento *</label>
           <input type="text" id="editColabNasc" class="input" required />
         </div>
-        <div class="field" style="margin-bottom: 12px;" id="wrapEditColabPerfil">
+        <div class="field" style="margin-bottom: 10px;" id="wrapEditColabPerfil">
           <label for="editColabPerfil">Perfil</label>
           <select id="editColabPerfil" class="select">
             <option value="0">Colaborador</option>
             <option value="1">Administrador</option>
           </select>
         </div>
-        <div class="field" style="margin-bottom: 8px;">
-          <label for="editColabNovaSenha">Definir Nova Senha Personalizada (opcional)</label>
-          <input type="password" id="editColabNovaSenha" class="input" placeholder="Deixe em branco para manter a atual" />
+        <div class="field">
+          <label for="editColabNovaSenha">Nova Senha Personalizada (opcional)</label>
+          <input type="password" id="editColabNovaSenha" class="input" placeholder="Deixe em branco para manter" />
         </div>
-        <label class="checkbox-row">
+        <label class="check-line">
           <input type="checkbox" id="editColabResetSenha" />
           <span>Resetar senha personalizada (voltar para data de nascimento)</span>
         </label>
-        <div class="modal-footer">
+        <div class="actions-row">
           <button type="button" class="btn" id="cancelarModalEditarColab">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+          <button type="submit" class="btn btn-accent">Salvar Alterações</button>
         </div>
       </form>
     </div>
@@ -859,30 +1054,37 @@
     let cacheOcorrencias = [];
     let cacheEquipe = [];
 
+    const TAB_META = {
+      dashboard: { title: "Dashboard", sub: "Visão geral de produtividade, lançamentos e gargalos" },
+      remessas: { title: "Remessas Pagas", sub: "Lançamento e cálculo automático de pontuação por esforço" },
+      ocorrencias: { title: "Ocorrências", sub: "Registro de pendências e horas de impacto operacional" },
+      bi: { title: "Relatórios & BI", sub: "Análise consolidada e detalhamento por colaborador" },
+      equipe: { title: "Equipe", sub: "Gestão de colaboradores, perfis e senhas personalizadas" },
+    };
+
     function applyTheme(theme) {
       if (theme === "dark") {
         htmlEl.setAttribute("data-theme", "dark");
-        themeToggle.textContent = "☀️ Claro";
+        themeToggle.textContent = "☀️ Modo Claro";
       } else {
         htmlEl.removeAttribute("data-theme");
-        themeToggle.textContent = "🌙 Escuro";
+        themeToggle.textContent = "🌙 Modo Escuro";
       }
       localStorage.setItem("ui_theme", theme);
     }
 
-    applyTheme(localStorage.getItem("ui_theme") || "dark");
+    // Inicia em tema claro como na referência, com opção de alternar para escuro
+    applyTheme(localStorage.getItem("ui_theme") || "light");
     themeToggle.addEventListener("click", () => {
       const curr = htmlEl.getAttribute("data-theme") === "dark" ? "dark" : "light";
       applyTheme(curr === "dark" ? "light" : "dark");
     });
 
-    function showToast(msg, type = "success") {
+    function showToast(msg) {
       toastEl.textContent = msg;
-      toastEl.className = `toast show ${type}`;
+      toastEl.classList.add("show");
       clearTimeout(window._toastTimer);
-      window._toastTimer = setTimeout(() => {
-        toastEl.className = "toast";
-      }, 3400);
+      window._toastTimer = setTimeout(() => toastEl.classList.remove("show"), 3200);
     }
 
     async function apiFetch(url, options = {}) {
@@ -897,22 +1099,25 @@
       return data;
     }
 
-    function escapeHtml(value) {
-      return String(value ?? "")
+    function esc(v) {
+      return String(v ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
     }
 
-    // Navegação por abas
-    document.querySelectorAll(".tab-btn").forEach((btn) => {
+    // Navegação lateral
+    document.querySelectorAll(".nav-item").forEach((btn) => {
       btn.addEventListener("click", async () => {
-        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".nav-item").forEach((b) => b.classList.remove("active"));
         document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
         btn.classList.add("active");
         const tab = btn.dataset.tab;
         document.getElementById(`tab-${tab}`).classList.add("active");
+        const meta = TAB_META[tab] || { title: "Painel", sub: "" };
+        document.getElementById("pageTitle").textContent = meta.title;
+        document.getElementById("pageSub").textContent = meta.sub;
 
         if (tab === "dashboard" || tab === "bi") {
           await carregarBi();
@@ -926,7 +1131,7 @@
       });
     });
 
-    // Cálculo prévio de esforço
+    // Esforço prévio
     function calcEsforcoLocal() {
       const p = Number(document.getElementById("qtdProcessos").value || 0);
       const c = Number(document.getElementById("qtdContratos").value || 0);
@@ -935,11 +1140,11 @@
       const g = Number(document.getElementById("glosasLancadas").value || 0);
       const a = Number(document.getElementById("apostilamentosBancarios").value || 0);
       const pts = p * 1 + c * 2 + ce * 1 + pa * 1 + g * 1 + a * 2;
-      document.getElementById("previewEsforco").textContent = `Esforço calculado: ${pts} pts`;
+      document.getElementById("previewEsforco").textContent = `Esforço: ${pts} pts`;
     }
 
-    document.querySelectorAll(".calc-esforco").forEach((inp) => {
-      inp.addEventListener("input", calcEsforcoLocal);
+    document.querySelectorAll(".calc-esforco").forEach((el) => {
+      el.addEventListener("input", calcEsforcoLocal);
     });
 
     // Remessas
@@ -958,20 +1163,20 @@
       cacheRemessas = await apiFetch("/api/remessas");
       const tbody = document.getElementById("tabelaRemessas");
       if (!cacheRemessas.length) {
-        tbody.innerHTML = `<tr><td colspan="8" class="empty-msg">Nenhuma remessa registrada.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Nenhuma remessa registrada.</td></tr>`;
         return;
       }
       tbody.innerHTML = cacheRemessas
         .map(
           (r) => `
           <tr>
-            <td>${escapeHtml(r.data_pagamento)}</td>
-            <td><strong>${escapeHtml(r.nome_remessa)}</strong></td>
-            <td>${escapeHtml(r.nome_colaborador)} (${escapeHtml(r.matricula_usuario)})</td>
+            <td>${esc(r.data_pagamento)}</td>
+            <td><strong>${esc(r.nome_remessa)}</strong></td>
+            <td>${esc(r.nome_colaborador)} (${esc(r.matricula_usuario)})</td>
             <td>${r.qtd_processos}</td>
             <td>${r.qtd_contratos}</td>
             <td>${r.apostilamentos_bancarios}</td>
-            <td><span class="pill pill-success">${r.pontuacao_total} pts</span></td>
+            <td><span class="pill pill-accent">${r.pontuacao_total} pts</span></td>
             <td>
               <button type="button" class="btn btn-sm" onclick="editarRemessa(${r.id})">Editar</button>
               <button type="button" class="btn btn-danger btn-sm" onclick="excluirRemessa(${r.id})">Excluir</button>
@@ -999,7 +1204,6 @@
       document.getElementById("btnSalvarRemessa").textContent = "Atualizar Remessa";
       document.getElementById("btnCancelarEdicaoRemessa").style.display = "inline-flex";
       calcEsforcoLocal();
-      window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     window.excluirRemessa = async function (id) {
@@ -1008,8 +1212,9 @@
         await apiFetch(`/api/remessas/${id}`, { method: "DELETE" });
         showToast("Remessa excluída.");
         await carregarRemessas();
+        await carregarBi();
       } catch (err) {
-        showToast(err.message, "error");
+        showToast(err.message);
       }
     };
 
@@ -1034,12 +1239,13 @@
           showToast("Remessa atualizada.");
         } else {
           await apiFetch("/api/remessas", { method: "POST", body: JSON.stringify(payload) });
-          showToast("Remessa lançada.");
+          showToast("Remessa salva.");
         }
         resetFormRemessa();
         await carregarRemessas();
+        await carregarBi();
       } catch (err) {
-        showToast(err.message, "error");
+        showToast(err.message);
       }
     });
 
@@ -1058,19 +1264,19 @@
       cacheOcorrencias = await apiFetch("/api/ocorrencias");
       const tbody = document.getElementById("tabelaOcorrencias");
       if (!cacheOcorrencias.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-msg">Nenhuma ocorrência registrada.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Nenhuma ocorrência registrada.</td></tr>`;
         return;
       }
       tbody.innerHTML = cacheOcorrencias
         .map(
           (o) => `
           <tr>
-            <td>${escapeHtml(o.data_registro)}</td>
-            <td>${escapeHtml(o.nome_colaborador)} (${escapeHtml(o.matricula_usuario)})</td>
-            <td><strong>${escapeHtml(o.motivo)}</strong></td>
-            <td>${escapeHtml(o.referencia)}</td>
-            <td><span class="pill pill-warning">${o.tempo_impacto} h</span></td>
-            <td>${escapeHtml(o.observacoes)}</td>
+            <td>${esc(o.data_registro)}</td>
+            <td>${esc(o.nome_colaborador)} (${esc(o.matricula_usuario)})</td>
+            <td><strong>${esc(o.motivo)}</strong></td>
+            <td>${esc(o.referencia)}</td>
+            <td><span class="pill pill-accent">${o.tempo_impacto}h</span></td>
+            <td>${esc(o.observacoes)}</td>
             <td>
               <button type="button" class="btn btn-sm" onclick="editarOcorrencia(${o.id})">Editar</button>
               <button type="button" class="btn btn-danger btn-sm" onclick="excluirOcorrencia(${o.id})">Excluir</button>
@@ -1093,7 +1299,6 @@
       document.getElementById("tituloFormOcorrencia").textContent = `Editando Ocorrência #${o.id}`;
       document.getElementById("btnSalvarOcorrencia").textContent = "Atualizar Ocorrência";
       document.getElementById("btnCancelarEdicaoOcorrencia").style.display = "inline-flex";
-      window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     window.excluirOcorrencia = async function (id) {
@@ -1102,8 +1307,9 @@
         await apiFetch(`/api/ocorrencias/${id}`, { method: "DELETE" });
         showToast("Ocorrência excluída.");
         await carregarOcorrencias();
+        await carregarBi();
       } catch (err) {
-        showToast(err.message, "error");
+        showToast(err.message);
       }
     };
 
@@ -1128,27 +1334,28 @@
         }
         resetFormOcorrencia();
         await carregarOcorrencias();
+        await carregarBi();
       } catch (err) {
-        showToast(err.message, "error");
+        showToast(err.message);
       }
     });
 
-    // BI & Dashboard
+    // BI, Dashboard e Painel Lateral Direito
     function renderKpis(containerId, r) {
       document.getElementById(containerId).innerHTML = `
-        <div class="kpi-card"><div class="kpi-label">Pontos de Esforço</div><div class="kpi-value">${r.total_pontos}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Remessas</div><div class="kpi-value">${r.total_remessas}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Processos</div><div class="kpi-value">${r.total_processos}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Contratos</div><div class="kpi-value">${r.total_contratos}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Ocorrências</div><div class="kpi-value">${r.total_ocorrencias}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Horas Paradas</div><div class="kpi-value">${r.total_horas_paradas}h</div></div>
+        <div class="kpi-box"><div class="label">Pontos</div><div class="val">${r.total_pontos}</div></div>
+        <div class="kpi-box"><div class="label">Remessas</div><div class="val">${r.total_remessas}</div></div>
+        <div class="kpi-box"><div class="label">Processos</div><div class="val">${r.total_processos}</div></div>
+        <div class="kpi-box"><div class="label">Contratos</div><div class="val">${r.total_contratos}</div></div>
+        <div class="kpi-box"><div class="label">Ocorrências</div><div class="val">${r.total_ocorrencias}</div></div>
+        <div class="kpi-box"><div class="label">Horas Paradas</div><div class="val">${r.total_horas_paradas}h</div></div>
       `;
     }
 
-    function renderBarras(containerId, items, labelKey, valKey, suffix = "") {
+    function renderBars(containerId, items, labelKey, valKey, suffix = "") {
       const el = document.getElementById(containerId);
       if (!items.length) {
-        el.innerHTML = `<p class="empty-msg">Sem dados para exibir.</p>`;
+        el.innerHTML = `<p class="empty-state">Sem dados para exibir.</p>`;
         return;
       }
       const maxVal = Math.max(...items.map((i) => Number(i[valKey] || 0)), 1);
@@ -1157,16 +1364,54 @@
           const val = Number(item[valKey] || 0);
           const pct = Math.min(100, Math.round((val / maxVal) * 100));
           return `
-            <div class="bar-row">
-              <div class="bar-meta">
-                <span>${escapeHtml(item[labelKey])}</span>
-                <strong>${val}${suffix}</strong>
+            <div class="bar-item">
+              <div class="bar-head">
+                <span>${esc(item[labelKey])}</span>
+                <span>${val}${suffix}</span>
               </div>
-              <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+              <div class="bar-bg"><div class="bar-fg" style="width:${pct}%"></div></div>
             </div>
           `;
         })
         .join("");
+    }
+
+    function renderRightRail(remessas, ocorrencias) {
+      const railRem = document.getElementById("railRemessas");
+      const ultimasRem = (remessas || []).slice(0, 4);
+      railRem.innerHTML = ultimasRem.length
+        ? ultimasRem
+            .map(
+              (r) => `
+              <div class="rail-card">
+                <div class="rail-card-top">
+                  <span>${esc(r.nome_remessa)}</span>
+                  <span class="pill pill-accent">${r.pontuacao_total} pts</span>
+                </div>
+                <div class="rail-card-sub">${esc(r.data_pagamento)} · ${esc(r.nome_colaborador)}</div>
+              </div>
+            `
+            )
+            .join("")
+        : `<p class="empty-state">Nenhuma remessa recente.</p>`;
+
+      const railOco = document.getElementById("railOcorrencias");
+      const ultimasOco = (ocorrencias || []).slice(0, 4);
+      railOco.innerHTML = ultimasOco.length
+        ? ultimasOco
+            .map(
+              (o) => `
+              <div class="rail-card">
+                <div class="rail-card-top">
+                  <span>${esc(o.motivo)}</span>
+                  <span>${o.tempo_impacto}h</span>
+                </div>
+                <div class="rail-card-sub">${esc(o.referencia)} · ${esc(o.data_registro)}</div>
+              </div>
+            `
+            )
+            .join("")
+        : `<p class="empty-state">Nenhuma ocorrência recente.</p>`;
     }
 
     async function carregarBi() {
@@ -1181,31 +1426,32 @@
           data.colaboradores
             .map(
               (c) =>
-                `<option value="${escapeHtml(c.matricula)}">${escapeHtml(c.nome)} (${escapeHtml(c.matricula)})</option>`
+                `<option value="${esc(c.matricula)}">${esc(c.nome)} (${esc(c.matricula)})</option>`
             )
             .join("");
         selectFiltro.value = atual;
       } else {
         const eu = data.colaboradores[0];
-        selectFiltro.innerHTML = `<option value="${escapeHtml(USUARIO_MATRICULA)}">${escapeHtml(eu ? eu.nome : USUARIO_MATRICULA)}</option>`;
+        selectFiltro.innerHTML = `<option value="${esc(USUARIO_MATRICULA)}">${esc(eu ? eu.nome : USUARIO_MATRICULA)}</option>`;
         selectFiltro.value = USUARIO_MATRICULA;
       }
 
       renderKpis("dashKpis", data.resumo);
       renderKpis("biKpis", data.resumo);
-      renderBarras("dashGraficoPontos", data.por_colaborador, "nome", "pontos", " pts");
-      renderBarras("dashGraficoMotivos", data.por_motivo, "motivo", "horas", "h");
+      renderBars("dashPontosBars", data.por_colaborador, "nome", "pontos", " pts");
+      renderBars("dashMotivosBars", data.por_motivo, "motivo", "horas", "h");
+      renderRightRail(data.remessas, data.ocorrencias);
 
       const drillBody = document.getElementById("tabelaBiDrilldown");
       if (!data.por_colaborador.length) {
-        drillBody.innerHTML = `<tr><td colspan="8" class="empty-msg">Nenhum dado encontrado.</td></tr>`;
+        drillBody.innerHTML = `<tr><td colspan="8" class="empty-state">Nenhum dado encontrado.</td></tr>`;
       } else {
         drillBody.innerHTML = data.por_colaborador
           .map(
             (c) => `
             <tr>
-              <td><strong>${escapeHtml(c.nome)}</strong></td>
-              <td>${escapeHtml(c.matricula)}</td>
+              <td><strong>${esc(c.nome)}</strong></td>
+              <td>${esc(c.matricula)}</td>
               <td>${c.pontos}</td>
               <td>${c.remessas}</td>
               <td>${c.processos}</td>
@@ -1221,7 +1467,7 @@
 
     document.getElementById("filtroBiMatricula").addEventListener("change", carregarBi);
 
-    // Modal Minha Senha (Qualquer Usuário)
+    // Modal Minha Senha
     const modalMinhaSenha = document.getElementById("modalMinhaSenha");
     document.getElementById("btnAbrirMinhaSenha").addEventListener("click", () => {
       document.getElementById("formMinhaSenha").reset();
@@ -1234,14 +1480,14 @@
       e.preventDefault();
       const senhaAtual = document.getElementById("senhaAtualInput").value.trim();
       const novaSenha = document.getElementById("novaSenhaInput").value.trim();
-      const confirmar = document.getElementById("confirmarNovaSenhaInput").value.trim();
+      const confirma = document.getElementById("confirmarNovaSenhaInput").value.trim();
 
       if (novaSenha.length < 4) {
-        showToast("A nova senha deve ter pelo menos 4 caracteres.", "error");
+        showToast("A nova senha deve ter pelo menos 4 caracteres.");
         return;
       }
-      if (novaSenha !== confirmar) {
-        showToast("A confirmação da nova senha não confere.", "error");
+      if (novaSenha !== confirma) {
+        showToast("A confirmação da nova senha não confere.");
         return;
       }
 
@@ -1252,15 +1498,15 @@
         });
         showToast(res.mensagem || "Senha personalizada salva!");
         modalMinhaSenha.classList.remove("open");
-        const badge = document.getElementById("badgeSenhaStatus");
+        const badge = document.getElementById("badgeSenha");
         badge.className = "pill pill-success";
-        badge.textContent = "Senha personalizada ativa";
+        badge.textContent = "Senha personalizada";
       } catch (err) {
-        showToast(err.message, "error");
+        showToast(err.message);
       }
     });
 
-    // Gestão de Equipe (Admin)
+    // Equipe (Admin)
     if (IS_ADMIN) {
       const modalEditarColab = document.getElementById("modalEditarColab");
       document.getElementById("fecharModalEditarColab").addEventListener("click", () => modalEditarColab.classList.remove("open"));
@@ -1274,12 +1520,12 @@
             const isSupremo = c.matricula === ADMIN_SUPREMO_MATRICULA;
             return `
               <tr>
-                <td><strong>${escapeHtml(c.matricula)}</strong></td>
-                <td>${escapeHtml(c.nome)}</td>
-                <td>${escapeHtml(c.cargo)}</td>
-                <td>${escapeHtml(c.data_nascimento)}</td>
+                <td><strong>${esc(c.matricula)}</strong></td>
+                <td>${esc(c.nome)}</td>
+                <td>${esc(c.cargo)}</td>
+                <td>${esc(c.data_nascimento)}</td>
                 <td>
-                  <span class="pill ${c.tem_senha_personalizada ? "pill-success" : "pill-warning"}">
+                  <span class="pill ${c.tem_senha_personalizada ? "pill-success" : "pill-accent"}">
                     ${c.tem_senha_personalizada ? "Personalizada" : "Padrão"}
                   </span>
                 </td>
@@ -1314,7 +1560,7 @@
           document.getElementById("formNovoColab").reset();
           await carregarEquipe();
         } catch (err) {
-          showToast(err.message, "error");
+          showToast(err.message);
         }
       });
 
@@ -1322,7 +1568,6 @@
         const c = cacheEquipe.find((item) => item.id === id);
         if (!c) return;
         document.getElementById("editColabId").value = c.id;
-        document.getElementById("editColabMatricula").value = c.matricula;
         document.getElementById("editColabNome").value = c.nome;
         document.getElementById("editColabCargo").value = c.cargo;
         document.getElementById("editColabNasc").value = c.data_nascimento;
@@ -1359,7 +1604,7 @@
           modalEditarColab.classList.remove("open");
           await carregarEquipe();
         } catch (err) {
-          showToast(err.message, "error");
+          showToast(err.message);
         }
       });
 
@@ -1370,12 +1615,11 @@
           showToast("Colaborador excluído.");
           await carregarEquipe();
         } catch (err) {
-          showToast(err.message, "error");
+          showToast(err.message);
         }
       };
     }
 
-    // Inicialização
     (async function init() {
       calcEsforcoLocal();
       await carregarBi();
