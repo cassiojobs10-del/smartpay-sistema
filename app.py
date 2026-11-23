@@ -1,439 +1,962 @@
-import streamlit as st
-import pandas as pd
-from backend import calcular_clt
-
-# ==========================================
-# CONFIGURAÇÃO DA PÁGINA
-# ==========================================
-st.set_page_config(
-    page_title="Sistema Financeiro",
-    layout="centered"
+import os
+import sqlite3
+from datetime import datetime
+from functools import wraps
+from flask import (
+    Flask,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
 )
 
-# --- CSS MINIMALISTA E SÓBRIO ---
-st.markdown("""
-<style>
-/* Fundo escuro fosco e minimalista */
-.stApp {
-    background-color: #0E1117 !important;
-    color: #FAFAFA !important;
-}
+app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "sgp-smartpay-chave-secreta-2026")
 
-/* Containers limpos com borda cinza discreta */
-div[data-testid="stVerticalBlockBorderWrapper"] {
-    background-color: #161A24 !important;
-    border: 1px solid #262D3D !important;
-    border-radius: 8px !important;
-    padding: 16px !important;
-}
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "smartpay_produtividade.db")
 
-/* Cards de métricas sóbrios */
-div[data-testid="stMetric"] {
-    background-color: #11141C !important;
-    border: 1px solid #262D3D !important;
-    padding: 14px 18px !important;
-    border-radius: 6px !important;
-}
-div[data-testid="stMetricValue"] > div {
-    font-weight: 600 !important;
-    color: #FFFFFF !important;
-}
-
-/* Removendo excesso de margens em cabeçalhos */
-h1, h2, h3, h4 {
-    font-weight: 600 !important;
-    letter-spacing: -0.3px !important;
-}
-
-/* Estilo discreto da barra lateral */
-section[data-testid="stSidebar"] {
-    background-color: #0A0C10 !important;
-    border-right: 1px solid #1C212E !important;
-}
-hr {
-    border-color: #262D3D !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ==========================================
-# INICIALIZAÇÃO DA MEMÓRIA GLOBAL (SESSION STATE)
-# ==========================================
-valores_padrao = {
-    # CLT
-    "salario_base": 3000.00, "beneficios": 0.00, "jornada": 220, 
-    "dependentes": 0, "aplicar_irrf": True, "horas_50": 0.0, "horas_100": 0.0,
-    # Orçamento Pessoal
-    "moradia": 1200.0, "contas": 300.0, "transporte": 350.0, "outros_fixos": 200.0,
-    "alimentacao": 400.0, "lazer": 250.0, "compras": 300.0, "valor_simulacao": 150.0,
-    # Cartões de Crédito
-    "nome_c1": "Nubank", "limite_c1": 5000.0, "base_c1": 300.0, "fech_c1": 25, "venc_c1": 5,
-    "nome_c2": "XP / Itaú", "limite_c2": 3000.0, "base_c2": 0.0, "fech_c2": 10, "venc_c2": 20,
-    # Consolidados do Motor
-    "salario_liquido": 0.0, "hora_liquida": 0.0, "salario_bruto_total": 0.0,
-    "total_fixo": 0.0, "total_var": 0.0, "total_faturas": 0.0
-}
-
-# Salva os valores padrões na memória se for a primeira vez
-for chave, valor in valores_padrao.items():
-    if chave not in st.session_state:
-        st.session_state[chave] = valor
-
-# Tabelas e Chat requerem estruturas específicas na memória
-if "df_c1_data" not in st.session_state:
-    st.session_state["df_c1_data"] = pd.DataFrame([{"Descrição": "Supermercado", "Valor (R$)": 250.00}, {"Descrição": "Assinatura de Softwares", "Valor (R$)": 39.90}])
-if "df_c2_data" not in st.session_state:
-    st.session_state["df_c2_data"] = pd.DataFrame([{"Descrição": "Combustível", "Valor (R$)": 150.00}])
-if "conversas" not in st.session_state:
-    st.session_state["conversas"] = {"1": {"mensagens": []}}
+ADMIN_MATRICULA_SUPREMA = "12345"
+ADMIN_NOME_SUPREMO = "Cássio Abreu"
+ADMIN_SENHA_SUPREMA = "30/12/95"
 
 
-# ==========================================
-# BARRA LATERAL (MENU)
-# ==========================================
-st.sidebar.title("Sistema Financeiro")
-st.sidebar.caption("Gestão Patrimonial e CLT")
-
-menu_selecionado = st.sidebar.radio(
-    "Navegação:",
-    ["Trabalhista & CLT", "Orçamento Pessoal", "Cartões de Crédito", "Consultoria IA"]
-)
-
-st.sidebar.divider()
-st.sidebar.caption("Os cálculos e faturas são sincronizados automaticamente entre os módulos.")
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH, timeout=30)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA synchronous = FULL")
+    conn.execute("PRAGMA journal_mode = DELETE")
+    return conn
 
 
-# ==========================================
-# 1. TRABALHISTA & CLT
-# ==========================================
-if menu_selecionado == "Trabalhista & CLT":
-    st.title("Trabalhista & CLT")
-    st.write("Demonstrativo de descontos oficiais e remuneração líquida real.")
-    st.divider()
-
-    with st.container(border=True):
-        st.subheader("Parâmetros do Salário")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            salario_base = st.number_input("Salário Bruto Base (R$)", min_value=1000.0, value=float(st.session_state["salario_base"]), step=100.0)
-            st.session_state["salario_base"] = salario_base
-        with col2:
-            beneficios = st.number_input("Benefícios Isentos (R$)", min_value=0.0, value=float(st.session_state["beneficios"]), step=50.0, help="Soma de Auxílio Alimentação, Refeição, Creche, etc.")
-            st.session_state["beneficios"] = beneficios
-
-        col3, col4, col5 = st.columns(3)
-        with col3:
-            opcoes_jornada = [220, 200, 180, 150]
-            jornada = st.selectbox("Jornada Mensal (Horas)", options=opcoes_jornada, index=opcoes_jornada.index(st.session_state["jornada"]))
-            st.session_state["jornada"] = jornada
-        with col4:
-            dependentes = st.number_input("Dependentes", min_value=0, value=int(st.session_state["dependentes"]), step=1)
-            st.session_state["dependentes"] = dependentes
-        with col5:
-            st.write("")
-            aplicar_irrf = st.toggle("Descontar IRRF", value=bool(st.session_state["aplicar_irrf"]))
-            st.session_state["aplicar_irrf"] = aplicar_irrf
-
-        with st.expander("Adicionar Horas Extras no Mês"):
-            col_he1, col_he2 = st.columns(2)
-            with col_he1:
-                horas_50 = st.number_input("Horas Extras 50% (Qtd)", min_value=0.0, value=float(st.session_state["horas_50"]), step=1.0)
-                st.session_state["horas_50"] = horas_50
-            with col_he2:
-                horas_100 = st.number_input("Horas Extras 100% (Qtd)", min_value=0.0, value=float(st.session_state["horas_100"]), step=1.0)
-                st.session_state["horas_100"] = horas_100
-
-    folha = calcular_clt(salario_base, jornada, dependentes, aplicar_irrf, horas_50, horas_100)
-    
-    salario_liquido_real = folha["salario_liquido"] + beneficios
-    salario_bruto_real = folha["salario_bruto_total"] + beneficios
-    
-    st.session_state["salario_liquido"] = salario_liquido_real
-    st.session_state["hora_liquida"] = folha["hora_liquida"]
-    st.session_state["salario_bruto_total"] = salario_bruto_real
-
-    st.write("")
-    with st.container(border=True):
-        st.subheader("Composição da Remuneração Mensal")
-
-        if folha["total_horas_extras"] > 0 or beneficios > 0:
-            st.write(f"**Salário Bruto Total:** R$ {salario_bruto_real:,.2f}")
-
-        card1, card2, card3 = st.columns(3)
-        with card1:
-            st.metric("Salário Líquido", f"R$ {salario_liquido_real:,.2f}", delta=f"Hora real: R$ {folha['hora_liquida']:,.2f}")
-        with card2:
-            st.metric("Desconto INSS", f"R$ {folha['inss']:,.2f}")
-        with card3:
-            if aplicar_irrf and folha['irrf'] > 0:
-                st.metric("Desconto IRRF", f"R$ {folha['irrf']:,.2f}")
-            else:
-                st.metric("Desconto IRRF", "R$ 0,00", delta="Isento", delta_color="off")
-                
-        st.write("")
-        st.caption(f"FGTS Acumulado no Mês (8%): R$ {folha['fgts']:,.2f} — Valor recolhido integralmente pelo empregador.")
-
-    st.write("")
-    with st.expander("Simular Recebimento de Férias"):
-        st.write("Demonstrativo do cálculo de Férias Integrais (30 dias) com terço constitucional.")
-        ferias_bruto = salario_base + (salario_base / 3)
-        desc_ferias = calcular_clt(ferias_bruto, 220, dependentes, aplicar_irrf, 0, 0)
-        
-        col_f1, col_f2, col_f3 = st.columns(3)
-        with col_f1:
-            st.metric("Férias Brutas", f"R$ {ferias_bruto:,.2f}")
-        with col_f2:
-            st.metric("Adicional 1/3", f"R$ {(salario_base / 3):,.2f}")
-        with col_f3:
-            st.metric("Líquido a Receber", f"R$ {desc_ferias['salario_liquido']:,.2f}", delta="Com descontos aplicados", delta_color="normal")
+def calcular_esforco(
+    processos, contratos, certidoes, parciais, glosas, apostilamentos
+):
+    return (
+        (int(processos or 0) * 1)
+        + (int(contratos or 0) * 2)
+        + (int(certidoes or 0) * 1)
+        + (int(parciais or 0) * 1)
+        + (int(glosas or 0) * 1)
+        + (int(apostilamentos or 0) * 2)
+    )
 
 
-# ==========================================
-# 2. ORÇAMENTO PESSOAL
-# ==========================================
-elif menu_selecionado == "Orçamento Pessoal":
-    st.title("Orçamento Pessoal")
-    st.write("Gestão de despesas essenciais, distribuição de renda e dinheiro livre.")
-    st.divider()
-
-    sal_liquido = st.session_state["salario_liquido"]
-    hora_liq = st.session_state["hora_liquida"]
-    faturas_cartao = st.session_state["total_faturas"]
-
-    with st.container(border=True):
-        st.subheader("Caixa Disponível do Mês")
-        
-        despesas_atuais = st.session_state["total_fixo"] + st.session_state["total_var"] + faturas_cartao
-        dinheiro_livre = max(0.0, sal_liquido - despesas_atuais)
-        
-        delta_cor = "normal" if dinheiro_livre > (sal_liquido * 0.1) else "off"
-        if dinheiro_livre <= 0: delta_cor = "inverse"
-        
-        col_d1, col_d2 = st.columns([1, 1.5])
-        with col_d1:
-            st.metric("Free Money (Livre)", f"R$ {dinheiro_livre:,.2f}", delta=f"Renda Base: R$ {sal_liquido:,.2f}", delta_color=delta_cor)
-        with col_d2:
-            st.write("Distribuição Orçamentária:")
-            if sal_liquido > 0:
-                pct_fixo = (st.session_state['total_fixo'] / sal_liquido) * 100
-                pct_var = (st.session_state['total_var'] / sal_liquido) * 100
-                pct_cartao = (faturas_cartao / sal_liquido) * 100
-                pct_livre = (dinheiro_livre / sal_liquido) * 100
-                st.caption(f"Fixas: {pct_fixo:.1f}% | Variáveis: {pct_var:.1f}% | Cartões: {pct_cartao:.1f}% | **Livre: {pct_livre:.1f}%**")
-                st.progress(min(1.0, (despesas_atuais/sal_liquido)))
-            else:
-                st.caption("Aguardando entrada de receita.")
-
-    st.write("")
-
-    with st.container(border=True):
-        col_fixo, col_var = st.columns(2)
-        with col_fixo:
-            st.markdown("#### Despesas Fixas")
-            moradia = st.number_input("Aluguel / Condomínio", min_value=0.0, value=float(st.session_state["moradia"]), step=50.0)
-            contas = st.number_input("Contas Básicas", min_value=0.0, value=float(st.session_state["contas"]), step=20.0)
-            transporte = st.number_input("Transporte", min_value=0.0, value=float(st.session_state["transporte"]), step=20.0)
-            outros_fixos = st.number_input("Outras Fixas", min_value=0.0, value=float(st.session_state["outros_fixos"]), step=20.0)
-            
-            st.session_state.update({"moradia": moradia, "contas": contas, "transporte": transporte, "outros_fixos": outros_fixos})
-
-        with col_var:
-            st.markdown("#### Despesas Variáveis")
-            alimentacao = st.number_input("Alimentação / Delivery", min_value=0.0, value=float(st.session_state["alimentacao"]), step=20.0)
-            lazer = st.number_input("Lazer", min_value=0.0, value=float(st.session_state["lazer"]), step=20.0)
-            compras = st.number_input("Imprevistos", min_value=0.0, value=float(st.session_state["compras"]), step=20.0)
-            
-            st.session_state.update({"alimentacao": alimentacao, "lazer": lazer, "compras": compras})
-
-    total_fixo = round(moradia + contas + transporte + outros_fixos, 2)
-    total_var = round(alimentacao + lazer + compras, 2)
-    
-    st.session_state["total_fixo"] = total_fixo
-    st.session_state["total_var"] = total_var
-
-    total_gastos = round(total_fixo + total_var, 2)
-    sobra_antes_cartao = round(sal_liquido - total_gastos, 2)
-
-    st.write("")
-    with st.container(border=True):
-        st.subheader("Resumo de Despesas")
-        b_card1, b_card2, b_card3 = st.columns(3)
-        with b_card1:
-            st.metric("Despesas Fixas", f"R$ {total_fixo:,.2f}")
-        with b_card2:
-            st.metric("Despesas Variáveis", f"R$ {total_var:,.2f}")
-        with b_card3:
-            st.metric("Saldo Pré-Cartão", f"R$ {sobra_antes_cartao:,.2f}", delta="Antes de faturas")
-
-    st.write("")
-    with st.container(border=True):
-        st.subheader("Custo em Horas de Trabalho")
-        col_gasto1, col_gasto2 = st.columns([1, 2])
-        with col_gasto1:
-            valor_compra = st.number_input("Valor para simular (R$)", min_value=1.0, value=float(st.session_state["valor_simulacao"]), step=10.0)
-            st.session_state["valor_simulacao"] = valor_compra
-        with col_gasto2:
-            if hora_liq > 0:
-                total_minutos = round((valor_compra / hora_liq) * 60)
-                horas = total_minutos // 60
-                minutos = total_minutos % 60
-                st.write(f"Para adquirir um item de **R$ {valor_compra:,.2f}**, o tempo de trabalho líquido correspondente é de **{horas} horas e {minutos} minutos**.")
-
-
-# ==========================================
-# 3. CARTÕES DE CRÉDITO
-# ==========================================
-elif menu_selecionado == "Cartões de Crédito":
-    st.title("Cartões de Crédito")
-    st.write("Acompanhamento de faturas, parcelas e limites disponíveis.")
-    st.divider()
-
-    aba1, aba2 = st.tabs(["Cartão Principal", "Cartão Secundário"])
-
-    with aba1:
-        with st.container(border=True):
-            st.subheader("Cartão Principal")
-            nome_c1 = st.text_input("Identificação", value=st.session_state["nome_c1"], key="in_nome_c1")
-            
-            col_c1_a, col_c1_b = st.columns(2)
-            with col_c1_a:
-                limite_c1 = st.number_input("Limite Total (R$)", min_value=0.0, value=float(st.session_state["limite_c1"]), step=100.0)
-                fatura_base_c1 = st.number_input("Parcelas em Andamento (R$)", min_value=0.0, value=float(st.session_state["base_c1"]), step=50.0)
-            with col_c1_b:
-                fechamento_c1 = st.number_input("Dia do Fechamento", min_value=1, max_value=31, value=int(st.session_state["fech_c1"]))
-                vencimento_c1 = st.number_input("Dia do Vencimento", min_value=1, max_value=31, value=int(st.session_state["venc_c1"]))
-
-            st.session_state.update({"nome_c1": nome_c1, "limite_c1": limite_c1, "base_c1": fatura_base_c1, "fech_c1": fechamento_c1, "venc_c1": vencimento_c1})
-
-            st.markdown(f"**Registros do Mês — {nome_c1}**")
-            df_c1 = st.data_editor(st.session_state["df_c1_data"], num_rows="dynamic", use_container_width=True)
-            st.session_state["df_c1_data"] = df_c1
-            
-            fatura_total_c1 = round(fatura_base_c1 + df_c1["Valor (R$)"].sum(), 2)
-            limite_disp_c1 = max(0.0, limite_c1 - fatura_total_c1)
-            melhor_dia_c1 = (fechamento_c1 % 31) + 1
-
-            res1, res2, res3 = st.columns(3)
-            with res1:
-                st.metric(f"Fatura Total — {nome_c1}", f"R$ {fatura_total_c1:,.2f}")
-            with res2:
-                st.metric("Limite Disponível", f"R$ {limite_disp_c1:,.2f}")
-            with res3:
-                st.metric("Melhor Dia de Compra", f"Dia {melhor_dia_c1}")
-
-    with aba2:
-        with st.container(border=True):
-            st.subheader("Cartão Secundário")
-            nome_c2 = st.text_input("Identificação", value=st.session_state["nome_c2"], key="in_nome_c2")
-            
-            col_c2_a, col_c2_b = st.columns(2)
-            with col_c2_a:
-                limite_c2 = st.number_input("Limite Total (R$)", min_value=0.0, value=float(st.session_state["limite_c2"]), step=100.0, key="in_lim_c2")
-                fatura_base_c2 = st.number_input("Parcelas em Andamento (R$)", min_value=0.0, value=float(st.session_state["base_c2"]), step=50.0, key="in_base_c2")
-            with col_c2_b:
-                fechamento_c2 = st.number_input("Dia do Fechamento", min_value=1, max_value=31, value=int(st.session_state["fech_c2"]), key="in_fech_c2")
-                vencimento_c2 = st.number_input("Dia do Vencimento", min_value=1, max_value=31, value=int(st.session_state["venc_c2"]), key="in_venc_c2")
-
-            st.session_state.update({"nome_c2": nome_c2, "limite_c2": limite_c2, "base_c2": fatura_base_c2, "fech_c2": fechamento_c2, "venc_c2": vencimento_c2})
-
-            st.markdown(f"**Registros do Mês — {nome_c2}**")
-            df_c2 = st.data_editor(st.session_state["df_c2_data"], num_rows="dynamic", use_container_width=True)
-            st.session_state["df_c2_data"] = df_c2
-            
-            fatura_total_c2 = round(fatura_base_c2 + df_c2["Valor (R$)"].sum(), 2)
-            limite_disp_c2 = max(0.0, limite_c2 - fatura_total_c2)
-            melhor_dia_c2 = (fechamento_c2 % 31) + 1
-
-            res_b1, res_b2, res_b3 = st.columns(3)
-            with res_b1:
-                st.metric(f"Fatura Total — {nome_c2}", f"R$ {fatura_total_c2:,.2f}")
-            with res_b2:
-                st.metric("Limite Disponível", f"R$ {limite_disp_c2:,.2f}")
-            with res_b3:
-                st.metric("Melhor Dia de Compra", f"Dia {melhor_dia_c2}")
-
-    st.session_state["total_faturas"] = round(fatura_total_c1 + fatura_total_c2, 2)
-
-    st.write("")
-    st.write(f"**Total Agregado de Faturas:** R$ {st.session_state['total_faturas']:,.2f}")
-
-
-# ==========================================
-# 4. CONSULTORIA IA
-# ==========================================
-elif menu_selecionado == "Consultoria IA":
-    st.title("Consultoria Financeira IA")
-    st.write("Converse de forma natural sobre o seu cenário financeiro.")
-    st.divider()
-
-    contexto = {
-        "sal_liq": st.session_state["salario_liquido"],
-        "salario_base": st.session_state["salario_base"],
-        "beneficios": st.session_state["beneficios"],
-        "fixos": st.session_state["total_fixo"],
-        "variaveis": st.session_state["total_var"],
-        "faturas": st.session_state["total_faturas"]
-    }
-    
-    total_saidas = round(contexto["fixos"] + contexto["variaveis"] + contexto["faturas"], 2)
-    contexto["saldo_livre"] = round(contexto["sal_liq"] - total_saidas, 2)
-
-    col_titulo, col_btn = st.columns([4, 1])
-    with col_titulo:
-        st.subheader("Assistente Virtual")
-    with col_btn:
-        if st.button("Nova Conversa 🔄", use_container_width=True):
-            st.session_state["conversas"]["1"]["mensagens"] = []
-            st.rerun()
-
-    def motor_ia_interno(pergunta, dados):
-        p = pergunta.lower()
-        if "benefício" in p or "beneficio" in p or "auxílio" in p or "auxilio" in p:
-            if dados['beneficios'] == 0:
-                return "Analisando seus dados, notei que **você não possui nenhum benefício ou auxílio isento cadastrado** no momento (o valor está R$ 0,00). Você pode ajustar isso na aba 'Trabalhista & CLT'."
-            else:
-                return f"Você tem cadastrado o valor de **R$ {dados['beneficios']:,.2f}** em benefícios isentos mensais na sua folha."
-        elif "salário" in p or "salario" in p or "ganho" in p:
-            return f"Seu salário bruto base está configurado em R$ {dados['salario_base']:,.2f}. Após a aplicação dos descontos oficiais e somando os seus benefícios, a sua remuneração líquida real disponível é de **R$ {dados['sal_liq']:,.2f}**."
-        elif "despesa" in p or "gasto" in p or "fixo" in p or "variável" in p or "variavel" in p:
-            total_despesas = dados['fixos'] + dados['variaveis']
-            return f"No seu orçamento pessoal, as despesas somam **R$ {total_despesas:,.2f}**, sendo divididas em R$ {dados['fixos']:,.2f} para custos fixos e R$ {dados['variaveis']:,.2f} para variáveis."
-        elif "fatura" in p or "cartão" in p or "cartao" in p or "crédito" in p:
-            return f"De acordo com a aba de Cartões de Crédito, a projeção atual das suas faturas totaliza **R$ {dados['faturas']:,.2f}** neste mês."
-        elif "livre" in p or "sobra" in p or "investir" in p or "saldo" in p or "resumo" in p:
-            if dados['saldo_livre'] <= 0:
-                return f"Atenção: A projeção do seu saldo livre está negativa em **R$ {dados['saldo_livre']:,.2f}**. É recomendável entrar nas abas de Orçamento e Cartões para revisar os gastos variáveis e evitar o uso de limite."
-            else:
-                return f"Boas notícias! Seu dinheiro livre projetado após pagar todas as obrigações é de **R$ {dados['saldo_livre']:,.2f}**. Esse montante está livre para direcionamento em investimentos ou lazer."
-        else:
-            return "Com base nos dados que você inseriu, estou monitorando seu fluxo de caixa. Como o nosso papo é focado em finanças, por favor me faça perguntas mais diretas sobre seus números, como:\n- *'Quanto eu recebo de benefício?'*\n- *'Qual meu saldo livre?'*\n- *'Como estão as minhas despesas?'*"
-
-    with st.container(border=True):
-        dados_ativos = st.session_state["conversas"]["1"]
-
-        if not dados_ativos["mensagens"]:
-            msg_boas_vindas = (
-                f"Olá! Eu sou o assistente do seu Sistema Financeiro.\n\n"
-                f"Analisei os dados das outras abas e vi que sua renda líquida é de **R$ {contexto['sal_liq']:,.2f}** e, após todas as obrigações, "
-                f"seu saldo livre atual projetado é de **R$ {contexto['saldo_livre']:,.2f}**.\n\n"
-                "Você pode me perguntar detalhes do seu orçamento. Tente algo como: *'Quanto eu recebo de benefício?'*"
+def init_db():
+    with get_db_connection() as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS colaboradores (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                matricula TEXT UNIQUE NOT NULL,
+                nome TEXT NOT NULL,
+                cargo TEXT NOT NULL DEFAULT 'Analista',
+                data_nascimento TEXT NOT NULL,
+                is_admin INTEGER NOT NULL DEFAULT 0
             )
-            dados_ativos["mensagens"].append({"role": "assistant", "content": msg_boas_vindas})
+            """
+        )
 
-        for mensagem in dados_ativos["mensagens"]:
-            with st.chat_message(mensagem["role"]):
-                st.markdown(mensagem["content"])
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS lancamentos_remessas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                data_pagamento TEXT NOT NULL,
+                nome_remessa TEXT NOT NULL,
+                qtd_fornecedores INTEGER NOT NULL DEFAULT 0,
+                qtd_processos INTEGER NOT NULL DEFAULT 0,
+                qtd_contratos INTEGER NOT NULL DEFAULT 0,
+                certidoes_renovadas INTEGER NOT NULL DEFAULT 0,
+                pagamentos_parciais INTEGER NOT NULL DEFAULT 0,
+                glosas_lancadas INTEGER NOT NULL DEFAULT 0,
+                apostilamentos_bancarios INTEGER NOT NULL DEFAULT 0,
+                pontuacao_total INTEGER NOT NULL DEFAULT 0,
+                data_registro TEXT NOT NULL,
+                matricula_usuario TEXT NOT NULL
+            )
+            """
+        )
 
-        if prompt := st.chat_input("Pergunte sobre seus benefícios, salário, faturas..."):
-            dados_ativos["mensagens"].append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS ocorrencias (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                data_registro TEXT NOT NULL,
+                motivo TEXT NOT NULL,
+                referencia TEXT NOT NULL,
+                tempo_impacto REAL NOT NULL DEFAULT 0,
+                observacoes TEXT DEFAULT '',
+                matricula_usuario TEXT NOT NULL,
+                data_criacao TEXT NOT NULL
+            )
+            """
+        )
 
-            with st.chat_message("assistant"):
-                with st.spinner("Processando seus dados..."):
-                    resposta_gerada = motor_ia_interno(prompt, contexto)
-                    st.markdown(resposta_gerada)
-            
-            dados_ativos["mensagens"].append({"role": "assistant", "content": resposta_gerada})
-            st.rerun()
+        # Garante sempre a existência e integridade do Administrador Supremo
+        admin_existente = conn.execute(
+            "SELECT id FROM colaboradores WHERE matricula = ?",
+            (ADMIN_MATRICULA_SUPREMA,),
+        ).fetchone()
+
+        if not admin_existente:
+            conn.execute(
+                """
+                INSERT INTO colaboradores (matricula, nome, cargo, data_nascimento, is_admin)
+                VALUES (?, ?, ?, ?, 1)
+                """,
+                (
+                    ADMIN_MATRICULA_SUPREMA,
+                    ADMIN_NOME_SUPREMO,
+                    "Administrador Supremo",
+                    ADMIN_SENHA_SUPREMA,
+                ),
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE colaboradores
+                SET nome = COALESCE(NULLIF(nome, ''), ?),
+                    data_nascimento = COALESCE(NULLIF(data_nascimento, ''), ?),
+                    is_admin = 1
+                WHERE matricula = ?
+                """,
+                (ADMIN_NOME_SUPREMO, ADMIN_SENHA_SUPREMA, ADMIN_MATRICULA_SUPREMA),
+            )
+
+        conn.commit()
+
+
+init_db()
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "matricula" not in session:
+            if request.path.startswith("/api/"):
+                return jsonify({"erro": "Não autenticado."}), 401
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "matricula" not in session:
+            return jsonify({"erro": "Não autenticado."}), 401
+        if not session.get("is_admin"):
+            return jsonify({"erro": "Acesso restrito a administradores."}), 403
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "GET":
+        if "matricula" in session:
+            return redirect(url_for("index"))
+        return render_template("login.html")
+
+    data = request.get_json(silent=True) or {}
+    usuario = str(data.get("usuario", "")).strip()
+    senha = str(data.get("senha", "")).strip()
+
+    if not usuario or not senha:
+        return (
+            jsonify(
+                {
+                    "status": "erro",
+                    "mensagem": "Informe a matrícula e a senha.",
+                }
+            ),
+            400,
+        )
+
+    with get_db_connection() as conn:
+        user = conn.execute(
+            """
+            SELECT matricula, nome, cargo, data_nascimento, is_admin
+            FROM colaboradores
+            WHERE matricula = ?
+            """,
+            (usuario,),
+        ).fetchone()
+
+    if not user or user["data_nascimento"].strip() != senha:
+        return (
+            jsonify(
+                {
+                    "status": "erro",
+                    "mensagem": "Matrícula ou data de nascimento incorretos.",
+                }
+            ),
+            401,
+        )
+
+    is_supremo = user["matricula"] == ADMIN_MATRICULA_SUPREMA
+    session.clear()
+    session["matricula"] = user["matricula"]
+    session["nome"] = ADMIN_NOME_SUPREMO if is_supremo else user["nome"]
+    session["cargo"] = user["cargo"]
+    session["is_admin"] = 1 if (is_supremo or int(user["is_admin"]) == 1) else 0
+
+    return jsonify({"status": "sucesso", "redirect": url_for("index")})
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+@app.route("/")
+@login_required
+def index():
+    return render_template(
+        "index.html",
+        usuario_matricula=session.get("matricula"),
+        usuario_nome=session.get("nome"),
+        usuario_cargo=session.get("cargo"),
+        is_admin=bool(session.get("is_admin")),
+    )
+
+
+@app.route("/api/sessao", methods=["GET"])
+@login_required
+def api_sessao():
+    return jsonify(
+        {
+            "matricula": session.get("matricula"),
+            "nome": session.get("nome"),
+            "cargo": session.get("cargo"),
+            "is_admin": bool(session.get("is_admin")),
+        }
+    )
+
+
+# ==========================================================
+# REMESSAS PAGAS (CRUD COM ISOLAMENTO POR MATRÍCULA)
+# ==========================================================
+@app.route("/api/remessas", methods=["GET", "POST"])
+@login_required
+def api_remessas():
+    matricula_atual = session.get("matricula")
+    is_admin = bool(session.get("is_admin"))
+
+    with get_db_connection() as conn:
+        if request.method == "GET":
+            filtro_matricula = request.args.get("matricula", "").strip()
+
+            if is_admin:
+                if filtro_matricula and filtro_matricula != "TODOS":
+                    rows = conn.execute(
+                        """
+                        SELECT r.*, COALESCE(c.nome, r.matricula_usuario) AS nome_colaborador
+                        FROM lancamentos_remessas r
+                        LEFT JOIN colaboradores c ON c.matricula = r.matricula_usuario
+                        WHERE r.matricula_usuario = ?
+                        ORDER BY r.id DESC
+                        """,
+                        (filtro_matricula,),
+                    ).fetchall()
+                else:
+                    rows = conn.execute(
+                        """
+                        SELECT r.*, COALESCE(c.nome, r.matricula_usuario) AS nome_colaborador
+                        FROM lancamentos_remessas r
+                        LEFT JOIN colaboradores c ON c.matricula = r.matricula_usuario
+                        ORDER BY r.id DESC
+                        """
+                    ).fetchall()
+            else:
+                rows = conn.execute(
+                    """
+                    SELECT r.*, COALESCE(c.nome, r.matricula_usuario) AS nome_colaborador
+                    FROM lancamentos_remessas r
+                    LEFT JOIN colaboradores c ON c.matricula = r.matricula_usuario
+                    WHERE r.matricula_usuario = ?
+                    ORDER BY r.id DESC
+                    """,
+                    (matricula_atual,),
+                ).fetchall()
+
+            return jsonify([dict(row) for row in rows])
+
+        data = request.get_json(silent=True) or {}
+        data_pagamento = str(data.get("data_pagamento", "")).strip()
+        nome_remessa = str(data.get("nome_remessa", "")).strip()
+
+        if not data_pagamento or not nome_remessa:
+            return (
+                jsonify(
+                    {
+                        "erro": "Data de pagamento e nome da remessa são obrigatórios."
+                    }
+                ),
+                400,
+            )
+
+        fornecedores = int(data.get("qtd_fornecedores", 0) or 0)
+        processos = int(data.get("qtd_processos", 0) or 0)
+        contratos = int(data.get("qtd_contratos", 0) or 0)
+        certidoes = int(data.get("certidoes_renovadas", 0) or 0)
+        parciais = int(data.get("pagamentos_parciais", 0) or 0)
+        glosas = int(data.get("glosas_lancadas", 0) or 0)
+        apostilamentos = int(data.get("apostilamentos_bancarios", 0) or 0)
+
+        pontuacao = calcular_esforco(
+            processos, contratos, certidoes, parciais, glosas, apostilamentos
+        )
+        data_registro = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        cursor = conn.execute(
+            """
+            INSERT INTO lancamentos_remessas (
+                data_pagamento, nome_remessa, qtd_fornecedores, qtd_processos,
+                qtd_contratos, certidoes_renovadas, pagamentos_parciais,
+                glosas_lancadas, apostilamentos_bancarios, pontuacao_total,
+                data_registro, matricula_usuario
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                data_pagamento,
+                nome_remessa,
+                fornecedores,
+                processos,
+                contratos,
+                certidoes,
+                parciais,
+                glosas,
+                apostilamentos,
+                pontuacao,
+                data_registro,
+                matricula_atual,
+            ),
+        )
+        conn.commit()
+
+        novo = conn.execute(
+            """
+            SELECT r.*, COALESCE(c.nome, r.matricula_usuario) AS nome_colaborador
+            FROM lancamentos_remessas r
+            LEFT JOIN colaboradores c ON c.matricula = r.matricula_usuario
+            WHERE r.id = ?
+            """,
+            (cursor.lastrowid,),
+        ).fetchone()
+        return jsonify(dict(novo)), 201
+
+
+@app.route("/api/remessas/<int:remessa_id>", methods=["PUT", "DELETE"])
+@login_required
+def api_remessa_item(remessa_id):
+    matricula_atual = session.get("matricula")
+    is_admin = bool(session.get("is_admin"))
+
+    with get_db_connection() as conn:
+        registro = conn.execute(
+            "SELECT * FROM lancamentos_remessas WHERE id = ?", (remessa_id,)
+        ).fetchone()
+
+        if not registro:
+            return jsonify({"erro": "Registro de remessa não encontrado."}), 404
+
+        if not is_admin and registro["matricula_usuario"] != matricula_atual:
+            return (
+                jsonify(
+                    {
+                        "erro": "Você não tem permissão para alterar ou excluir este registro."
+                    }
+                ),
+                403,
+            )
+
+        if request.method == "DELETE":
+            conn.execute(
+                "DELETE FROM lancamentos_remessas WHERE id = ?", (remessa_id,)
+            )
+            conn.commit()
+            return jsonify({"status": "excluido", "id": remessa_id})
+
+        data = request.get_json(silent=True) or {}
+        data_pagamento = str(
+            data.get("data_pagamento", registro["data_pagamento"])
+        ).strip()
+        nome_remessa = str(
+            data.get("nome_remessa", registro["nome_remessa"])
+        ).strip()
+        fornecedores = int(
+            data.get("qtd_fornecedores", registro["qtd_fornecedores"]) or 0
+        )
+        processos = int(
+            data.get("qtd_processos", registro["qtd_processos"]) or 0
+        )
+        contratos = int(
+            data.get("qtd_contratos", registro["qtd_contratos"]) or 0
+        )
+        certidoes = int(
+            data.get("certidoes_renovadas", registro["certidoes_renovadas"])
+            or 0
+        )
+        parciais = int(
+            data.get("pagamentos_parciais", registro["pagamentos_parciais"])
+            or 0
+        )
+        glosas = int(
+            data.get("glosas_lancadas", registro["glosas_lancadas"]) or 0
+        )
+        apostilamentos = int(
+            data.get(
+                "apostilamentos_bancarios", registro["apostilamentos_bancarios"]
+            )
+            or 0
+        )
+
+        pontuacao = calcular_esforco(
+            processos, contratos, certidoes, parciais, glosas, apostilamentos
+        )
+
+        conn.execute(
+            """
+            UPDATE lancamentos_remessas
+            SET data_pagamento = ?,
+                nome_remessa = ?,
+                qtd_fornecedores = ?,
+                qtd_processos = ?,
+                qtd_contratos = ?,
+                certidoes_renovadas = ?,
+                pagamentos_parciais = ?,
+                glosas_lancadas = ?,
+                apostilamentos_bancarios = ?,
+                pontuacao_total = ?
+            WHERE id = ?
+            """,
+            (
+                data_pagamento,
+                nome_remessa,
+                fornecedores,
+                processos,
+                contratos,
+                certidoes,
+                parciais,
+                glosas,
+                apostilamentos,
+                pontuacao,
+                remessa_id,
+            ),
+        )
+        conn.commit()
+
+        atualizado = conn.execute(
+            """
+            SELECT r.*, COALESCE(c.nome, r.matricula_usuario) AS nome_colaborador
+            FROM lancamentos_remessas r
+            LEFT JOIN colaboradores c ON c.matricula = r.matricula_usuario
+            WHERE r.id = ?
+            """,
+            (remessa_id,),
+        ).fetchone()
+        return jsonify(dict(atualizado))
+
+
+# ==========================================================
+# OCORRÊNCIAS / PENDÊNCIAS (CRUD COM ISOLAMENTO POR MATRÍCULA)
+# ==========================================================
+@app.route("/api/ocorrencias", methods=["GET", "POST"])
+@login_required
+def api_ocorrencias():
+    matricula_atual = session.get("matricula")
+    is_admin = bool(session.get("is_admin"))
+
+    with get_db_connection() as conn:
+        if request.method == "GET":
+            filtro_matricula = request.args.get("matricula", "").strip()
+
+            if is_admin:
+                if filtro_matricula and filtro_matricula != "TODOS":
+                    rows = conn.execute(
+                        """
+                        SELECT o.*, COALESCE(c.nome, o.matricula_usuario) AS nome_colaborador
+                        FROM ocorrencias o
+                        LEFT JOIN colaboradores c ON c.matricula = o.matricula_usuario
+                        WHERE o.matricula_usuario = ?
+                        ORDER BY o.id DESC
+                        """,
+                        (filtro_matricula,),
+                    ).fetchall()
+                else:
+                    rows = conn.execute(
+                        """
+                        SELECT o.*, COALESCE(c.nome, o.matricula_usuario) AS nome_colaborador
+                        FROM ocorrencias o
+                        LEFT JOIN colaboradores c ON c.matricula = o.matricula_usuario
+                        ORDER BY o.id DESC
+                        """
+                    ).fetchall()
+            else:
+                rows = conn.execute(
+                    """
+                    SELECT o.*, COALESCE(c.nome, o.matricula_usuario) AS nome_colaborador
+                    FROM ocorrencias o
+                    LEFT JOIN colaboradores c ON c.matricula = o.matricula_usuario
+                    WHERE o.matricula_usuario = ?
+                    ORDER BY o.id DESC
+                    """,
+                    (matricula_atual,),
+                ).fetchall()
+
+            return jsonify([dict(row) for row in rows])
+
+        data = request.get_json(silent=True) or {}
+        data_registro = str(data.get("data_registro", "")).strip()
+        motivo = str(data.get("motivo", "")).strip()
+        referencia = str(data.get("referencia", "")).strip()
+        tempo_impacto = float(data.get("tempo_impacto", 0) or 0)
+        observacoes = str(data.get("observacoes", "")).strip()
+
+        if not data_registro or not motivo or not referencia:
+            return (
+                jsonify(
+                    {
+                        "erro": "Data, motivo e referência são obrigatórios."
+                    }
+                ),
+                400,
+            )
+
+        data_criacao = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor = conn.execute(
+            """
+            INSERT INTO ocorrencias (
+                data_registro, motivo, referencia, tempo_impacto,
+                observacoes, matricula_usuario, data_criacao
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                data_registro,
+                motivo,
+                referencia,
+                tempo_impacto,
+                observacoes,
+                matricula_atual,
+                data_criacao,
+            ),
+        )
+        conn.commit()
+
+        nova = conn.execute(
+            """
+            SELECT o.*, COALESCE(c.nome, o.matricula_usuario) AS nome_colaborador
+            FROM ocorrencias o
+            LEFT JOIN colaboradores c ON c.matricula = o.matricula_usuario
+            WHERE o.id = ?
+            """,
+            (cursor.lastrowid,),
+        ).fetchone()
+        return jsonify(dict(nova)), 201
+
+
+@app.route("/api/ocorrencias/<int:ocorrencia_id>", methods=["PUT", "DELETE"])
+@login_required
+def api_ocorrencia_item(ocorrencia_id):
+    matricula_atual = session.get("matricula")
+    is_admin = bool(session.get("is_admin"))
+
+    with get_db_connection() as conn:
+        registro = conn.execute(
+            "SELECT * FROM ocorrencias WHERE id = ?", (ocorrencia_id,)
+        ).fetchone()
+
+        if not registro:
+            return jsonify({"erro": "Ocorrência não encontrada."}), 404
+
+        if not is_admin and registro["matricula_usuario"] != matricula_atual:
+            return (
+                jsonify(
+                    {
+                        "erro": "Você não tem permissão para alterar ou excluir esta ocorrência."
+                    }
+                ),
+                403,
+            )
+
+        if request.method == "DELETE":
+            conn.execute(
+                "DELETE FROM ocorrencias WHERE id = ?", (ocorrencia_id,)
+            )
+            conn.commit()
+            return jsonify({"status": "excluido", "id": ocorrencia_id})
+
+        data = request.get_json(silent=True) or {}
+        data_registro = str(
+            data.get("data_registro", registro["data_registro"])
+        ).strip()
+        motivo = str(data.get("motivo", registro["motivo"])).strip()
+        referencia = str(
+            data.get("referencia", registro["referencia"])
+        ).strip()
+        tempo_impacto = float(
+            data.get("tempo_impacto", registro["tempo_impacto"]) or 0
+        )
+        observacoes = str(
+            data.get("observacoes", registro["observacoes"])
+        ).strip()
+
+        conn.execute(
+            """
+            UPDATE ocorrencias
+            SET data_registro = ?,
+                motivo = ?,
+                referencia = ?,
+                tempo_impacto = ?,
+                observacoes = ?
+            WHERE id = ?
+            """,
+            (
+                data_registro,
+                motivo,
+                referencia,
+                tempo_impacto,
+                observacoes,
+                ocorrencia_id,
+            ),
+        )
+        conn.commit()
+
+        atualizada = conn.execute(
+            """
+            SELECT o.*, COALESCE(c.nome, o.matricula_usuario) AS nome_colaborador
+            FROM ocorrencias o
+            LEFT JOIN colaboradores c ON c.matricula = o.matricula_usuario
+            WHERE o.id = ?
+            """,
+            (ocorrencia_id,),
+        ).fetchone()
+        return jsonify(dict(atualizada))
+
+
+# ==========================================================
+# GESTÃO DE COLABORADORES (APENAS ADMIN + BLINDAGEM DO 12345)
+# ==========================================================
+@app.route("/api/colaboradores", methods=["GET", "POST"])
+@login_required
+@admin_required
+def api_colaboradores():
+    with get_db_connection() as conn:
+        if request.method == "GET":
+            rows = conn.execute(
+                """
+                SELECT id, matricula, nome, cargo, data_nascimento, is_admin
+                FROM colaboradores
+                ORDER BY is_admin DESC, nome ASC
+                """
+            ).fetchall()
+            return jsonify([dict(row) for row in rows])
+
+        data = request.get_json(silent=True) or {}
+        matricula = str(data.get("matricula", "")).strip()
+        nome = str(data.get("nome", "")).strip()
+        cargo = str(data.get("cargo", "Analista")).strip() or "Analista"
+        data_nascimento = str(data.get("data_nascimento", "")).strip()
+        is_admin_novo = 1 if int(data.get("is_admin", 0) or 0) == 1 else 0
+
+        if not matricula or not nome or not data_nascimento:
+            return (
+                jsonify(
+                    {
+                        "erro": "Matrícula, nome e data de nascimento são obrigatórios."
+                    }
+                ),
+                400,
+            )
+
+        if matricula == ADMIN_MATRICULA_SUPREMA:
+            is_admin_novo = 1
+
+        try:
+            cursor = conn.execute(
+                """
+                INSERT INTO colaboradores (matricula, nome, cargo, data_nascimento, is_admin)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (matricula, nome, cargo, data_nascimento, is_admin_novo),
+            )
+            conn.commit()
+        except sqlite3.IntegrityError:
+            return (
+                jsonify({"erro": "Já existe um colaborador com essa matrícula."}),
+                409,
+            )
+
+        novo = conn.execute(
+            """
+            SELECT id, matricula, nome, cargo, data_nascimento, is_admin
+            FROM colaboradores
+            WHERE id = ?
+            """,
+            (cursor.lastrowid,),
+        ).fetchone()
+        return jsonify(dict(novo)), 201
+
+
+@app.route("/api/colaboradores/<int:colab_id>", methods=["PUT", "DELETE"])
+@login_required
+@admin_required
+def api_colaborador_item(colab_id):
+    with get_db_connection() as conn:
+        colab = conn.execute(
+            "SELECT * FROM colaboradores WHERE id = ?", (colab_id,)
+        ).fetchone()
+
+        if not colab:
+            return jsonify({"erro": "Colaborador não encontrado."}), 404
+
+        if colab["matricula"] == ADMIN_MATRICULA_SUPREMA:
+            if request.method == "DELETE":
+                return (
+                    jsonify(
+                        {
+                            "erro": "A conta do Administrador Supremo não pode ser excluída."
+                        }
+                    ),
+                    403,
+                )
+
+            data = request.get_json(silent=True) or {}
+            nome = str(data.get("nome", colab["nome"])).strip() or colab["nome"]
+            cargo = str(data.get("cargo", colab["cargo"])).strip() or colab["cargo"]
+            data_nascimento = (
+                str(data.get("data_nascimento", colab["data_nascimento"])).strip()
+                or colab["data_nascimento"]
+            )
+
+            conn.execute(
+                """
+                UPDATE colaboradores
+                SET nome = ?, cargo = ?, data_nascimento = ?, is_admin = 1
+                WHERE id = ?
+                """,
+                (nome, cargo, data_nascimento, colab_id),
+            )
+            conn.commit()
+            atualizado = conn.execute(
+                """
+                SELECT id, matricula, nome, cargo, data_nascimento, is_admin
+                FROM colaboradores
+                WHERE id = ?
+                """,
+                (colab_id,),
+            ).fetchone()
+            return jsonify(dict(atualizado))
+
+        if request.method == "DELETE":
+            conn.execute("DELETE FROM colaboradores WHERE id = ?", (colab_id,))
+            conn.commit()
+            return jsonify({"status": "excluido", "id": colab_id})
+
+        data = request.get_json(silent=True) or {}
+        nome = str(data.get("nome", colab["nome"])).strip() or colab["nome"]
+        cargo = str(data.get("cargo", colab["cargo"])).strip() or colab["cargo"]
+        data_nascimento = (
+            str(data.get("data_nascimento", colab["data_nascimento"])).strip()
+            or colab["data_nascimento"]
+        )
+        is_admin_atualizado = (
+            1 if int(data.get("is_admin", colab["is_admin"]) or 0) == 1 else 0
+        )
+
+        conn.execute(
+            """
+            UPDATE colaboradores
+            SET nome = ?, cargo = ?, data_nascimento = ?, is_admin = ?
+            WHERE id = ?
+            """,
+            (nome, cargo, data_nascimento, is_admin_atualizado, colab_id),
+        )
+        conn.commit()
+
+        atualizado = conn.execute(
+            """
+            SELECT id, matricula, nome, cargo, data_nascimento, is_admin
+            FROM colaboradores
+            WHERE id = ?
+            """,
+            (colab_id,),
+        ).fetchone()
+        return jsonify(dict(atualizado))
+
+
+# ==========================================================
+# RELATÓRIOS & BI
+# ==========================================================
+@app.route("/api/bi", methods=["GET"])
+@login_required
+def api_bi():
+    matricula_atual = session.get("matricula")
+    is_admin = bool(session.get("is_admin"))
+    filtro_matricula = request.args.get("matricula", "").strip()
+
+    with get_db_connection() as conn:
+        if is_admin:
+            colaboradores_rows = conn.execute(
+                "SELECT matricula, nome, cargo, is_admin FROM colaboradores ORDER BY nome ASC"
+            ).fetchall()
+            colaboradores_lista = [dict(c) for c in colaboradores_rows]
+
+            if filtro_matricula and filtro_matricula != "TODOS":
+                remessas = conn.execute(
+                    """
+                    SELECT r.*, COALESCE(c.nome, r.matricula_usuario) AS nome_colaborador
+                    FROM lancamentos_remessas r
+                    LEFT JOIN colaboradores c ON c.matricula = r.matricula_usuario
+                    WHERE r.matricula_usuario = ?
+                    ORDER BY r.id DESC
+                    """,
+                    (filtro_matricula,),
+                ).fetchall()
+                ocorrencias = conn.execute(
+                    """
+                    SELECT o.*, COALESCE(c.nome, o.matricula_usuario) AS nome_colaborador
+                    FROM ocorrencias o
+                    LEFT JOIN colaboradores c ON c.matricula = o.matricula_usuario
+                    WHERE o.matricula_usuario = ?
+                    ORDER BY o.id DESC
+                    """,
+                    (filtro_matricula,),
+                ).fetchall()
+            else:
+                remessas = conn.execute(
+                    """
+                    SELECT r.*, COALESCE(c.nome, r.matricula_usuario) AS nome_colaborador
+                    FROM lancamentos_remessas r
+                    LEFT JOIN colaboradores c ON c.matricula = r.matricula_usuario
+                    ORDER BY r.id DESC
+                    """
+                ).fetchall()
+                ocorrencias = conn.execute(
+                    """
+                    SELECT o.*, COALESCE(c.nome, o.matricula_usuario) AS nome_colaborador
+                    FROM ocorrencias o
+                    LEFT JOIN colaboradores c ON c.matricula = o.matricula_usuario
+                    ORDER BY o.id DESC
+                    """
+                ).fetchall()
+        else:
+            meu_colab = conn.execute(
+                "SELECT matricula, nome, cargo, is_admin FROM colaboradores WHERE matricula = ?",
+                (matricula_atual,),
+            ).fetchone()
+            colaboradores_lista = [dict(meu_colab)] if meu_colab else []
+
+            remessas = conn.execute(
+                """
+                SELECT r.*, COALESCE(c.nome, r.matricula_usuario) AS nome_colaborador
+                FROM lancamentos_remessas r
+                LEFT JOIN colaboradores c ON c.matricula = r.matricula_usuario
+                WHERE r.matricula_usuario = ?
+                ORDER BY r.id DESC
+                """,
+                (matricula_atual,),
+            ).fetchall()
+            ocorrencias = conn.execute(
+                """
+                SELECT o.*, COALESCE(c.nome, o.matricula_usuario) AS nome_colaborador
+                FROM ocorrencias o
+                LEFT JOIN colaboradores c ON c.matricula = o.matricula_usuario
+                WHERE o.matricula_usuario = ?
+                ORDER BY o.id DESC
+                """,
+                (matricula_atual,),
+            ).fetchall()
+
+        remessas_list = [dict(r) for r in remessas]
+        ocorrencias_list = [dict(o) for o in ocorrencias]
+
+        total_pontos = sum(int(r["pontuacao_total"] or 0) for r in remessas_list)
+        total_remessas = len(remessas_list)
+        total_processos = sum(int(r["qtd_processos"] or 0) for r in remessas_list)
+        total_contratos = sum(int(r["qtd_contratos"] or 0) for r in remessas_list)
+        total_ocorrencias = len(ocorrencias_list)
+        total_horas_paradas = round(
+            sum(float(o["tempo_impacto"] or 0) for o in ocorrencias_list), 2
+        )
+
+        # Agrupamento por colaborador (drill-down)
+        mapa_colab = {}
+        for r in remessas_list:
+            mat = r["matricula_usuario"]
+            if mat not in mapa_colab:
+                mapa_colab[mat] = {
+                    "matricula": mat,
+                    "nome": r["nome_colaborador"],
+                    "pontos": 0,
+                    "remessas": 0,
+                    "processos": 0,
+                    "contratos": 0,
+                    "ocorrencias": 0,
+                    "horas_paradas": 0.0,
+                }
+            mapa_colab[mat]["pontos"] += int(r["pontuacao_total"] or 0)
+            mapa_colab[mat]["remessas"] += 1
+            mapa_colab[mat]["processos"] += int(r["qtd_processos"] or 0)
+            mapa_colab[mat]["contratos"] += int(r["qtd_contratos"] or 0)
+
+        for o in ocorrencias_list:
+            mat = o["matricula_usuario"]
+            if mat not in mapa_colab:
+                mapa_colab[mat] = {
+                    "matricula": mat,
+                    "nome": o["nome_colaborador"],
+                    "pontos": 0,
+                    "remessas": 0,
+                    "processos": 0,
+                    "contratos": 0,
+                    "ocorrencias": 0,
+                    "horas_paradas": 0.0,
+                }
+            mapa_colab[mat]["ocorrencias"] += 1
+            mapa_colab[mat]["horas_paradas"] = round(
+                mapa_colab[mat]["horas_paradas"] + float(o["tempo_impacto"] or 0),
+                2,
+            )
+
+        # Agrupamento por motivo de ocorrência
+        mapa_motivos = {}
+        for o in ocorrencias_list:
+            mot = o["motivo"] or "Outros"
+            if mot not in mapa_motivos:
+                mapa_motivos[mot] = {"motivo": mot, "quantidade": 0, "horas": 0.0}
+            mapa_motivos[mot]["quantidade"] += 1
+            mapa_motivos[mot]["horas"] = round(
+                mapa_motivos[mot]["horas"] + float(o["tempo_impacto"] or 0), 2
+            )
+
+        return jsonify(
+            {
+                "resumo": {
+                    "total_pontos": total_pontos,
+                    "total_remessas": total_remessas,
+                    "total_processos": total_processos,
+                    "total_contratos": total_contratos,
+                    "total_ocorrencias": total_ocorrencias,
+                    "total_horas_paradas": total_horas_paradas,
+                },
+                "por_colaborador": list(mapa_colab.values()),
+                "por_motivo": list(mapa_motivos.values()),
+                "colaboradores": colaboradores_lista,
+                "remessas": remessas_list,
+                "ocorrencias": ocorrencias_list,
+            }
+        )
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
