@@ -1,607 +1,1385 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Gerência Financeira</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --bg-body: #f3f4f6; --bg-card: #ffffff; --bg-input: #f9fafb;
-            --text-main: #111827; --text-muted: #6b7280; --border: #e5e7eb;
-            --btn-primary: #111827; --btn-primary-text: #ffffff;
-            --menu-active-bg: #111827; --menu-active-text: #ffffff;
-            --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.03);
-            --shadow-btn: 0 4px 12px rgba(17, 24, 39, 0.2);
-            --danger: #ef4444;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f4f6fa;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-soft: rgba(37, 99, 235, 0.1);
+      --success: #059669;
+      --success-soft: rgba(5, 150, 105, 0.12);
+      --danger: #dc2626;
+      --danger-soft: rgba(220, 38, 38, 0.12);
+      --warning: #d97706;
+      --warning-soft: rgba(217, 119, 6, 0.12);
+      --shadow: 0 8px 28px rgba(15, 23, 42, 0.05);
+    }
 
-        [data-theme="dark"] {
-            --bg-body: #09090b; --bg-card: #18181b; --bg-input: #27272a;
-            --text-main: #f4f4f5; --text-muted: #a1a1aa; --border: #27272a;
-            --btn-primary: #ffffff; --btn-primary-text: #000000;
-            --menu-active-bg: #ffffff; --menu-active-text: #000000;
-            --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.3);
-            --shadow-btn: 0 4px 12px rgba(255, 255, 255, 0.1);
-        }
+    [data-theme="dark"] {
+      --bg: #0b0f17;
+      --surface: #111827;
+      --surface-2: #172033;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: #233046;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-soft: rgba(59, 130, 246, 0.16);
+      --success: #10b981;
+      --success-soft: rgba(16, 185, 129, 0.16);
+      --danger: #f87171;
+      --danger-soft: rgba(248, 113, 113, 0.16);
+      --warning: #fbbf24;
+      --warning-soft: rgba(251, 191, 36, 0.16);
+      --shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
-        body { background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    body {
+      font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
 
-        .sidebar { width: 260px; display: flex; flex-direction: column; padding: 30px 20px; flex-shrink: 0; background-color: var(--bg-card); border-right: 1px solid var(--border); }
-        .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 50px; padding-left: 10px; }
-        .logo-icon { width: 36px; height: 36px; background-color: var(--text-main); color: var(--bg-body); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .logo-text { font-size: 15px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
 
-        .menu-items { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-        .menu-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 12px; color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 14px; cursor: pointer; }
-        .menu-item:hover { color: var(--text-main); }
-        .menu-item.active { background-color: var(--menu-active-bg); color: var(--menu-active-text); box-shadow: var(--shadow-btn); }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
 
-        .profile-box { margin-top: auto; display: flex; align-items: center; justify-content: space-between; padding: 16px; background-color: var(--bg-input); border-radius: 16px; }
-        .profile-data { display: flex; align-items: center; gap: 12px; }
-        .profile-avatar { width: 36px; height: 36px; border-radius: 50%; background-color: var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-main); font-size: 13px; }
-        .btn-logout { color: var(--text-muted); background: none; border: none; cursor: pointer; font-size: 16px; }
-        .btn-logout:hover { color: #ef4444; }
+    .user-badge {
+      background: var(--primary-soft);
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
 
-        .main-content { flex-grow: 1; padding: 30px 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
-        .topbar { display: flex; justify-content: space-between; align-items: center; }
-        .header-title { font-size: 24px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
-        .topbar-actions { display: flex; align-items: center; gap: 12px; }
-        .btn-icon { width: 42px; height: 42px; border-radius: 50%; background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow-card); }
-        .btn-icon:hover { border-color: var(--text-muted); }
+    .user-meta {
+      font-size: 13px;
+      color: var(--muted);
+    }
 
-        .card { background-color: var(--bg-card); border-radius: 24px; padding: 30px; box-shadow: var(--shadow-card); border: 1px solid var(--border); width: 100%; }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .card-title { font-size: 16px; font-weight: 700; color: var(--text-main); }
-        .card-subtitle { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .user-meta strong {
+      color: var(--text);
+    }
 
-        .filter-group { display: flex; align-items: center; gap: 10px; background-color: var(--bg-card); border: 1px solid var(--border); padding: 6px; border-radius: 12px; box-shadow: var(--shadow-card); }
-        .btn-period { background: transparent; border: none; border-radius: 8px; color: var(--text-muted); padding: 8px 16px; font-weight: 600; font-size: 12px; cursor: pointer; }
-        .btn-period.active { background-color: var(--text-main); color: var(--bg-card); }
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
 
-        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; width: 100%; }
-        .metric-card { background-color: var(--bg-card); border-radius: 24px; padding: 24px; box-shadow: var(--shadow-card); border: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; }
-        .metric-label { display: block; color: var(--text-muted); font-size: 13px; font-weight: 600; margin-bottom: 8px; }
-        .metric-number { font-size: 42px; font-weight: 800; color: var(--text-main); letter-spacing: -1px; line-height: 1; }
-        .metric-icon { width: 48px; height: 48px; border-radius: 14px; background-color: var(--bg-input); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .btn {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 13px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.12s ease;
+    }
 
-        .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;}
-        .form-group { display: flex; flex-direction: column; gap: 8px; }
-        .form-group label { color: var(--text-muted); font-size: 12px; font-weight: 600; }
-        .form-input { background-color: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); padding: 14px 16px; font-size: 14px; font-weight: 500; outline: none; width: 100%; }
-        .form-input:focus { border-color: var(--text-main); }
+    .btn:hover {
+      border-color: var(--primary);
+    }
 
-        .btn-submit { background-color: var(--btn-primary); color: var(--btn-primary-text); border: none; border-radius: 12px; font-weight: 600; padding: 16px 24px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-submit:hover { opacity: 0.9; }
-        .btn-secondary { background-color: var(--bg-input); color: var(--text-main); border: 1px solid var(--border); border-radius: 12px; font-weight: 600; padding: 16px 24px; cursor: pointer; }
-        .btn-export { background-color: var(--bg-input); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .btn-export:hover { background-color: var(--border); }
+    .btn:active {
+      transform: scale(0.99);
+    }
 
-        .table-wrapper { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { padding: 16px; color: var(--text-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        td { padding: 16px; color: var(--text-main); font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--border); }
-        tr:last-child td { border-bottom: none; }
-        
-        .badge { background-color: var(--bg-input); padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 12px; }
-        .badge-green { color: #10b981; background-color: rgba(16, 185, 129, 0.1); }
-        .badge-red { color: #ef4444; background-color: rgba(239, 68, 68, 0.1); }
-        .btn-action { color: var(--text-muted); background: none; border: none; cursor: pointer; font-size: 15px; margin-right: 12px; }
-        .btn-action:hover { color: var(--text-main); }
-        .btn-delete:hover { color: #ef4444; }
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
 
-        .chart-container { position: relative; height: 260px; width: 100%; margin-top: 10px; }
-        
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); opacity: 0; visibility: hidden; transition: 0.3s; z-index: 99; }
-        .overlay.active { opacity: 1; visibility: visible; }
-        .slide-panel { position: fixed; top: 0; right: -600px; width: 550px; height: 100%; background: var(--bg-card); border-left: 1px solid var(--border); box-shadow: -10px 0 40px rgba(0,0,0,0.2); z-index: 100; transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto; }
-        .slide-panel.active { right: 0; }
-        .panel-header { padding: 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--bg-card); z-index: 10; }
-        .panel-body { padding: 30px; display: flex; flex-direction: column; gap: 24px; }
-    </style>
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    .btn-danger {
+      background: var(--danger-soft);
+      border-color: transparent;
+      color: var(--danger);
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .tab-btn {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 9px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: var(--surface-2);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      background: var(--primary-soft);
+      border-color: rgba(59, 130, 246, 0.25);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .kpi-label {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .input,
+    .select,
+    .textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13.5px;
+      border-radius: 10px;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .input:focus,
+    .select:focus,
+    .textarea:focus {
+      border-color: var(--primary);
+      background: var(--surface);
+    }
+
+    .textarea {
+      min-height: 76px;
+      resize: vertical;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    th {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      background: var(--surface-2);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+
+    .pill-success {
+      background: var(--success-soft);
+      color: var(--success);
+    }
+
+    .pill-warning {
+      background: var(--warning-soft);
+      color: var(--warning);
+    }
+
+    .pill-primary {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .bar-row {
+      margin-bottom: 12px;
+    }
+
+    .bar-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12.5px;
+      margin-bottom: 5px;
+    }
+
+    .bar-track {
+      height: 9px;
+      background: var(--surface-2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+      max-width: 360px;
+    }
+
+    .toast.show {
+      display: block;
+    }
+
+    .toast.success {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .toast.error {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(0, 0, 0, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 440px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .empty-msg {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 12px 0;
+    }
+  </style>
 </head>
 <body>
-
-    <nav class="sidebar">
-        <div class="logo-area">
-            <div class="logo-icon"><i class="fa-solid fa-layer-group"></i></div>
-            <div class="logo-text">Gerência Financeira</div>
-        </div>
-
-        <ul class="menu-items">
-            <li class="menu-item active" id="menu_dashboard" onclick="alternarAba('dashboard')"><i class="fa-solid fa-chart-pie"></i> Meu Dashboard</li>
-            <li class="menu-item" id="menu_remessas" onclick="alternarAba('remessas')"><i class="fa-solid fa-file-invoice-dollar"></i> Remessas Pagas</li>
-            <li class="menu-item" id="menu_ocorrencias" onclick="alternarAba('ocorrencias')"><i class="fa-solid fa-triangle-exclamation"></i> Pendências</li>
-            
-            <!-- RELATÓRIOS & BI AGORA LIBERADOS PARA TODOS OS COLABORADORES -->
-            <li class="menu-item" id="menu_relatorios" onclick="alternarAba('relatorios')"><i class="fa-solid fa-globe"></i> Relatórios & BI</li>
-            
-            {% if session.get('is_admin') %}
-            <div style="margin: 20px 0 10px 16px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Gestão Global</div>
-            <li class="menu-item" id="menu_equipe" onclick="alternarAba('equipe')"><i class="fa-solid fa-users"></i> Equipe</li>
-            {% endif %}
-        </ul>
-
-        <div class="profile-box">
-            <div class="profile-data">
-                <div class="profile-avatar">{{ session.get('nome', 'US')[0:2] | upper }}</div>
-                <div>
-                    <p style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">{{ session.get('nome', 'Usuário') }}</p>
-                    <p style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ session.get('cargo', 'Colaborador') }}</p>
-                </div>
-            </div>
-            <button onclick="window.location.href='/logout'" class="btn-logout" title="Sair"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
-        </div>
-    </nav>
-
-    <main class="main-content">
-        
-        <div class="topbar">
-            <h1 class="header-title" id="page-main-title">Visão Geral</h1>
-            <div class="topbar-actions">
-                <button class="btn-icon" onclick="window.location.reload()" title="Atualizar"><i class="fa-solid fa-rotate-right"></i></button>
-                <button class="btn-icon" onclick="toggleTheme()" title="Mudar Tema"><i id="theme-icon" class="fa-solid fa-moon"></i></button>
-            </div>
-        </div>
-
-        <!-- ABA: DASHBOARD INDIVIDUAL -->
-        <section id="aba_dashboard_view" style="display: block;">
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 24px; gap: 16px;">
-                <div class="filter-group">
-                    <button class="btn-period" id="period_hoje" onclick="setPeriodo('hoje')">Hoje</button>
-                    <button class="btn-period active" id="period_semanal" onclick="setPeriodo('semanal')">Semanal</button>
-                    <button class="btn-period" id="period_mensal" onclick="setPeriodo('mensal')">Mensal</button>
-                </div>
-                <div class="filter-group" style="padding: 4px 12px; align-items: center;">
-                    <input type="date" id="date_from" style="background:transparent; border:none; color:var(--text-main); font-size:12px; outline:none;" onchange="atualizarPorDataManual()">
-                    <span style="color: var(--text-muted); font-size: 12px; margin: 0 6px;">até</span>
-                    <input type="date" id="date_to" style="background:transparent; border:none; color:var(--text-main); font-size:12px; outline:none;" onchange="atualizarPorDataManual()">
-                </div>
-            </div>
-
-            <div class="metrics-grid" style="margin-bottom: 24px;">
-                <div class="metric-card"><div><label class="metric-label">Pontos Adquiridos</label><div class="metric-number" id="dash_pontos">0</div></div><div class="metric-icon"><i class="fa-solid fa-bolt"></i></div></div>
-                <div class="metric-card"><div><label class="metric-label">Processos Concluídos</label><div class="metric-number" id="dash_processos">0</div></div><div class="metric-icon"><i class="fa-solid fa-check-double"></i></div></div>
-                <div class="metric-card"><div><label class="metric-label">Remessas Auditadas</label><div class="metric-number" id="dash_remessas">0</div></div><div class="metric-icon"><i class="fa-solid fa-file-invoice"></i></div></div>
-            </div>
-
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Evolução da Sua Produtividade</h2></div>
-                <div class="chart-container"><canvas id="chartIndEvolucao"></canvas></div>
-            </div>
-        </section>
-
-        <!-- ABA: REMESSAS -->
-        <section id="aba_remessas_view" style="display: none; flex-direction: column; width: 100%;">
-            <div class="card" style="margin-bottom: 24px;">
-                <div class="card-header"><h2 class="card-title">Novo Lançamento</h2></div>
-                <div class="row-grid">
-                    <div class="form-group"><label>Data Pagamento</label><input type="date" id="data_pagamento" class="form-input"></div>
-                    <div class="form-group"><label>Nº/Nome Remessa</label><input type="text" id="nome_remessa" class="form-input" placeholder="Ex: 7190 - c"></div>
-                </div>
-                <div class="row-grid">
-                    <div class="form-group"><label>Qtd. Fornecedores</label><input type="number" id="qtd_fornecedores" class="form-input" value="0"></div>
-                    <div class="form-group"><label>Qtd. Processos</label><input type="number" id="qtd_processos" class="form-input" value="0"></div>
-                </div>
-                <h3 style="font-size: 14px; font-weight: 700; margin: 24px 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid var(--border);">Detalhamento da Remessa</h3>
-                <div class="row-grid">
-                    <div class="form-group"><label>Contratos</label><input type="number" id="qtd_contratos" class="form-input" value="0"></div>
-                    <div class="form-group"><label>Certidões</label><input type="number" id="certidoes_renovadas" class="form-input" value="0"></div>
-                </div>
-                <div class="row-grid">
-                    <div class="form-group"><label>Pag. Parciais</label><input type="number" id="pagamentos_parciais" class="form-input" value="0"></div>
-                    <div class="form-group"><label>Glosas</label><input type="number" id="glosas_lancadas" class="form-input" value="0"></div>
-                </div>
-                <div class="form-group" style="width: 49%;"><label>Apostilamentos</label><input type="number" id="apostilamentos_bancarios" class="form-input" value="0"></div>
-                <div style="display: flex; gap: 16px; margin-top: 30px;">
-                    <button class="btn-submit" id="btn_principal" onclick="registrarLote()">Salvar Produção</button>
-                    <button class="btn-secondary" id="btn_cancelar" onclick="cancelarEdicao()" style="display: none;">Cancelar</button>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Histórico de Remessas</h2><button class="btn-export" onclick="exportarCSV('remessas')"><i class="fa-solid fa-download"></i> Exportar CSV</button></div>
-                <div class="table-wrapper"><table><thead><tr><th>Data</th><th>Remessa</th><th>Fornec.</th><th>Processos</th><th>Pontos</th><th style="text-align: right;">Ações</th></tr></thead><tbody id="corpo_tabela_historico"></tbody></table></div>
-            </div>
-        </section>
-
-        <!-- ABA: PENDÊNCIAS -->
-        <section id="aba_ocorrencias_view" style="display: none; flex-direction: column; width: 100%;">
-            <div class="card" style="margin-bottom: 24px;">
-                <div class="card-header"><h2 class="card-title">Registrar Pendência</h2></div>
-                <div class="row-grid">
-                    <div class="form-group"><label>Data</label><input type="date" id="oco_data" class="form-input"></div>
-                    <div class="form-group"><label>Motivo da Pendência</label><select id="oco_motivo" class="form-input"><option value="Falta de volume">Falta de volume / Processos insuficientes</option><option value="Pendência de Pagamento">Pendência de Pagamento</option><option value="Sistema fora do ar">Sistema fora do ar</option><option value="Aguardando retorno">Aguardando retorno de outro setor</option><option value="Outros">Outros motivos</option></select></div>
-                </div>
-                <div class="row-grid">
-                    <div class="form-group"><label>Nº Remessa/Ref.</label><input type="text" id="oco_ref" class="form-input" placeholder="Opcional"></div>
-                    <div class="form-group"><label>Horas Paradas</label><input type="number" id="oco_tempo" class="form-input" placeholder="Ex: 2" step="0.5" min="0"></div>
-                </div>
-                <div class="form-group" style="margin-top: 10px;"><label>Observações</label><input type="text" id="oco_obs" class="form-input" placeholder="Descreva brevemente..."></div>
-                <div style="display: flex; gap: 16px; margin-top: 30px;">
-                    <button class="btn-submit" id="btn_oco_principal" onclick="registrarOcorrencia()">Salvar Pendência</button>
-                    <button class="btn-secondary" id="btn_oco_cancelar" onclick="cancelarEdicaoOcorrencia()" style="display: none;">Cancelar</button>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Histórico de inconsistências</h2><button class="btn-export" onclick="exportarCSV('ocorrencias')"><i class="fa-solid fa-download"></i> Exportar CSV</button></div>
-                <div class="table-wrapper"><table><thead><tr><th>Data</th><th>Motivo</th><th>Remessa</th><th>Tempo</th><th>Obs</th><th style="text-align: right;">Ações</th></tr></thead><tbody id="corpo_tabela_ocorrencias"></tbody></table></div>
-            </div>
-        </section>
-
-        <!-- ABA: RELATÓRIOS & BI (AGORA GERAL, COM FILTRAGEM AUTOMÁTICA DE PERMISSÃO) -->
-        <section id="aba_relatorios_view" style="display: none; flex-direction: column; width: 100%;">
-            <div class="card" style="margin-bottom: 24px;">
-                <div class="card-header"><h2 class="card-title">Business Intelligence & Relatórios</h2></div>
-                <div class="row-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr; align-items: end;">
-                    <div class="form-group"><label>Base de Dados</label><select id="rel_tipo" class="form-input"><option value="remessas">Produção (Remessas)</option><option value="ocorrencias">Inconsistências (Pendências)</option></select></div>
-                    <div class="form-group">
-                        <label>Analista</label>
-                        <!-- Se não for admin, o javascript preenche apenas com o nome dele -->
-                        <select id="rel_colab" class="form-input"></select>
-                    </div>
-                    <div class="form-group"><label>De</label><input type="date" id="rel_data_ini" class="form-input"></div>
-                    <div class="form-group"><label>Até</label><input type="date" id="rel_data_fim" class="form-input"></div>
-                </div>
-                <button class="btn-submit" onclick="gerarRelatorioAdmin()" style="margin-top: 24px; width: 100%;">Executar Análise de Desempenho</button>
-            </div>
-
-            <!-- GRÁFICOS DE BI -->
-            <div class="row-grid" style="margin-bottom: 24px;">
-                <div class="card">
-                    <h3 class="card-title" style="margin-bottom: 16px;">Evolução de Pontos Auditados</h3>
-                    <div class="chart-container"><canvas id="chartGlobalEvolucao"></canvas></div>
-                </div>
-                <div class="card">
-                    <h3 class="card-title" style="margin-bottom: 16px;">Impacto de Inconsistências (Horas Perdidas)</h3>
-                    <div class="chart-container"><canvas id="chartGlobalGargalos"></canvas></div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Detalhamento de Produção & Pendências</h2><button class="btn-export" onclick="exportarRelatorioAdminCSV()"><i class="fa-solid fa-download"></i> Baixar Planilha</button></div>
-                <div class="table-wrapper">
-                    <table>
-                        <thead><tr><th>Analista</th><th>Matrícula</th><th>Cargo</th><th style="text-align: right;">Ação</th></tr></thead>
-                        <tbody id="rel_tabela_equipe_bi"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- ABA: GESTÃO DE EQUIPE (APENAS PARA GESTORES) -->
-        {% if session.get('is_admin') %}
-        <section id="aba_equipe_view" style="display: none; flex-direction: column; width: 100%;">
-            <div class="card" style="margin-bottom: 24px;">
-                <div class="card-header"><h2 class="card-title">Acessos da Equipe</h2></div>
-                <div class="row-grid">
-                    <div class="form-group"><label>Matrícula</label><input type="text" id="colab_matricula" class="form-input" placeholder="Ex: 12345"></div>
-                    <div class="form-group"><label>Nome Completo</label><input type="text" id="colab_nome" class="form-input"></div>
-                </div>
-                <div class="row-grid">
-                    <div class="form-group"><label>Cargo</label><input type="text" id="colab_cargo" class="form-input"></div>
-                    <div class="form-group"><label>Senha (Data Nasc.)</label><input type="text" id="colab_data" class="form-input" placeholder="dd/mm/aa"></div>
-                </div>
-                <div style="margin: 20px 0;"><label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-main); font-weight: 600; font-size: 13px;"><input type="checkbox" id="colab_admin" style="width: 16px; height: 16px;"> Dar permissões de Gestor</label></div>
-                <div style="display: flex; gap: 16px;">
-                    <button class="btn-submit" id="btn_colab_principal" onclick="salvarColaborador()">Salvar Colaborador</button>
-                    <button class="btn-secondary" id="btn_colab_cancelar" onclick="cancelarEdicaoColaborador()" style="display: none;">Cancelar</button>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><h2 class="card-title">Colaboradores Cadastrados</h2></div>
-                <div class="table-wrapper"><table><thead><tr><th>Matrícula</th><th>Nome</th><th>Cargo</th><th>Senha</th><th>Admin</th><th style="text-align: right;">Ações</th></tr></thead><tbody id="corpo_tabela_equipe"></tbody></table></div>
-            </div>
-        </section>
-        {% endif %}
-
-    </main>
-
-    <!-- PAINEL LATERAL DESLIZANTE (DRILL-DOWN) -->
-    <div class="overlay" id="overlay" onclick="fecharPainel()"></div>
-    <div class="slide-panel" id="slidePanel">
-        <div class="panel-header">
-            <div>
-                <h2 style="font-size: 18px; font-weight: 800;" id="panelName">Nome do Analista</h2>
-                <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Dossiê de Produtividade & Inconsistências</span>
-            </div>
-            <button class="btn-export" onclick="fecharPainel()"><i class="fa-solid fa-xmark"></i> Fechar</button>
-        </div>
-        <div class="panel-body">
-            <div class="row-grid" style="margin:0;">
-                <div class="card" style="padding: 20px;"><span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total de Pontos</span><div style="font-size: 28px; font-weight: 800; margin-top: 4px;" id="panelPts">0</div></div>
-                <div class="card" style="padding: 20px; border-color: rgba(239, 68, 68, 0.3);"><span style="font-size: 11px; color: #ef4444; font-weight: 700; text-transform: uppercase;">Horas Paradas</span><div style="font-size: 28px; font-weight: 800; margin-top: 4px; color: #ef4444;" id="panelHrs">0h</div></div>
-            </div>
-            <div class="card">
-                <h3 class="card-title" style="margin-bottom: 12px; font-size: 13px;">O que travou o trabalho (Pendências)</h3>
-                <div style="height: 180px;"><canvas id="chartPanelGargalos"></canvas></div>
-            </div>
-            <div class="card">
-                <h3 class="card-title" style="margin-bottom: 12px; font-size: 13px;">Últimas Inconsistências</h3>
-                <div class="table-wrapper">
-                    <table>
-                        <thead><tr><th>Data</th><th>Motivo</th><th>Tempo</th></tr></thead>
-                        <tbody id="panelTabelaOcorrencias"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+  <header class="topbar">
+    <div class="user-info">
+      <div class="user-meta">
+        Usuário: <strong>{{ usuario_nome }}</strong> (Matrícula: <strong>{{ usuario_matricula }}</strong>)
+      </div>
+      <span class="user-badge">{{ "Administrador" if is_admin else "Colaborador" }}</span>
+      <span class="pill {{ 'pill-success' if tem_senha_personalizada else 'pill-warning' }}" id="badgeSenhaStatus">
+        {{ "Senha personalizada ativa" if tem_senha_personalizada else "Senha padrão (data nasc.)" }}
+      </span>
     </div>
 
-    <script>
-        function toggleTheme() {
-            const body = document.documentElement;
-            const icon = document.getElementById('theme-icon');
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme'); icon.className = 'fa-solid fa-moon'; localStorage.setItem('theme', 'light');
-            } else {
-                body.setAttribute('data-theme', 'dark'); icon.className = 'fa-solid fa-sun'; localStorage.setItem('theme', 'dark');
-            }
+    <div class="topbar-actions">
+      <button type="button" class="btn" id="btnAbrirMinhaSenha">🔑 Minha senha</button>
+      <button type="button" class="btn" id="themeToggle">🌙 Tema</button>
+      <a href="/logout" class="btn btn-danger">Sair</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <nav class="tabs" id="tabsNav">
+      <button type="button" class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button type="button" class="tab-btn" data-tab="remessas">Remessas Pagas</button>
+      <button type="button" class="tab-btn" data-tab="ocorrencias">Ocorrências</button>
+      <button type="button" class="tab-btn" data-tab="bi">Relatórios &amp; BI</button>
+      {% if is_admin %}
+      <button type="button" class="tab-btn" data-tab="equipe">Equipe</button>
+      {% endif %}
+    </nav>
+
+    <!-- ABA: DASHBOARD -->
+    <section class="tab-panel active" id="tab-dashboard">
+      <div class="kpi-grid" id="dashKpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Pontuação por Colaborador</h2>
+          </div>
+          <div id="dashGraficoPontos"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Horas Paradas por Motivo</h2>
+          </div>
+          <div id="dashGraficoMotivos"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA: REMESSAS PAGAS -->
+    <section class="tab-panel" id="tab-remessas">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title" id="tituloFormRemessa">Novo Lançamento de Remessa</h2>
+          <span class="pill pill-primary" id="previewEsforco">Esforço calculado: 0 pts</span>
+        </div>
+        <form id="formRemessa">
+          <input type="hidden" id="remessaId" />
+          <div class="form-grid">
+            <div class="field">
+              <label for="dataPagamento">Data de Pagamento *</label>
+              <input type="date" id="dataPagamento" class="input" required />
+            </div>
+            <div class="field">
+              <label for="nomeRemessa">Nome da Remessa *</label>
+              <input type="text" id="nomeRemessa" class="input" placeholder="Ex: Remessa 042" required />
+            </div>
+            <div class="field">
+              <label for="qtdFornecedores">Fornecedores</label>
+              <input type="number" id="qtdFornecedores" class="input calc-esforco" min="0" value="0" />
+            </div>
+            <div class="field">
+              <label for="qtdProcessos">Processos (1 pt)</label>
+              <input type="number" id="qtdProcessos" class="input calc-esforco" min="0" value="0" />
+            </div>
+            <div class="field">
+              <label for="qtdContratos">Contratos (2 pts)</label>
+              <input type="number" id="qtdContratos" class="input calc-esforco" min="0" value="0" />
+            </div>
+            <div class="field">
+              <label for="certidoesRenovadas">Certidões Renovadas (1 pt)</label>
+              <input type="number" id="certidoesRenovadas" class="input calc-esforco" min="0" value="0" />
+            </div>
+            <div class="field">
+              <label for="pagamentosParciais">Pagamentos Parciais (1 pt)</label>
+              <input type="number" id="pagamentosParciais" class="input calc-esforco" min="0" value="0" />
+            </div>
+            <div class="field">
+              <label for="glosasLancadas">Glosas Lançadas (1 pt)</label>
+              <input type="number" id="glosasLancadas" class="input calc-esforco" min="0" value="0" />
+            </div>
+            <div class="field">
+              <label for="apostilamentosBancarios">Apostilamentos Bancários (2 pts)</label>
+              <input type="number" id="apostilamentosBancarios" class="input calc-esforco" min="0" value="0" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn" id="btnCancelarEdicaoRemessa" style="display: none;">Cancelar edição</button>
+            <button type="submit" class="btn btn-primary" id="btnSalvarRemessa">Salvar Remessa</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Remessas Registradas</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Data Pgto</th>
+                <th>Remessa</th>
+                <th>Colaborador</th>
+                <th>Processos</th>
+                <th>Contratos</th>
+                <th>Apostil.</th>
+                <th>Pontos</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaRemessas"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA: OCORRÊNCIAS -->
+    <section class="tab-panel" id="tab-ocorrencias">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title" id="tituloFormOcorrencia">Registrar Ocorrência / Gargalo</h2>
+        </div>
+        <form id="formOcorrencia">
+          <input type="hidden" id="ocorrenciaId" />
+          <div class="form-grid">
+            <div class="field">
+              <label for="dataOcorrencia">Data *</label>
+              <input type="date" id="dataOcorrencia" class="input" required />
+            </div>
+            <div class="field">
+              <label for="motivoOcorrencia">Motivo *</label>
+              <input type="text" id="motivoOcorrencia" class="input" placeholder="Ex: Pendência documental" required />
+            </div>
+            <div class="field">
+              <label for="referenciaOcorrencia">Referência *</label>
+              <input type="text" id="referenciaOcorrencia" class="input" placeholder="Processo / Remessa / Contrato" required />
+            </div>
+            <div class="field">
+              <label for="tempoImpacto">Tempo de Impacto (horas)</label>
+              <input type="number" step="0.1" min="0" id="tempoImpacto" class="input" value="0" />
+            </div>
+          </div>
+          <div class="field" style="margin-top: 14px;">
+            <label for="observacoesOcorrencia">Observações</label>
+            <textarea id="observacoesOcorrencia" class="textarea" placeholder="Detalhes adicionais..."></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn" id="btnCancelarEdicaoOcorrencia" style="display: none;">Cancelar edição</button>
+            <button type="submit" class="btn btn-primary" id="btnSalvarOcorrencia">Salvar Ocorrência</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Ocorrências Registradas</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Colaborador</th>
+                <th>Motivo</th>
+                <th>Referência</th>
+                <th>Impacto (h)</th>
+                <th>Observações</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaOcorrencias"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA: RELATÓRIOS & BI -->
+    <section class="tab-panel" id="tab-bi">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Filtros de BI</h2>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="filtroBiMatricula">Colaborador</label>
+            <select id="filtroBiMatricula" class="select" {% if not is_admin %}disabled{% endif %}>
+              {% if is_admin %}
+              <option value="TODOS">Todos os colaboradores</option>
+              {% endif %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="biKpis"></div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Detalhamento por Colaborador (Drill-down)</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Colaborador</th>
+                <th>Matrícula</th>
+                <th>Pontos</th>
+                <th>Remessas</th>
+                <th>Processos</th>
+                <th>Contratos</th>
+                <th>Ocorrências</th>
+                <th>Horas Paradas</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaBiDrilldown"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA: EQUIPE (ADMIN) -->
+    {% if is_admin %}
+    <section class="tab-panel" id="tab-equipe">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Cadastrar Colaborador</h2>
+        </div>
+        <form id="formNovoColab">
+          <div class="form-grid">
+            <div class="field">
+              <label for="novoColabMatricula">Matrícula *</label>
+              <input type="text" id="novoColabMatricula" class="input" required />
+            </div>
+            <div class="field">
+              <label for="novoColabNome">Nome *</label>
+              <input type="text" id="novoColabNome" class="input" required />
+            </div>
+            <div class="field">
+              <label for="novoColabCargo">Cargo</label>
+              <input type="text" id="novoColabCargo" class="input" value="Analista" />
+            </div>
+            <div class="field">
+              <label for="novoColabNasc">Data de Nascimento *</label>
+              <input type="text" id="novoColabNasc" class="input" placeholder="DD/MM/AA ou DD/MM/AAAA" required />
+            </div>
+            <div class="field">
+              <label for="novoColabSenha">Senha Personalizada (opcional)</label>
+              <input type="password" id="novoColabSenha" class="input" placeholder="Mín. 4 caracteres" />
+            </div>
+            <div class="field">
+              <label for="novoColabAdmin">Perfil</label>
+              <select id="novoColabAdmin" class="select">
+                <option value="0">Colaborador</option>
+                <option value="1">Administrador</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Adicionar Colaborador</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Colaboradores Cadastrados</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Matrícula</th>
+                <th>Nome</th>
+                <th>Cargo</th>
+                <th>Nascimento</th>
+                <th>Tipo de Senha</th>
+                <th>Perfil</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaEquipe"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+  </main>
+
+  <!-- MODAL: MINHA SENHA PERSONALIZADA -->
+  <div class="modal-backdrop" id="modalMinhaSenha" aria-hidden="true">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Definir / Alterar Minha Senha</h3>
+        <button type="button" class="btn btn-sm" id="fecharModalMinhaSenha">✕</button>
+      </div>
+      <form id="formMinhaSenha">
+        <div class="field" style="margin-bottom: 12px;">
+          <label for="senhaAtualInput">Senha Atual *</label>
+          <input type="password" id="senhaAtualInput" class="input" placeholder="Sua senha atual ou data de nascimento" required />
+        </div>
+        <div class="field" style="margin-bottom: 12px;">
+          <label for="novaSenhaInput">Nova Senha Personalizada *</label>
+          <input type="password" id="novaSenhaInput" class="input" placeholder="Mínimo 4 caracteres" required />
+        </div>
+        <div class="field">
+          <label for="confirmarNovaSenhaInput">Confirmar Nova Senha *</label>
+          <input type="password" id="confirmarNovaSenhaInput" class="input" placeholder="Repita a nova senha" required />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" id="cancelarModalMinhaSenha">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Senha</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR COLABORADOR / SENHA PELO ADMIN -->
+  {% if is_admin %}
+  <div class="modal-backdrop" id="modalEditarColab" aria-hidden="true">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Editar Colaborador</h3>
+        <button type="button" class="btn btn-sm" id="fecharModalEditarColab">✕</button>
+      </div>
+      <form id="formEditarColab">
+        <input type="hidden" id="editColabId" />
+        <input type="hidden" id="editColabMatricula" />
+        <div class="field" style="margin-bottom: 12px;">
+          <label for="editColabNome">Nome *</label>
+          <input type="text" id="editColabNome" class="input" required />
+        </div>
+        <div class="field" style="margin-bottom: 12px;">
+          <label for="editColabCargo">Cargo</label>
+          <input type="text" id="editColabCargo" class="input" />
+        </div>
+        <div class="field" style="margin-bottom: 12px;">
+          <label for="editColabNasc">Data de Nascimento *</label>
+          <input type="text" id="editColabNasc" class="input" required />
+        </div>
+        <div class="field" style="margin-bottom: 12px;" id="wrapEditColabPerfil">
+          <label for="editColabPerfil">Perfil</label>
+          <select id="editColabPerfil" class="select">
+            <option value="0">Colaborador</option>
+            <option value="1">Administrador</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom: 8px;">
+          <label for="editColabNovaSenha">Definir Nova Senha Personalizada (opcional)</label>
+          <input type="password" id="editColabNovaSenha" class="input" placeholder="Deixe em branco para manter a atual" />
+        </div>
+        <label class="checkbox-row">
+          <input type="checkbox" id="editColabResetSenha" />
+          <span>Resetar senha personalizada (voltar para data de nascimento)</span>
+        </label>
+        <div class="modal-footer">
+          <button type="button" class="btn" id="cancelarModalEditarColab">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const IS_ADMIN = {{ "true" if is_admin else "false" }};
+    const USUARIO_MATRICULA = "{{ usuario_matricula }}";
+    const ADMIN_SUPREMO_MATRICULA = "12345";
+
+    const htmlEl = document.documentElement;
+    const themeToggle = document.getElementById("themeToggle");
+    const toastEl = document.getElementById("toast");
+
+    let cacheRemessas = [];
+    let cacheOcorrencias = [];
+    let cacheEquipe = [];
+
+    function applyTheme(theme) {
+      if (theme === "dark") {
+        htmlEl.setAttribute("data-theme", "dark");
+        themeToggle.textContent = "☀️ Claro";
+      } else {
+        htmlEl.removeAttribute("data-theme");
+        themeToggle.textContent = "🌙 Escuro";
+      }
+      localStorage.setItem("ui_theme", theme);
+    }
+
+    applyTheme(localStorage.getItem("ui_theme") || "dark");
+    themeToggle.addEventListener("click", () => {
+      const curr = htmlEl.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      applyTheme(curr === "dark" ? "light" : "dark");
+    });
+
+    function showToast(msg, type = "success") {
+      toastEl.textContent = msg;
+      toastEl.className = `toast show ${type}`;
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toastEl.className = "toast";
+      }, 3400);
+    }
+
+    async function apiFetch(url, options = {}) {
+      const resp = await fetch(url, {
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        ...options,
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(data.erro || data.mensagem || "Erro na requisição.");
+      }
+      return data;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // Navegação por abas
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        const tab = btn.dataset.tab;
+        document.getElementById(`tab-${tab}`).classList.add("active");
+
+        if (tab === "dashboard" || tab === "bi") {
+          await carregarBi();
+        } else if (tab === "remessas") {
+          await carregarRemessas();
+        } else if (tab === "ocorrencias") {
+          await carregarOcorrencias();
+        } else if (tab === "equipe" && IS_ADMIN) {
+          await carregarEquipe();
         }
-        if(localStorage.getItem('theme') === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); document.getElementById('theme-icon').className = 'fa-solid fa-sun'; }
+      });
+    });
 
-        let historicoRemessas = []; let historicoOcorrencias = []; let listaColaboradores = []; let dadosRelatorioAtual = []; let tipoRelatorioAtual = '';
-        let idSendoEditado = null; let idOcoEditado = null; let idColabEditado = null;
-        let chartInd = null, chartGlobEv = null, chartGlobGar = null, chartPanel = null;
+    // Cálculo prévio de esforço
+    function calcEsforcoLocal() {
+      const p = Number(document.getElementById("qtdProcessos").value || 0);
+      const c = Number(document.getElementById("qtdContratos").value || 0);
+      const ce = Number(document.getElementById("certidoesRenovadas").value || 0);
+      const pa = Number(document.getElementById("pagamentosParciais").value || 0);
+      const g = Number(document.getElementById("glosasLancadas").value || 0);
+      const a = Number(document.getElementById("apostilamentosBancarios").value || 0);
+      const pts = p * 1 + c * 2 + ce * 1 + pa * 1 + g * 1 + a * 2;
+      document.getElementById("previewEsforco").textContent = `Esforço calculado: ${pts} pts`;
+    }
 
-        window.onload = function() {
-            const dp = document.getElementById('data_pagamento'); if(dp) dp.valueAsDate = new Date();
-            const do_ = document.getElementById('oco_data'); if(do_) do_.valueAsDate = new Date();
-            const r1 = document.getElementById('rel_data_ini'); if(r1) r1.value = formataDataISO(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
-            const r2 = document.getElementById('rel_data_fim'); if(r2) r2.valueAsDate = new Date();
-            setPeriodo('mensal');
+    document.querySelectorAll(".calc-esforco").forEach((inp) => {
+      inp.addEventListener("input", calcEsforcoLocal);
+    });
+
+    // Remessas
+    function resetFormRemessa() {
+      document.getElementById("remessaId").value = "";
+      document.getElementById("tituloFormRemessa").textContent = "Novo Lançamento de Remessa";
+      document.getElementById("btnSalvarRemessa").textContent = "Salvar Remessa";
+      document.getElementById("btnCancelarEdicaoRemessa").style.display = "none";
+      document.getElementById("formRemessa").reset();
+      calcEsforcoLocal();
+    }
+
+    document.getElementById("btnCancelarEdicaoRemessa").addEventListener("click", resetFormRemessa);
+
+    async function carregarRemessas() {
+      cacheRemessas = await apiFetch("/api/remessas");
+      const tbody = document.getElementById("tabelaRemessas");
+      if (!cacheRemessas.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-msg">Nenhuma remessa registrada.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = cacheRemessas
+        .map(
+          (r) => `
+          <tr>
+            <td>${escapeHtml(r.data_pagamento)}</td>
+            <td><strong>${escapeHtml(r.nome_remessa)}</strong></td>
+            <td>${escapeHtml(r.nome_colaborador)} (${escapeHtml(r.matricula_usuario)})</td>
+            <td>${r.qtd_processos}</td>
+            <td>${r.qtd_contratos}</td>
+            <td>${r.apostilamentos_bancarios}</td>
+            <td><span class="pill pill-success">${r.pontuacao_total} pts</span></td>
+            <td>
+              <button type="button" class="btn btn-sm" onclick="editarRemessa(${r.id})">Editar</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="excluirRemessa(${r.id})">Excluir</button>
+            </td>
+          </tr>
+        `
+        )
+        .join("");
+    }
+
+    window.editarRemessa = function (id) {
+      const r = cacheRemessas.find((item) => item.id === id);
+      if (!r) return;
+      document.getElementById("remessaId").value = r.id;
+      document.getElementById("dataPagamento").value = r.data_pagamento;
+      document.getElementById("nomeRemessa").value = r.nome_remessa;
+      document.getElementById("qtdFornecedores").value = r.qtd_fornecedores;
+      document.getElementById("qtdProcessos").value = r.qtd_processos;
+      document.getElementById("qtdContratos").value = r.qtd_contratos;
+      document.getElementById("certidoesRenovadas").value = r.certidoes_renovadas;
+      document.getElementById("pagamentosParciais").value = r.pagamentos_parciais;
+      document.getElementById("glosasLancadas").value = r.glosas_lancadas;
+      document.getElementById("apostilamentosBancarios").value = r.apostilamentos_bancarios;
+      document.getElementById("tituloFormRemessa").textContent = `Editando Remessa #${r.id}`;
+      document.getElementById("btnSalvarRemessa").textContent = "Atualizar Remessa";
+      document.getElementById("btnCancelarEdicaoRemessa").style.display = "inline-flex";
+      calcEsforcoLocal();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.excluirRemessa = async function (id) {
+      if (!confirm("Deseja excluir esta remessa?")) return;
+      try {
+        await apiFetch(`/api/remessas/${id}`, { method: "DELETE" });
+        showToast("Remessa excluída.");
+        await carregarRemessas();
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    };
+
+    document.getElementById("formRemessa").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("remessaId").value;
+      const payload = {
+        data_pagamento: document.getElementById("dataPagamento").value,
+        nome_remessa: document.getElementById("nomeRemessa").value.trim(),
+        qtd_fornecedores: Number(document.getElementById("qtdFornecedores").value || 0),
+        qtd_processos: Number(document.getElementById("qtdProcessos").value || 0),
+        qtd_contratos: Number(document.getElementById("qtdContratos").value || 0),
+        certidoes_renovadas: Number(document.getElementById("certidoesRenovadas").value || 0),
+        pagamentos_parciais: Number(document.getElementById("pagamentosParciais").value || 0),
+        glosas_lancadas: Number(document.getElementById("glosasLancadas").value || 0),
+        apostilamentos_bancarios: Number(document.getElementById("apostilamentosBancarios").value || 0),
+      };
+
+      try {
+        if (id) {
+          await apiFetch(`/api/remessas/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+          showToast("Remessa atualizada.");
+        } else {
+          await apiFetch("/api/remessas", { method: "POST", body: JSON.stringify(payload) });
+          showToast("Remessa lançada.");
+        }
+        resetFormRemessa();
+        await carregarRemessas();
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+    // Ocorrências
+    function resetFormOcorrencia() {
+      document.getElementById("ocorrenciaId").value = "";
+      document.getElementById("tituloFormOcorrencia").textContent = "Registrar Ocorrência / Gargalo";
+      document.getElementById("btnSalvarOcorrencia").textContent = "Salvar Ocorrência";
+      document.getElementById("btnCancelarEdicaoOcorrencia").style.display = "none";
+      document.getElementById("formOcorrencia").reset();
+    }
+
+    document.getElementById("btnCancelarEdicaoOcorrencia").addEventListener("click", resetFormOcorrencia);
+
+    async function carregarOcorrencias() {
+      cacheOcorrencias = await apiFetch("/api/ocorrencias");
+      const tbody = document.getElementById("tabelaOcorrencias");
+      if (!cacheOcorrencias.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-msg">Nenhuma ocorrência registrada.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = cacheOcorrencias
+        .map(
+          (o) => `
+          <tr>
+            <td>${escapeHtml(o.data_registro)}</td>
+            <td>${escapeHtml(o.nome_colaborador)} (${escapeHtml(o.matricula_usuario)})</td>
+            <td><strong>${escapeHtml(o.motivo)}</strong></td>
+            <td>${escapeHtml(o.referencia)}</td>
+            <td><span class="pill pill-warning">${o.tempo_impacto} h</span></td>
+            <td>${escapeHtml(o.observacoes)}</td>
+            <td>
+              <button type="button" class="btn btn-sm" onclick="editarOcorrencia(${o.id})">Editar</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="excluirOcorrencia(${o.id})">Excluir</button>
+            </td>
+          </tr>
+        `
+        )
+        .join("");
+    }
+
+    window.editarOcorrencia = function (id) {
+      const o = cacheOcorrencias.find((item) => item.id === id);
+      if (!o) return;
+      document.getElementById("ocorrenciaId").value = o.id;
+      document.getElementById("dataOcorrencia").value = o.data_registro;
+      document.getElementById("motivoOcorrencia").value = o.motivo;
+      document.getElementById("referenciaOcorrencia").value = o.referencia;
+      document.getElementById("tempoImpacto").value = o.tempo_impacto;
+      document.getElementById("observacoesOcorrencia").value = o.observacoes || "";
+      document.getElementById("tituloFormOcorrencia").textContent = `Editando Ocorrência #${o.id}`;
+      document.getElementById("btnSalvarOcorrencia").textContent = "Atualizar Ocorrência";
+      document.getElementById("btnCancelarEdicaoOcorrencia").style.display = "inline-flex";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.excluirOcorrencia = async function (id) {
+      if (!confirm("Deseja excluir esta ocorrência?")) return;
+      try {
+        await apiFetch(`/api/ocorrencias/${id}`, { method: "DELETE" });
+        showToast("Ocorrência excluída.");
+        await carregarOcorrencias();
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    };
+
+    document.getElementById("formOcorrencia").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("ocorrenciaId").value;
+      const payload = {
+        data_registro: document.getElementById("dataOcorrencia").value,
+        motivo: document.getElementById("motivoOcorrencia").value.trim(),
+        referencia: document.getElementById("referenciaOcorrencia").value.trim(),
+        tempo_impacto: Number(document.getElementById("tempoImpacto").value || 0),
+        observacoes: document.getElementById("observacoesOcorrencia").value.trim(),
+      };
+
+      try {
+        if (id) {
+          await apiFetch(`/api/ocorrencias/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+          showToast("Ocorrência atualizada.");
+        } else {
+          await apiFetch("/api/ocorrencias", { method: "POST", body: JSON.stringify(payload) });
+          showToast("Ocorrência registrada.");
+        }
+        resetFormOcorrencia();
+        await carregarOcorrencias();
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+    // BI & Dashboard
+    function renderKpis(containerId, r) {
+      document.getElementById(containerId).innerHTML = `
+        <div class="kpi-card"><div class="kpi-label">Pontos de Esforço</div><div class="kpi-value">${r.total_pontos}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Remessas</div><div class="kpi-value">${r.total_remessas}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Processos</div><div class="kpi-value">${r.total_processos}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Contratos</div><div class="kpi-value">${r.total_contratos}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Ocorrências</div><div class="kpi-value">${r.total_ocorrencias}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Horas Paradas</div><div class="kpi-value">${r.total_horas_paradas}h</div></div>
+      `;
+    }
+
+    function renderBarras(containerId, items, labelKey, valKey, suffix = "") {
+      const el = document.getElementById(containerId);
+      if (!items.length) {
+        el.innerHTML = `<p class="empty-msg">Sem dados para exibir.</p>`;
+        return;
+      }
+      const maxVal = Math.max(...items.map((i) => Number(i[valKey] || 0)), 1);
+      el.innerHTML = items
+        .map((item) => {
+          const val = Number(item[valKey] || 0);
+          const pct = Math.min(100, Math.round((val / maxVal) * 100));
+          return `
+            <div class="bar-row">
+              <div class="bar-meta">
+                <span>${escapeHtml(item[labelKey])}</span>
+                <strong>${val}${suffix}</strong>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    async function carregarBi() {
+      const selectFiltro = document.getElementById("filtroBiMatricula");
+      const matParam = IS_ADMIN ? selectFiltro.value || "TODOS" : USUARIO_MATRICULA;
+      const data = await apiFetch(`/api/bi?matricula=${encodeURIComponent(matParam)}`);
+
+      if (IS_ADMIN) {
+        const atual = selectFiltro.value || "TODOS";
+        selectFiltro.innerHTML =
+          `<option value="TODOS">Todos os colaboradores</option>` +
+          data.colaboradores
+            .map(
+              (c) =>
+                `<option value="${escapeHtml(c.matricula)}">${escapeHtml(c.nome)} (${escapeHtml(c.matricula)})</option>`
+            )
+            .join("");
+        selectFiltro.value = atual;
+      } else {
+        const eu = data.colaboradores[0];
+        selectFiltro.innerHTML = `<option value="${escapeHtml(USUARIO_MATRICULA)}">${escapeHtml(eu ? eu.nome : USUARIO_MATRICULA)}</option>`;
+        selectFiltro.value = USUARIO_MATRICULA;
+      }
+
+      renderKpis("dashKpis", data.resumo);
+      renderKpis("biKpis", data.resumo);
+      renderBarras("dashGraficoPontos", data.por_colaborador, "nome", "pontos", " pts");
+      renderBarras("dashGraficoMotivos", data.por_motivo, "motivo", "horas", "h");
+
+      const drillBody = document.getElementById("tabelaBiDrilldown");
+      if (!data.por_colaborador.length) {
+        drillBody.innerHTML = `<tr><td colspan="8" class="empty-msg">Nenhum dado encontrado.</td></tr>`;
+      } else {
+        drillBody.innerHTML = data.por_colaborador
+          .map(
+            (c) => `
+            <tr>
+              <td><strong>${escapeHtml(c.nome)}</strong></td>
+              <td>${escapeHtml(c.matricula)}</td>
+              <td>${c.pontos}</td>
+              <td>${c.remessas}</td>
+              <td>${c.processos}</td>
+              <td>${c.contratos}</td>
+              <td>${c.ocorrencias}</td>
+              <td>${c.horas_paradas}h</td>
+            </tr>
+          `
+          )
+          .join("");
+      }
+    }
+
+    document.getElementById("filtroBiMatricula").addEventListener("change", carregarBi);
+
+    // Modal Minha Senha (Qualquer Usuário)
+    const modalMinhaSenha = document.getElementById("modalMinhaSenha");
+    document.getElementById("btnAbrirMinhaSenha").addEventListener("click", () => {
+      document.getElementById("formMinhaSenha").reset();
+      modalMinhaSenha.classList.add("open");
+    });
+    document.getElementById("fecharModalMinhaSenha").addEventListener("click", () => modalMinhaSenha.classList.remove("open"));
+    document.getElementById("cancelarModalMinhaSenha").addEventListener("click", () => modalMinhaSenha.classList.remove("open"));
+
+    document.getElementById("formMinhaSenha").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const senhaAtual = document.getElementById("senhaAtualInput").value.trim();
+      const novaSenha = document.getElementById("novaSenhaInput").value.trim();
+      const confirmar = document.getElementById("confirmarNovaSenhaInput").value.trim();
+
+      if (novaSenha.length < 4) {
+        showToast("A nova senha deve ter pelo menos 4 caracteres.", "error");
+        return;
+      }
+      if (novaSenha !== confirmar) {
+        showToast("A confirmação da nova senha não confere.", "error");
+        return;
+      }
+
+      try {
+        const res = await apiFetch("/api/minha-senha", {
+          method: "POST",
+          body: JSON.stringify({ senha_atual: senhaAtual, nova_senha: novaSenha }),
+        });
+        showToast(res.mensagem || "Senha personalizada salva!");
+        modalMinhaSenha.classList.remove("open");
+        const badge = document.getElementById("badgeSenhaStatus");
+        badge.className = "pill pill-success";
+        badge.textContent = "Senha personalizada ativa";
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+    // Gestão de Equipe (Admin)
+    if (IS_ADMIN) {
+      const modalEditarColab = document.getElementById("modalEditarColab");
+      document.getElementById("fecharModalEditarColab").addEventListener("click", () => modalEditarColab.classList.remove("open"));
+      document.getElementById("cancelarModalEditarColab").addEventListener("click", () => modalEditarColab.classList.remove("open"));
+
+      async function carregarEquipe() {
+        cacheEquipe = await apiFetch("/api/colaboradores");
+        const tbody = document.getElementById("tabelaEquipe");
+        tbody.innerHTML = cacheEquipe
+          .map((c) => {
+            const isSupremo = c.matricula === ADMIN_SUPREMO_MATRICULA;
+            return `
+              <tr>
+                <td><strong>${escapeHtml(c.matricula)}</strong></td>
+                <td>${escapeHtml(c.nome)}</td>
+                <td>${escapeHtml(c.cargo)}</td>
+                <td>${escapeHtml(c.data_nascimento)}</td>
+                <td>
+                  <span class="pill ${c.tem_senha_personalizada ? "pill-success" : "pill-warning"}">
+                    ${c.tem_senha_personalizada ? "Personalizada" : "Padrão"}
+                  </span>
+                </td>
+                <td>${Number(c.is_admin) === 1 ? "Administrador" : "Colaborador"}</td>
+                <td>
+                  <button type="button" class="btn btn-sm" onclick="abrirModalEditarColab(${c.id})">Editar / Senha</button>
+                  ${
+                    isSupremo
+                      ? ""
+                      : `<button type="button" class="btn btn-danger btn-sm" onclick="excluirColab(${c.id})">Excluir</button>`
+                  }
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      document.getElementById("formNovoColab").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const payload = {
+          matricula: document.getElementById("novoColabMatricula").value.trim(),
+          nome: document.getElementById("novoColabNome").value.trim(),
+          cargo: document.getElementById("novoColabCargo").value.trim() || "Analista",
+          data_nascimento: document.getElementById("novoColabNasc").value.trim(),
+          nova_senha: document.getElementById("novoColabSenha").value.trim(),
+          is_admin: Number(document.getElementById("novoColabAdmin").value || 0),
+        };
+        try {
+          await apiFetch("/api/colaboradores", { method: "POST", body: JSON.stringify(payload) });
+          showToast("Colaborador cadastrado.");
+          document.getElementById("formNovoColab").reset();
+          await carregarEquipe();
+        } catch (err) {
+          showToast(err.message, "error");
+        }
+      });
+
+      window.abrirModalEditarColab = function (id) {
+        const c = cacheEquipe.find((item) => item.id === id);
+        if (!c) return;
+        document.getElementById("editColabId").value = c.id;
+        document.getElementById("editColabMatricula").value = c.matricula;
+        document.getElementById("editColabNome").value = c.nome;
+        document.getElementById("editColabCargo").value = c.cargo;
+        document.getElementById("editColabNasc").value = c.data_nascimento;
+        document.getElementById("editColabNovaSenha").value = "";
+        document.getElementById("editColabResetSenha").checked = false;
+
+        const wrapPerfil = document.getElementById("wrapEditColabPerfil");
+        if (c.matricula === ADMIN_SUPREMO_MATRICULA) {
+          wrapPerfil.style.display = "none";
+          document.getElementById("editColabPerfil").value = "1";
+        } else {
+          wrapPerfil.style.display = "flex";
+          document.getElementById("editColabPerfil").value = String(c.is_admin);
+        }
+
+        modalEditarColab.classList.add("open");
+      };
+
+      document.getElementById("formEditarColab").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("editColabId").value;
+        const payload = {
+          nome: document.getElementById("editColabNome").value.trim(),
+          cargo: document.getElementById("editColabCargo").value.trim() || "Analista",
+          data_nascimento: document.getElementById("editColabNasc").value.trim(),
+          is_admin: Number(document.getElementById("editColabPerfil").value || 0),
+          nova_senha: document.getElementById("editColabNovaSenha").value.trim(),
+          resetar_senha: document.getElementById("editColabResetSenha").checked,
         };
 
-        function alternarAba(aba) {
-            const menus = ['menu_dashboard', 'menu_remessas', 'menu_ocorrencias', 'menu_relatorios', 'menu_equipe'];
-            const views = ['aba_dashboard_view', 'aba_remessas_view', 'aba_ocorrencias_view', 'aba_relatorios_view', 'aba_equipe_view'];
-            menus.forEach(m => { const el = document.getElementById(m); if(el) el.classList.remove('active'); });
-            views.forEach(v => { const el = document.getElementById(v); if(el) el.style.display = 'none'; });
-            const mAtivo = document.getElementById(`menu_${aba}`); if(mAtivo) mAtivo.classList.add('active');
-            const vAtivo = document.getElementById(`aba_${aba}_view`); if(vAtivo) vAtivo.style.display = aba === 'dashboard' ? 'block' : 'flex';
-
-            if(aba === 'dashboard') { carregarMetricasDashboard(); carregarGraficoIndividual(); }
-            if(aba === 'remessas') carregarHistorico();
-            if(aba === 'ocorrencias') carregarOcorrencias();
-            if(aba === 'equipe') carregarEquipe();
-            if(aba === 'relatorios') { preencherDropdownColaboradores(); gerarRelatorioAdmin(); }
+        try {
+          await apiFetch(`/api/colaboradores/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+          showToast("Colaborador atualizado.");
+          modalEditarColab.classList.remove("open");
+          await carregarEquipe();
+        } catch (err) {
+          showToast(err.message, "error");
         }
+      });
 
-        function formataDataISO(data) { return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`; }
+      window.excluirColab = async function (id) {
+        if (!confirm("Deseja excluir este colaborador?")) return;
+        try {
+          await apiFetch(`/api/colaboradores/${id}`, { method: "DELETE" });
+          showToast("Colaborador excluído.");
+          await carregarEquipe();
+        } catch (err) {
+          showToast(err.message, "error");
+        }
+      };
+    }
 
-        function setPeriodo(periodo) {
-            ['hoje', 'semanal', 'mensal'].forEach(p => document.getElementById(`period_${p}`).classList.remove('active'));
-            if(periodo) document.getElementById(`period_${periodo}`).classList.add('active');
-            const hoje = new Date(); let dataInicio = new Date(); let dataFim = new Date();
-            if (periodo === 'semanal') dataInicio.setDate(hoje.getDate() - hoje.getDay());
-            else if (periodo === 'mensal') dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-            document.getElementById('date_from').value = formataDataISO(dataInicio); document.getElementById('date_to').value = formataDataISO(dataFim);
-            carregarMetricasDashboard();
-        }
-        function atualizarPorDataManual() { ['hoje', 'semanal', 'mensal'].forEach(p => document.getElementById(`period_${p}`).classList.remove('active')); carregarMetricasDashboard(); }
-
-        async function carregarMetricasDashboard() {
-            const i = document.getElementById('date_from').value; const f = document.getElementById('date_to').value;
-            let url = '/api/metricas-dashboard'; if (i && f) url += `?inicio=${i}&fim=${f}`;
-            try {
-                const r = await fetch(url); const m = await r.json();
-                document.getElementById('dash_pontos').innerText = m.pontos_totais || 0;
-                document.getElementById('dash_processos').innerText = m.processos_totais || 0;
-                document.getElementById('dash_remessas').innerText = m.total_remessas || 0;
-            } catch (e) {}
-        }
-
-        async function carregarGraficoIndividual() {
-            const r = await fetch('/api/listar-remessas'); const dados = await r.json();
-            const ctx = document.getElementById('chartIndEvolucao').getContext('2d');
-            if(chartInd) chartInd.destroy();
-            
-            const porData = {};
-            dados.slice().reverse().forEach(d => { porData[d.data_pagamento] = (porData[d.data_pagamento] || 0) + d.pontuacao_total; });
-
-            chartInd = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Object.keys(porData),
-                    datasets: [{ label: 'Pontos', data: Object.values(porData), borderColor: '#111827', backgroundColor: 'rgba(17,24,39,0.03)', borderWidth: 2, fill: true, tension: 0.3 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e5e7eb' } }, x: { grid: { display: false } } } }
-            });
-        }
-
-        async function carregarHistorico() {
-            const r = await fetch('/api/listar-remessas'); historicoRemessas = await r.json();
-            const b = document.getElementById('corpo_tabela_historico'); b.innerHTML = "";
-            if (historicoRemessas.length === 0) { b.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum registo.</td></tr>`; return; }
-            historicoRemessas.forEach(rem => {
-                b.innerHTML += `<tr><td>${rem.data_pagamento.split('-').reverse().join('/')}</td><td style="font-weight: 700;">${rem.nome_remessa}</td><td>${rem.qtd_fornecedores}</td><td>${rem.qtd_processos}</td><td><span class="badge badge-green">${rem.pontuacao_total} pts</span></td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicao(${rem.id})"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirRemessa(${rem.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-            });
-        }
-        function prepararEdicao(id) {
-            const rem = historicoRemessas.find(r => r.id === id); if (!rem) return; idSendoEditado = id;
-            document.getElementById('data_pagamento').value = rem.data_pagamento; document.getElementById('nome_remessa').value = rem.nome_remessa; document.getElementById('qtd_fornecedores').value = rem.qtd_fornecedores; document.getElementById('qtd_processos').value = rem.qtd_processos; document.getElementById('qtd_contratos').value = rem.qtd_contratos; document.getElementById('certidoes_renovadas').value = rem.certidoes_renovadas; document.getElementById('pagamentos_parciais').value = rem.pagamentos_parciais; document.getElementById('glosas_lancadas').value = rem.glosas_lancadas || 0; document.getElementById('apostilamentos_bancarios').value = rem.apostilamentos_bancarios || 0;
-            document.getElementById('btn_principal').innerText = "Atualizar Produção"; document.getElementById('btn_cancelar').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        function cancelarEdicao() {
-            idSendoEditado = null; document.getElementById('data_pagamento').valueAsDate = new Date(); document.getElementById('nome_remessa').value = ""; document.querySelectorAll('#aba_remessas_view .form-input[type="number"]').forEach(i => i.value = "0");
-            document.getElementById('btn_principal').innerText = "Salvar Produção"; document.getElementById('btn_cancelar').style.display = "none";
-        }
-        async function registrarLote() {
-            const dados = { data_pagamento: document.getElementById('data_pagamento').value, nome_remessa: document.getElementById('nome_remessa').value, qtd_fornecedores: document.getElementById('qtd_fornecedores').value, qtd_processos: document.getElementById('qtd_processos').value, qtd_contratos: document.getElementById('qtd_contratos').value, certidoes_renovadas: document.getElementById('certidoes_renovadas').value, pagamentos_parciais: document.getElementById('pagamentos_parciais').value, glosas_lancadas: document.getElementById('glosas_lancadas').value, apostilamentos_bancarios: document.getElementById('apostilamentos_bancarios').value };
-            if(!dados.nome_remessa) return;
-            await fetch(idSendoEditado ? `/api/atualizar-lote/${idSendoEditado}` : '/api/salvar-lote', { method: idSendoEditado ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-            cancelarEdicao(); carregarHistorico();
-        }
-        async function excluirRemessa(id) { if(!confirm("Excluir?")) return; await fetch(`/api/deletar-lote/${id}`, { method: 'DELETE' }); carregarHistorico(); }
-
-        async function carregarOcorrencias() {
-            const r = await fetch('/api/listar-ocorrencias'); historicoOcorrencias = await r.json();
-            const b = document.getElementById('corpo_tabela_ocorrencias'); b.innerHTML = "";
-            if (historicoOcorrencias.length === 0) { b.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum registo.</td></tr>`; return; }
-            historicoOcorrencias.forEach(oco => {
-                b.innerHTML += `<tr><td>${oco.data_registro.split('-').reverse().join('/')}</td><td><span class="badge badge-red">${oco.motivo}</span></td><td style="font-weight: 700;">${oco.referencia || '-'}</td><td>${oco.tempo_impacto}h</td><td>${oco.observacoes}</td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicaoOcorrencia(${oco.id})"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirOcorrencia(${oco.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-            });
-        }
-        function prepararEdicaoOcorrencia(id) {
-            const oco = historicoOcorrencias.find(o => o.id === id); if (!oco) return; idOcoEditado = id;
-            document.getElementById('oco_data').value = oco.data_registro; document.getElementById('oco_motivo').value = oco.motivo; document.getElementById('oco_ref').value = oco.referencia; document.getElementById('oco_tempo').value = oco.tempo_impacto; document.getElementById('oco_obs').value = oco.observacoes;
-            document.getElementById('btn_oco_principal').innerText = "Atualizar Pendência"; document.getElementById('btn_oco_cancelar').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        function cancelarEdicaoOcorrencia() {
-            idOcoEditado = null; document.getElementById('oco_data').valueAsDate = new Date(); document.getElementById('oco_motivo').value = "Falta de volume"; document.getElementById('oco_ref').value = ""; document.getElementById('oco_tempo').value = ""; document.getElementById('oco_obs').value = "";
-            document.getElementById('btn_oco_principal').innerText = "Salvar Pendência"; document.getElementById('btn_oco_cancelar').style.display = "none";
-        }
-        async function registrarOcorrencia() {
-            const dados = { data_registro: document.getElementById('oco_data').value, motivo: document.getElementById('oco_motivo').value, referencia: document.getElementById('oco_ref').value, tempo_impacto: document.getElementById('oco_tempo').value, observacoes: document.getElementById('oco_obs').value };
-            await fetch(idOcoEditado ? `/api/atualizar-ocorrencia/${idOcoEditado}` : '/api/salvar-ocorrencia', { method: idOcoEditado ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-            cancelarEdicaoOcorrencia(); carregarOcorrencias();
-        }
-        async function excluirOcorrencia(id) { if(!confirm("Excluir?")) return; await fetch(`/api/deletar-ocorrencia/${id}`, { method: 'DELETE' }); carregarOcorrencias(); }
-
-        async function carregarEquipe() {
-            const r = await fetch('/api/colaboradores'); listaColaboradores = await r.json();
-            const b = document.getElementById('corpo_tabela_equipe'); b.innerHTML = "";
-            listaColaboradores.forEach(c => {
-                const badge = c.is_admin ? '<span class="badge badge-green">Gestor</span>' : '<span style="color: var(--text-muted);">Comum</span>';
-                b.innerHTML += `<tr><td style="font-weight: 700;">${c.matricula}</td><td>${c.nome}</td><td>${c.cargo}</td><td>${c.data_nascimento}</td><td>${badge}</td><td style="text-align: right;"><button class="btn-action" onclick="prepararEdicaoColaborador(${c.id})"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-action btn-delete" onclick="excluirColab(${c.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-            });
-        }
-        function prepararEdicaoColaborador(id) {
-            const colab = listaColaboradores.find(c => c.id === id); if (!colab) return; idColabEditado = id;
-            document.getElementById('colab_matricula').value = colab.matricula; document.getElementById('colab_nome').value = colab.nome; document.getElementById('colab_cargo').value = colab.cargo; document.getElementById('colab_data').value = colab.data_nascimento; document.getElementById('colab_admin').checked = colab.is_admin ? true : false;
-            document.getElementById('btn_colab_principal').innerText = "Atualizar Colaborador"; document.getElementById('btn_colab_cancelar').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        function cancelarEdicaoColaborador() {
-            idColabEditado = null; ['colab_matricula', 'colab_nome', 'colab_cargo', 'colab_data'].forEach(id => document.getElementById(id).value = ""); document.getElementById('colab_admin').checked = false;
-            document.getElementById('btn_colab_principal').innerText = "Salvar Colaborador"; document.getElementById('btn_colab_cancelar').style.display = "none";
-        }
-        async function salvarColaborador() {
-            const dados = { matricula: document.getElementById('colab_matricula').value, nome: document.getElementById('colab_nome').value, cargo: document.getElementById('colab_cargo').value, data_nascimento: document.getElementById('colab_data').value, is_admin: document.getElementById('colab_admin').checked };
-            if(!dados.matricula || !dados.nome) return;
-            const r = await fetch(idColabEditado ? `/api/colaboradores/${idColabEditado}` : '/api/colaboradores', { method: idColabEditado ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-            if(r.ok) { cancelarEdicaoColaborador(); carregarEquipe(); } else { const d = await r.json(); alert(d.mensagem); }
-        }
-        async function excluirColab(id) { if(!confirm("Remover acesso?")) return; await fetch(`/api/colaboradores/${id}`, { method: 'DELETE' }); carregarEquipe(); }
-
-        // ==========================================
-        // RELATÓRIOS & BI (FILTRA POR PERMISSÃO)
-        // ==========================================
-        async function preencherDropdownColaboradores() {
-            const seletor = document.getElementById('rel_colab'); seletor.innerHTML = '';
-            const r = await fetch('/api/colaboradores'); listaColaboradores = await r.json();
-            
-            // Se tiver mais de 1 (Admin), mostra a opção "Toda a Equipe"
-            if (listaColaboradores.length > 1) {
-                seletor.innerHTML = '<option value="todos">Toda a Equipe</option>';
-            }
-            listaColaboradores.forEach(c => seletor.innerHTML += `<option value="${c.matricula}">${c.nome}</option>`);
-        }
-
-        async function gerarRelatorioAdmin() {
-            const mat = document.getElementById('rel_colab').value; const ini = document.getElementById('rel_data_ini').value; const fim = document.getElementById('rel_data_fim').value;
-            
-            const rRem = await fetch(`/api/admin/relatorios/remessas?matricula=${mat}&inicio=${ini}&fim=${fim}`);
-            const resRem = await rRem.json();
-            const rOco = await fetch(`/api/admin/relatorios/ocorrencias?matricula=${mat}&inicio=${ini}&fim=${fim}`);
-            const resOco = await rOco.json();
-
-            // Gráfico 1: Evolução
-            const ctxEv = document.getElementById('chartGlobalEvolucao').getContext('2d');
-            if(chartGlobEv) chartGlobEv.destroy();
-            const porData = {};
-            resRem.dados.forEach(d => { porData[d.data_pagamento] = (porData[d.data_pagamento] || 0) + d.pontuacao_total; });
-            chartGlobEv = new Chart(ctxEv, {
-                type: 'line',
-                data: { labels: Object.keys(porData).reverse(), datasets: [{ label: 'Pontos Auditados', data: Object.values(porData).reverse(), borderColor: '#111827', backgroundColor: 'rgba(17,24,39,0.03)', borderWidth: 2, fill: true, tension: 0.3 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e5e7eb' } }, x: { grid: { display: false } } } }
-            });
-
-            // Gráfico 2: Gargalos
-            const ctxGar = document.getElementById('chartGlobalGargalos').getContext('2d');
-            if(chartGlobGar) chartGlobGar.destroy();
-            const motivos = {};
-            resOco.dados.forEach(o => { motivos[o.motivo] = (motivos[o.motivo] || 0) + o.tempo_impacto; });
-            chartGlobGar = new Chart(ctxGar, {
-                type: 'bar',
-                data: { labels: Object.keys(motivos), datasets: [{ label: 'Horas', data: Object.values(motivos), backgroundColor: '#ef4444', borderRadius: 6 }] },
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: '#e5e7eb' } }, y: { grid: { display: false } } } }
-            });
-
-            // Tabela com Drill-down
-            const tbody = document.getElementById('rel_tabela_equipe_bi'); tbody.innerHTML = "";
-            listaColaboradores.forEach(c => {
-                if(mat !== 'todos' && c.matricula !== mat) return;
-                tbody.innerHTML += `<tr>
-                    <td style="font-weight:700;">${c.nome}</td>
-                    <td>${c.matricula}</td>
-                    <td>${c.cargo}</td>
-                    <td style="text-align: right;"><button class="btn-export" onclick="abrirPainel('${c.matricula}', '${c.nome}')"><i class="fa-solid fa-chart-line"></i> Detalhes</button></td>
-                </tr>`;
-            });
-        }
-
-        async function abrirPainel(matricula, nome) {
-            document.getElementById('panelName').innerText = nome;
-            document.getElementById('overlay').classList.add('active');
-            document.getElementById('slidePanel').classList.add('active');
-            document.body.style.overflow = 'hidden';
-
-            const ini = document.getElementById('rel_data_ini').value; const fim = document.getElementById('rel_data_fim').value;
-            
-            const rRem = await fetch(`/api/admin/relatorios/remessas?matricula=${matricula}&inicio=${ini}&fim=${fim}`);
-            const dRem = await rRem.json();
-            const rOco = await fetch(`/api/admin/relatorios/ocorrencias?matricula=${matricula}&inicio=${ini}&fim=${fim}`);
-            const dOco = await rOco.json();
-
-            document.getElementById('panelPts').innerText = dRem.metricas.pontos_totais;
-            document.getElementById('panelHrs').innerText = dOco.metricas.total_horas + "h";
-
-            const tb = document.getElementById('panelTabelaOcorrencias'); tb.innerHTML = "";
-            if(dOco.dados.length === 0) { tb.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Nenhuma inconsistência.</td></tr>`; }
-            dOco.dados.forEach(o => {
-                tb.innerHTML += `<tr><td>${o.data_registro.split('-').reverse().join('/')}</td><td><span class="badge badge-red">${o.motivo}</span></td><td>${o.tempo_impacto}h</td></tr>`;
-            });
-
-            const ctxP = document.getElementById('chartPanelGargalos').getContext('2d');
-            if(chartPanel) chartPanel.destroy();
-            const motMap = {}; dOco.dados.forEach(o => { motMap[o.motivo] = (motMap[o.motivo] || 0) + o.tempo_impacto; });
-            chartPanel = new Chart(ctxP, {
-                type: 'doughnut',
-                data: { labels: Object.keys(motMap), datasets: [{ data: Object.values(motMap), backgroundColor: ['#ef4444', '#f87171', '#fca5a5', '#fee2e2'], borderWidth: 0 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 11 } } } } }
-            });
-        }
-
-        function fecharPainel() {
-            document.getElementById('overlay').classList.remove('active');
-            document.getElementById('slidePanel').classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
-
-        function exportarCSV(tipo) {
-            let csv = '\uFEFF'; let filename = '';
-            if (tipo === 'remessas') {
-                if (historicoRemessas.length === 0) return; filename = 'remessas.csv';
-                csv += "Data;Remessa;Fornecedores;Processos;Contratos;Certidoes;Pag. Parciais;Glosas;Apostilamentos;Pontos\n";
-                historicoRemessas.forEach(r => csv += `${r.data_pagamento.split('-').reverse().join('/')};"${r.nome_remessa}";${r.qtd_fornecedores};${r.qtd_processos};${r.qtd_contratos};${r.certidoes_renovadas};${r.pagamentos_parciais};${r.glosas_lancadas};${r.apostilamentos_bancarios};${r.pontuacao_total}\n`);
-            } else if (tipo === 'ocorrencias') {
-                if (historicoOcorrencias.length === 0) return; filename = 'ocorrencias.csv';
-                csv += "Data;Motivo;Ref;Horas;Obs\n";
-                historicoOcorrencias.forEach(o => csv += `${o.data_registro.split('-').reverse().join('/')};"${o.motivo}";"${o.referencia || ''}";${o.tempo_impacto};"${o.observacoes || ''}"\n`);
-            }
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = filename; link.click();
-        }
-
-        function exportarRelatorioAdminCSV() {
-            exportarCSV('remessas');
-        }
-    </script>
+    // Inicialização
+    (async function init() {
+      calcEsforcoLocal();
+      await carregarBi();
+    })();
+  </script>
 </body>
 </html>
