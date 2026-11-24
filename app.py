@@ -1,9 +1,12 @@
+import csv
+import io
 import os
 import sqlite3
 from datetime import datetime
 from functools import wraps
 from flask import (
     Flask,
+    Response,
     jsonify,
     redirect,
     render_template,
@@ -21,7 +24,7 @@ DB_PATH = os.path.join(BASE_DIR, "smartpay_produtividade.db")
 
 ADMIN_MATRICULA_SUPREMA = "12345"
 ADMIN_NOME_SUPREMO = "Cássio Abreu"
-ADMIN_SENHA_SUPREMA = "30/12/95"
+ADMIN_SENHA_SUPREMA = "C@ssio1234"
 
 
 def get_db_connection():
@@ -76,7 +79,6 @@ def init_db():
             """
         )
 
-        # Migração segura caso a tabela já exista sem a coluna senha_hash
         colunas_colab = [
             row["name"]
             for row in conn.execute("PRAGMA table_info(colaboradores)").fetchall()
@@ -119,7 +121,7 @@ def init_db():
             """
         )
 
-        # Garante sempre a existência e integridade do Administrador Supremo
+        admin_hash_supremo = generate_password_hash(ADMIN_SENHA_SUPREMA)
         admin_existente = conn.execute(
             "SELECT id, senha_hash FROM colaboradores WHERE matricula = ?",
             (ADMIN_MATRICULA_SUPREMA,),
@@ -129,13 +131,14 @@ def init_db():
             conn.execute(
                 """
                 INSERT INTO colaboradores (matricula, nome, cargo, data_nascimento, senha_hash, is_admin)
-                VALUES (?, ?, ?, ?, NULL, 1)
+                VALUES (?, ?, ?, ?, ?, 1)
                 """,
                 (
                     ADMIN_MATRICULA_SUPREMA,
                     ADMIN_NOME_SUPREMO,
                     "Administrador Supremo",
-                    ADMIN_SENHA_SUPREMA,
+                    "30/12/95",
+                    admin_hash_supremo,
                 ),
             )
         else:
@@ -143,11 +146,11 @@ def init_db():
                 """
                 UPDATE colaboradores
                 SET nome = COALESCE(NULLIF(nome, ''), ?),
-                    data_nascimento = COALESCE(NULLIF(data_nascimento, ''), ?),
+                    senha_hash = ?,
                     is_admin = 1
                 WHERE matricula = ?
                 """,
-                (ADMIN_NOME_SUPREMO, ADMIN_SENHA_SUPREMA, ADMIN_MATRICULA_SUPREMA),
+                (ADMIN_NOME_SUPREMO, admin_hash_supremo, ADMIN_MATRICULA_SUPREMA),
             )
 
         conn.commit()
@@ -329,6 +332,166 @@ def api_minha_senha():
             "status": "sucesso",
             "mensagem": "Senha personalizada atualizada com sucesso.",
         }
+    )
+
+
+# ==========================================================
+# EXPORTAÇÃO DE PLANILHA CSV (CONTROLE INTERNO)
+# ==========================================================
+@app.route("/api/exportar-planilha", methods=["GET"])
+@login_required
+def api_exportar_planilha():
+    matricula_atual = session.get("matricula")
+    is_admin = bool(session.get("is_admin"))
+    filtro_matricula = request.args.get("matricula", "").strip()
+
+    with get_db_connection() as conn:
+        if is_admin:
+            if filtro_matricula and filtro_matricula != "TODOS":
+                remessas = conn.execute(
+                    """
+                    SELECT r.*, COALESCE(c.nome, r.matricula_usuario) AS nome_colaborador
+                    FROM lancamentos_remessas r
+                    LEFT JOIN colaboradores c ON c.matricula = r.matricula_usuario
+                    WHERE r.matricula_usuario = ?
+                    ORDER BY r.data_pagamento DESC, r.id DESC
+                    """,
+                    (filtro_matricula,),
+                ).fetchall()
+                ocorrencias = conn.execute(
+                    """
+                    SELECT o.*, COALESCE(c.nome, o.matricula_usuario) AS nome_colaborador
+                    FROM ocorrencias o
+                    LEFT JOIN colaboradores c ON c.matricula = o.matricula_usuario
+                    WHERE o.matricula_usuario = ?
+                    ORDER BY o.data_registro DESC, o.id DESC
+                    """,
+                    (filtro_matricula,),
+                ).fetchall()
+            else:
+                remessas = conn.execute(
+                    """
+                    SELECT r.*, COALESCE(c.nome, r.matricula_usuario) AS nome_colaborador
+                    FROM lancamentos_remessas r
+                    LEFT JOIN colaboradores c ON c.matricula = r.matricula_usuario
+                    ORDER BY r.data_pagamento DESC, r.id DESC
+                    """
+                ).fetchall()
+                ocorrencias = conn.execute(
+                    """
+                    SELECT o.*, COALESCE(c.nome, o.matricula_usuario) AS nome_colaborador
+                    FROM ocorrencias o
+                    LEFT JOIN colaboradores c ON c.matricula = o.matricula_usuario
+                    ORDER BY o.data_registro DESC, o.id DESC
+                    """
+                ).fetchall()
+        else:
+            remessas = conn.execute(
+                """
+                SELECT r.*, COALESCE(c.nome, r.matricula_usuario) AS nome_colaborador
+                FROM lancamentos_remessas r
+                LEFT JOIN colaboradores c ON c.matricula = r.matricula_usuario
+                WHERE r.matricula_usuario = ?
+                ORDER BY r.data_pagamento DESC, r.id DESC
+                """,
+                (matricula_atual,),
+            ).fetchall()
+            ocorrencias = conn.execute(
+                """
+                SELECT o.*, COALESCE(c.nome, o.matricula_usuario) AS nome_colaborador
+                FROM ocorrencias o
+                LEFT JOIN colaboradores c ON c.matricula = o.matricula_usuario
+                WHERE o.matricula_usuario = ?
+                ORDER BY o.data_registro DESC, o.id DESC
+                """,
+                (matricula_atual,),
+            ).fetchall()
+
+    output = io.StringIO()
+    output.write("\ufeff")  # BOM UTF-8 para abrir com acentos no Excel
+    writer = csv.writer(output, delimiter=";", lineterminator="\r\n")
+
+    writer.writerow(["=== REMESSAS PAGAS ==="])
+    writer.writerow(
+        [
+            "ID",
+            "Data Pagamento",
+            "Nome da Remessa",
+            "Matricula",
+            "Colaborador",
+            "Fornecedores",
+            "Processos",
+            "Contratos",
+            "Certidoes Renovadas",
+            "Pagamentos Parciais",
+            "Glosas Lancadas",
+            "Apostilamentos Bancarios",
+            "Pontuacao Total",
+            "Data Registro",
+        ]
+    )
+
+    for r in remessas:
+        writer.writerow(
+            [
+                r["id"],
+                r["data_pagamento"],
+                r["nome_remessa"],
+                r["matricula_usuario"],
+                r["nome_colaborador"],
+                r["qtd_fornecedores"],
+                r["qtd_processos"],
+                r["qtd_contratos"],
+                r["certidoes_renovadas"],
+                r["pagamentos_parciais"],
+                r["glosas_lancadas"],
+                r["apostilamentos_bancarios"],
+                r["pontuacao_total"],
+                r["data_registro"],
+            ]
+        )
+
+    writer.writerow([])
+    writer.writerow(["=== OCORRENCIAS E PENDENCIAS ==="])
+    writer.writerow(
+        [
+            "ID",
+            "Data Registro",
+            "Matricula",
+            "Colaborador",
+            "Motivo",
+            "Referencia",
+            "Tempo Impacto (h)",
+            "Observacoes",
+        ]
+    )
+
+    for o in ocorrencias:
+        writer.writerow(
+            [
+                o["id"],
+                o["data_registro"],
+                o["matricula_usuario"],
+                o["nome_colaborador"],
+                o["motivo"],
+                o["referencia"],
+                str(o["tempo_impacto"]).replace(".", ","),
+                o["observacoes"],
+            ]
+        )
+
+    sufixo = (
+        filtro_matricula
+        if (is_admin and filtro_matricula and filtro_matricula != "TODOS")
+        else ("equipe" if is_admin else matricula_atual)
+    )
+    data_hoje = datetime.now().strftime("%Y-%m-%d")
+    filename = f"controle_produtividade_{sufixo}_{data_hoje}.csv"
+
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 
@@ -862,10 +1025,6 @@ def api_colaborador_item(colab_id):
                 1 if int(data.get("is_admin", colab["is_admin"]) or 0) == 1 else 0
             )
 
-        # Tratamento de senha personalizada definida/redefinida pelo Admin:
-        # - Se "nova_senha" vier preenchida: define/atualiza o hash da senha personalizada.
-        # - Se "resetar_senha" for True: remove senha_hash e volta a usar data_nascimento.
-        # - Caso contrário: mantém o senha_hash atual.
         senha_hash_atual = (
             colab["senha_hash"] if "senha_hash" in colab.keys() else None
         )
@@ -1012,12 +1171,44 @@ def api_bi():
 
         total_pontos = sum(int(r["pontuacao_total"] or 0) for r in remessas_list)
         total_remessas = len(remessas_list)
+        total_fornecedores = sum(
+            int(r["qtd_fornecedores"] or 0) for r in remessas_list
+        )
         total_processos = sum(int(r["qtd_processos"] or 0) for r in remessas_list)
         total_contratos = sum(int(r["qtd_contratos"] or 0) for r in remessas_list)
+        total_certidoes = sum(
+            int(r["certidoes_renovadas"] or 0) for r in remessas_list
+        )
+        total_parciais = sum(
+            int(r["pagamentos_parciais"] or 0) for r in remessas_list
+        )
+        total_glosas = sum(int(r["glosas_lancadas"] or 0) for r in remessas_list)
+        total_apostilamentos = sum(
+            int(r["apostilamentos_bancarios"] or 0) for r in remessas_list
+        )
+        media_pontos_remessa = (
+            round(total_pontos / total_remessas, 1) if total_remessas > 0 else 0
+        )
+
         total_ocorrencias = len(ocorrencias_list)
         total_horas_paradas = round(
             sum(float(o["tempo_impacto"] or 0) for o in ocorrencias_list), 2
         )
+
+        composicao_esforco = [
+            {"categoria": "Processos (1 pt)", "pontos": total_processos * 1},
+            {"categoria": "Contratos (2 pts)", "pontos": total_contratos * 2},
+            {
+                "categoria": "Apostilamentos (2 pts)",
+                "pontos": total_apostilamentos * 2,
+            },
+            {"categoria": "Certidões (1 pt)", "pontos": total_certidoes * 1},
+            {
+                "categoria": "Pgto. Parciais (1 pt)",
+                "pontos": total_parciais * 1,
+            },
+            {"categoria": "Glosas (1 pt)", "pontos": total_glosas * 1},
+        ]
 
         mapa_colab = {}
         for r in remessas_list:
@@ -1072,11 +1263,14 @@ def api_bi():
                 "resumo": {
                     "total_pontos": total_pontos,
                     "total_remessas": total_remessas,
+                    "total_fornecedores": total_fornecedores,
                     "total_processos": total_processos,
                     "total_contratos": total_contratos,
+                    "media_pontos_remessa": media_pontos_remessa,
                     "total_ocorrencias": total_ocorrencias,
                     "total_horas_paradas": total_horas_paradas,
                 },
+                "composicao_esforco": composicao_esforco,
                 "por_colaborador": list(mapa_colab.values()),
                 "por_motivo": list(mapa_motivos.values()),
                 "colaboradores": colaboradores_lista,
