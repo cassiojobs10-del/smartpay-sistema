@@ -1,6 +1,7 @@
 import csv
 import io
 import os
+import re
 import sqlite3
 from datetime import datetime
 from functools import wraps
@@ -16,23 +17,104 @@ from flask import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
+try:
+    import psycopg
+    from psycopg.rows import dict_row
+except ImportError:
+    psycopg = None
+    dict_row = None
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "sgp-smartpay-chave-secreta-2026")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "smartpay_produtividade.db")
 
+DATABASE_URL = (
+    os.environ.get("DATABASE_URL") or os.environ.get("SUPABASE_DB_URL") or ""
+).strip()
+USE_POSTGRES = bool(DATABASE_URL)
+
 ADMIN_MATRICULA_SUPREMA = "12345"
 ADMIN_NOME_SUPREMO = "Cássio Abreu"
 ADMIN_SENHA_SUPREMA = "C@ssio1234"
 
 
+class DBConnectionWrapper:
+    """Padroniza execução e row dict entre SQLite e PostgreSQL."""
+
+    def __init__(self, raw_conn, is_pg: bool):
+        self.raw_conn = raw_conn
+        self.is_pg = is_pg
+
+    def _adapt_sql(self, sql: str) -> str:
+        if not self.is_pg:
+            return sql
+        # Converte placeholders '?' para '%s'
+        adapted = sql.replace("?", "%s")
+        # Converte AUTOINCREMENT do SQLite para SERIAL no PostgreSQL
+        adapted = re.sub(
+            r"\bINTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT\b",
+            "SERIAL PRIMARY KEY",
+            adapted,
+            flags=re.IGNORECASE,
+        )
+        return adapted
+
+    def execute(self, sql: str, params=()):
+        query = self._adapt_sql(sql)
+        if self.is_pg:
+            cursor = self.raw_conn.cursor(row_factory=dict_row)
+            # Se for INSERT sem RETURNING e vier de tabela com id, retorna lastrowid quando possível
+            upper_q = query.strip().upper()
+            if upper_q.startswith("INSERT INTO") and "RETURNING" not in upper_q:
+                cursor.execute(query + " RETURNING id", params)
+                row = cursor.fetchone()
+                cursor.lastrowid = row["id"] if row and "id" in row else None
+                return cursor
+            cursor.execute(query, params)
+            return cursor
+        return self.raw_conn.execute(query, params)
+
+    def commit(self):
+        self.raw_conn.commit()
+
+    def close(self):
+        self.raw_conn.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        try:
+            if exc_type is not None:
+                self.raw_conn.rollback()
+        finally:
+            self.close()
+
+
 def get_db_connection():
+    if USE_POSTGRES:
+        if psycopg is None:
+            raise RuntimeError(
+                "Pacote 'psycopg[binary]' não instalado. Adicione ao requirements.txt."
+            )
+        conn = psycopg.connect(DATABASE_URL, autocommit=False)
+        return DBConnectionWrapper(conn, is_pg=True)
+
     conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA synchronous = FULL")
     conn.execute("PRAGMA journal_mode = DELETE")
-    return conn
+    return DBConnectionWrapper(conn, is_pg=False)
+
+
+def is_integrity_error(exc: Exception) -> bool:
+    if isinstance(exc, sqlite3.IntegrityError):
+        return True
+    if psycopg is not None and isinstance(exc, psycopg.IntegrityError):
+        return True
+    return "unique" in str(exc).lower() or "duplicate" in str(exc).lower()
 
 
 def calcular_esforco(
@@ -53,13 +135,12 @@ def verificar_credencial_usuario(user_row, senha_informada):
     if not senha_digitada:
         return False
 
-    senha_hash = (
-        user_row["senha_hash"] if "senha_hash" in user_row.keys() else None
-    )
+    row_dict = dict(user_row)
+    senha_hash = row_dict.get("senha_hash")
     if senha_hash:
         return check_password_hash(senha_hash, senha_digitada)
 
-    data_nasc = str(user_row["data_nascimento"] or "").strip()
+    data_nasc = str(row_dict.get("data_nascimento") or "").strip()
     return data_nasc != "" and data_nasc == senha_digitada
 
 
@@ -79,12 +160,17 @@ def init_db():
             """
         )
 
-        colunas_colab = [
-            row["name"]
-            for row in conn.execute("PRAGMA table_info(colaboradores)").fetchall()
-        ]
-        if "senha_hash" not in colunas_colab:
-            conn.execute("ALTER TABLE colaboradores ADD COLUMN senha_hash TEXT")
+        if conn.is_pg:
+            conn.execute(
+                "ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS senha_hash TEXT"
+            )
+        else:
+            colunas_colab = [
+                row["name"]
+                for row in conn.execute("PRAGMA table_info(colaboradores)").fetchall()
+            ]
+            if "senha_hash" not in colunas_colab:
+                conn.execute("ALTER TABLE colaboradores ADD COLUMN senha_hash TEXT")
 
         conn.execute(
             """
@@ -156,7 +242,10 @@ def init_db():
         conn.commit()
 
 
-init_db()
+try:
+    init_db()
+except Exception as e:
+    print(f"[AVISO init_db]: {e}")
 
 
 def login_required(f):
@@ -226,13 +315,16 @@ def login():
             401,
         )
 
-    is_supremo = user["matricula"] == ADMIN_MATRICULA_SUPREMA
+    user_dict = dict(user)
+    is_supremo = user_dict["matricula"] == ADMIN_MATRICULA_SUPREMA
     session.clear()
-    session["matricula"] = user["matricula"]
-    session["nome"] = ADMIN_NOME_SUPREMO if is_supremo else user["nome"]
-    session["cargo"] = user["cargo"]
-    session["is_admin"] = 1 if (is_supremo or int(user["is_admin"]) == 1) else 0
-    session["tem_senha_personalizada"] = bool(user["senha_hash"])
+    session["matricula"] = user_dict["matricula"]
+    session["nome"] = ADMIN_NOME_SUPREMO if is_supremo else user_dict["nome"]
+    session["cargo"] = user_dict["cargo"]
+    session["is_admin"] = (
+        1 if (is_supremo or int(user_dict["is_admin"]) == 1) else 0
+    )
+    session["tem_senha_personalizada"] = bool(user_dict.get("senha_hash"))
 
     return jsonify({"status": "sucesso", "redirect": url_for("index")})
 
@@ -408,7 +500,7 @@ def api_exportar_planilha():
             ).fetchall()
 
     output = io.StringIO()
-    output.write("\ufeff")  # BOM UTF-8 para abrir com acentos no Excel
+    output.write("\ufeff")
     writer = csv.writer(output, delimiter=";", lineterminator="\r\n")
 
     writer.writerow(["=== REMESSAS PAGAS ==="])
@@ -431,7 +523,8 @@ def api_exportar_planilha():
         ]
     )
 
-    for r in remessas:
+    for row in remessas:
+        r = dict(row)
         writer.writerow(
             [
                 r["id"],
@@ -466,7 +559,8 @@ def api_exportar_planilha():
         ]
     )
 
-    for o in ocorrencias:
+    for row in ocorrencias:
+        o = dict(row)
         writer.writerow(
             [
                 o["id"],
@@ -595,6 +689,7 @@ def api_remessas():
                 matricula_atual,
             ),
         )
+        novo_id = cursor.lastrowid
         conn.commit()
 
         novo = conn.execute(
@@ -604,7 +699,7 @@ def api_remessas():
             LEFT JOIN colaboradores c ON c.matricula = r.matricula_usuario
             WHERE r.id = ?
             """,
-            (cursor.lastrowid,),
+            (novo_id,),
         ).fetchone()
         return jsonify(dict(novo)), 201
 
@@ -616,13 +711,14 @@ def api_remessa_item(remessa_id):
     is_admin = bool(session.get("is_admin"))
 
     with get_db_connection() as conn:
-        registro = conn.execute(
+        row = conn.execute(
             "SELECT * FROM lancamentos_remessas WHERE id = ?", (remessa_id,)
         ).fetchone()
 
-        if not registro:
+        if not row:
             return jsonify({"erro": "Registro de remessa não encontrado."}), 404
 
+        registro = dict(row)
         if not is_admin and registro["matricula_usuario"] != matricula_atual:
             return (
                 jsonify(
@@ -805,6 +901,7 @@ def api_ocorrencias():
                 data_criacao,
             ),
         )
+        novo_id = cursor.lastrowid
         conn.commit()
 
         nova = conn.execute(
@@ -814,7 +911,7 @@ def api_ocorrencias():
             LEFT JOIN colaboradores c ON c.matricula = o.matricula_usuario
             WHERE o.id = ?
             """,
-            (cursor.lastrowid,),
+            (novo_id,),
         ).fetchone()
         return jsonify(dict(nova)), 201
 
@@ -826,13 +923,14 @@ def api_ocorrencia_item(ocorrencia_id):
     is_admin = bool(session.get("is_admin"))
 
     with get_db_connection() as conn:
-        registro = conn.execute(
+        row = conn.execute(
             "SELECT * FROM ocorrencias WHERE id = ?", (ocorrencia_id,)
         ).fetchone()
 
-        if not registro:
+        if not row:
             return jsonify({"erro": "Ocorrência não encontrada."}), 404
 
+        registro = dict(row)
         if not is_admin and registro["matricula_usuario"] != matricula_atual:
             return (
                 jsonify(
@@ -962,12 +1060,17 @@ def api_colaboradores():
                 """,
                 (matricula, nome, cargo, data_nascimento, senha_hash, is_admin_novo),
             )
+            novo_id = cursor.lastrowid
             conn.commit()
-        except sqlite3.IntegrityError:
-            return (
-                jsonify({"erro": "Já existe um colaborador com essa matrícula."}),
-                409,
-            )
+        except Exception as exc:
+            if is_integrity_error(exc):
+                return (
+                    jsonify(
+                        {"erro": "Já existe um colaborador com essa matrícula."}
+                    ),
+                    409,
+                )
+            raise
 
         novo = conn.execute(
             """
@@ -975,7 +1078,7 @@ def api_colaboradores():
             FROM colaboradores
             WHERE id = ?
             """,
-            (cursor.lastrowid,),
+            (novo_id,),
         ).fetchone()
         novo_dict = dict(novo)
         novo_dict["tem_senha_personalizada"] = bool(
@@ -989,13 +1092,14 @@ def api_colaboradores():
 @admin_required
 def api_colaborador_item(colab_id):
     with get_db_connection() as conn:
-        colab = conn.execute(
+        row = conn.execute(
             "SELECT * FROM colaboradores WHERE id = ?", (colab_id,)
         ).fetchone()
 
-        if not colab:
+        if not row:
             return jsonify({"erro": "Colaborador não encontrado."}), 404
 
+        colab = dict(row)
         if request.method == "DELETE":
             if colab["matricula"] == ADMIN_MATRICULA_SUPREMA:
                 return (
@@ -1025,9 +1129,7 @@ def api_colaborador_item(colab_id):
                 1 if int(data.get("is_admin", colab["is_admin"]) or 0) == 1 else 0
             )
 
-        senha_hash_atual = (
-            colab["senha_hash"] if "senha_hash" in colab.keys() else None
-        )
+        senha_hash_atual = colab.get("senha_hash")
         if "nova_senha" in data and str(data.get("nova_senha") or "").strip() != "":
             nova_senha = str(data.get("nova_senha")).strip()
             if len(nova_senha) < 4:
